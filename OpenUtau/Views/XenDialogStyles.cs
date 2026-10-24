@@ -5,8 +5,8 @@ using Avalonia.Markup.Xaml.Styling;
 namespace OpenUtau.App.Views {
     internal static class XenDialogStyles {
         public static void Apply(Window window) {
-            window.Styles.Add(new StyleInclude(new Uri("avares://OpenUtau/")) {
-                Source = new Uri("avares://OpenUtau/Styles/XenDialogs.axaml"),
+            window.Styles.Add(new StyleInclude(new Uri(XenStrings.AssetRoot)) {
+                Source = new Uri(XenStrings.AssetRoot + "Styles/XenDialogs.axaml"),
             });
             window.Opened += (_, _) => {
                 var screen = window.Screens.ScreenFromWindow(window);

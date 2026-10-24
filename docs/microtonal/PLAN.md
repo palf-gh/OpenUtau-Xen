@@ -6,7 +6,7 @@ Designed in a private planning conversation; implementation authorised 2026-10-2
 
 ## Product and formats
 
-OpenUtau Xen is a local derivative at `<working copy>`.
+OpenUtau Xen is a derivative of upstream OpenUtau.
 The native project extension is `.ustxen` (UST + Xen); reusable tuning presets
 use `.tunxen` (Tuning + Xen). `.ustx`, `.scl` and `.kbm` are interchange formats.
 Native formats have their own identifiers and versions; upstream USTX versions

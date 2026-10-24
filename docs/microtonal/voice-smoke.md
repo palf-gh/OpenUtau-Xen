@@ -2,12 +2,16 @@
 
 ## Local assets
 
-User-authorised source root: `<voice folder>`.
-Classic tools: `<UTAU folder>\resampler.exe` and its DLL.
-Classic sample source: <classic voicebank>, one Japanese /a/ oto.
-DiffSinger source: <diffsinger voicebank>/configs, with its supplied acoustic model
-and tgm_hifigan_v110 vocoder. These assets remain external and are not committed
-or redistributed.
+The person running the check supplies every asset; the repository names none.
+
+- Classic: a UTAU voicebank with a sustained Japanese /a/ oto, and a UTAU folder
+  containing `resampler.exe` and its DLL.
+- DiffSinger: a voicebank configuration folder with its acoustic model, and the
+  vocoder model that voicebank expects.
+
+The recorded results used one licensed single-note Japanese UTAU voicebank and one
+licensed DiffSinger voicebank with a HiFi-GAN vocoder. These assets remain external
+and are not committed or redistributed.
 
 The test copies the selected Classic recording, oto parameters and any existing
 FRQ into an isolated working bank. Generated metadata is written only to that
@@ -30,13 +34,14 @@ central voiced segment. The acceptance window is +/-5 cents for this smoke
 check. This does not replace listening, broad voice/model coverage, transitions,
 inferred-pitch/retake checks or the Classic adapter's separate integer-cent test.
 
-Tests are opt-in through OPENUTAU_XEN_VOICE_ROOT, OPENUTAU_XEN_UTAU_ENGINE and
+Tests are opt-in through OPENUTAU_XEN_CLASSIC_BANK, OPENUTAU_XEN_DIFFSINGER_BANK,
+OPENUTAU_XEN_DIFFSINGER_VOCODER, OPENUTAU_XEN_UTAU_ENGINE and
 OPENUTAU_XEN_SMOKE_OUTPUT. The script sets OPENUTAU_XEN_SMOKE_ISOLATED and uses
 a dedicated filtered test process so DocManager initialisation cannot affect
 other tests. Preferences and the UI callback are restored in finally. Tools are
 staged in a unique test-only resampler subdirectory and removed afterwards;
-existing installed resamplers are never overwritten. Unset voice-root means
-explicitly skipped external tests. See `tools/verify-xen-voices.ps1`.
+existing installed resamplers are never overwritten. Any unset asset setting
+means explicitly skipped external tests. See `tools/verify-xen-voices.ps1`.
 
 ENUNU, Vogen and VOICEVOX assets were not located in the supplied directories.
 Their shared F0 paths were inspected, but actual synthesis is unverified. A first

@@ -20,11 +20,13 @@ namespace OpenUtau.App {
             "bohlen-pierce-13edt" => "Bohlen–Pierce (13-EDT)",
             _ => tuning.Name,
         };
+        /// <summary>Avalonia asset root of this assembly; follows the executable name.</summary>
+        public static readonly string AssetRoot = $"avares://{typeof(XenStrings).Assembly.GetName().Name}/";
         static readonly Dictionary<string, IResourceDictionary> dictionaries = new();
         public static IResourceDictionary GetResources(string language) {
             if (!dictionaries.TryGetValue(language, out var resource)) {
-                resource = new ResourceInclude(new Uri("avares://OpenUtau/")) {
-                    Source = new Uri($"avares://OpenUtau/Strings/Xen.{language}.axaml"),
+                resource = new ResourceInclude(new Uri(AssetRoot)) {
+                    Source = new Uri($"{AssetRoot}Strings/Xen.{language}.axaml"),
                 }.Loaded;
                 dictionaries.Add(language, resource);
             }

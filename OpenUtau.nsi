@@ -29,7 +29,7 @@ ManifestDPIAware true
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
 ; Finish page
-!define MUI_FINISHPAGE_RUN "$INSTDIR\OpenUtau.exe"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\OpenUtau-Xen.exe"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
@@ -63,8 +63,8 @@ Section "MainSection" SEC01
 SectionEnd
 
 Section -AdditionalIcons
-  CreateShortCut "$SMPROGRAMS\OpenUtau Xen.lnk" "$INSTDIR\OpenUtau.exe"
-  CreateShortCut "$DESKTOP\OpenUtau Xen.lnk" "$INSTDIR\OpenUtau.exe"
+  CreateShortCut "$SMPROGRAMS\OpenUtau Xen.lnk" "$INSTDIR\OpenUtau-Xen.exe"
+  CreateShortCut "$DESKTOP\OpenUtau Xen.lnk" "$INSTDIR\OpenUtau-Xen.exe"
 SectionEnd
 
 Section -Post
@@ -76,15 +76,15 @@ Section -Post
   WriteUninstaller "$INSTDIR\uninst.exe"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninst.exe"
-  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\OpenUtau.exe"
+  WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\OpenUtau-Xen.exe"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
 
   WriteRegStr HKCR ".ustxen" "" "OpenUtauXenFile"
   WriteRegStr HKCR "OpenUtauXenFile" "" "OpenUtau Xen Project"
-  WriteRegStr HKCR "OpenUtauXenFile\DefaultIcon" "" "$INSTDIR\OpenUtau.exe"
-  WriteRegStr HKCR "OpenUtauXenFile\shell\open\command" "" '"$INSTDIR\OpenUtau.exe" "%1"'
+  WriteRegStr HKCR "OpenUtauXenFile\DefaultIcon" "" "$INSTDIR\OpenUtau-Xen.exe"
+  WriteRegStr HKCR "OpenUtauXenFile\shell\open\command" "" '"$INSTDIR\OpenUtau-Xen.exe" "%1"'
 SectionEnd
 
 Section "VC Redist"

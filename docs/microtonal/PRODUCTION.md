@@ -2,7 +2,7 @@
 
 ## 2026-10-24 — Environment and baseline
 
-- Created an independent Git clone at `<working copy>`; original inspection
+- Created an independent local Git clone; original inspection
   checkout retained. No GitHub fork or remote publication performed.
 - Upstream revision: `3eb9dd26459fa51dc2c5bf46693a9492d817c130`.
 - Registered `upstream`; created `main` and `develop` branches.
@@ -26,7 +26,7 @@
 - First full integrated run: 326 passed, 4 failed; all failures were synthetic
   render-fixture notes missing ExtendedDuration. Fixed the fixture and reran all
   eight XenRenderTest cases successfully. A serial full rerun remains required.
-- User supplied voice root `<voice folder>` and engines `<UTAU folder>`.
+- User supplied a local voicebank folder and a UTAU engine folder.
   Classic and DiffSinger assets were located. Real-engine smoke work is ongoing.
 
 ## 2026-10-24 — Native projects, rendering and real voices
@@ -125,9 +125,9 @@ The first release is not declared complete while these checks remain open.
   check is not called, and the menu entry shows the manual-update notice.
 - The NSIS installer was not built: it needs `vc_redist.x64.exe`, which has not
   been downloaded. makensis is installed.
-- VOICEVOX is installed locally (`<VOICEVOX folder>`) but no
+- VOICEVOX is installed locally but no
   OpenUtau VOICEVOX singer was found. No ENUNU or Vogen voice exists under
-  `<voice folder>`, the UTAU folder or existing OpenUtau installs.
+  the supplied voicebank folder, the UTAU folder or existing OpenUtau installs.
 - `README-XEN.md` was merged into a single bilingual `README.md` (English and
   Japanese, with language links at the top). The Japanese text was polished
   with yomiyasu. Added `AGENTS.md` and `CLAUDE.md`; both require yomiyasu for
@@ -234,3 +234,21 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   UI-adjusted deep blue `#3344D6` (white-text contrast 7.15:1) derived from brand
   `#0000FF`. Between keys use the sub blue. Purple-tinted greys became neutral.
   DESIGN.md rewritten and checked with yomiyasu. 391 passed, 1 skipped.
+
+## 2026-10-24 — Pre-publication clean-up
+
+- Removed local paths, the planning-conversation identifier and voicebank names
+  from tracked documents. The real-voice test now takes the Classic bank,
+  DiffSinger configuration, DiffSinger vocoder and UTAU engine folder as explicit
+  settings (`OPENUTAU_XEN_CLASSIC_BANK`, `OPENUTAU_XEN_DIFFSINGER_BANK`,
+  `OPENUTAU_XEN_DIFFSINGER_VOCODER`, `OPENUTAU_XEN_UTAU_ENGINE`); no default
+  install path remains. Rerun with the same local assets and an empty cache: 3 passed.
+- Removed upstream-only scheduled and maintainer workflows (Crowdin sync, stale
+  issues, release clean-up, team auto-merge). The PR test now targets this fork's
+  branches; manual build workflows remain and need Xen naming before releases.
+- The executable and assembly are now `OpenUtau-Xen` (root namespace unchanged;
+  Xen resource URIs follow the assembly name). The installer, macOS bundle
+  executable and shortcuts use the new name.
+- Version set to `0.1.0` (first public pre-release); versioning rules added to
+  `AGENTS.md`.
+

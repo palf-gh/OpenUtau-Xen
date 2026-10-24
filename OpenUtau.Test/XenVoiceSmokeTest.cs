@@ -21,9 +21,13 @@ using Xunit;
 
 namespace OpenUtau.Test {
     public sealed class VoiceSmokeTheoryAttribute : TheoryAttribute {
+        /// <summary>Local voicebanks and tools are named by the person running the test, never by the repository.</summary>
+        public static readonly string[] RequiredSettings = {
+            "OPENUTAU_XEN_CLASSIC_BANK", "OPENUTAU_XEN_DIFFSINGER_BANK", "OPENUTAU_XEN_DIFFSINGER_VOCODER", "OPENUTAU_XEN_UTAU_ENGINE",
+        };
         public VoiceSmokeTheoryAttribute() {
-            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENUTAU_XEN_VOICE_ROOT")))
-                Skip = "Set OPENUTAU_XEN_VOICE_ROOT to opt in to local licensed voice tests.";
+            if (RequiredSettings.Any(name => string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name))))
+                Skip = "Set " + string.Join(", ", RequiredSettings) + " to opt in to local licensed voice tests.";
             else if (Environment.GetEnvironmentVariable("OPENUTAU_XEN_SMOKE_ISOLATED") != "1")
                 Skip = "Run tools/verify-xen-voices.ps1 in its dedicated test process.";
         }
@@ -44,7 +48,6 @@ namespace OpenUtau.Test {
             (string Name, string Directory)? staged = null;
             try {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            string root = Environment.GetEnvironmentVariable("OPENUTAU_XEN_VOICE_ROOT")!;
             string output = Environment.GetEnvironmentVariable("OPENUTAU_XEN_SMOKE_OUTPUT")
                 ?? Path.Combine(AppContext.BaseDirectory, "voice-smoke");
             Directory.CreateDirectory(output);
@@ -59,7 +62,7 @@ namespace OpenUtau.Test {
             Preferences.Default.DiffSingerDepth = 0.2;
             DocManager.Inst.Initialize(Thread.CurrentThread, TaskScheduler.Default);
             DocManager.Inst.PostOnUIThread = _ => { };
-            USinger singer = engine == "DIFFSINGER" ? LoadDiffSinger(root, output) : PrepareClassic(root, output);
+            USinger singer = engine == "DIFFSINGER" ? LoadDiffSinger(output) : PrepareClassic(output);
             if (engine == "CLASSIC") staged = PrepareResampler();
             var results = new List<object>();
             var frequencies = new[] { 440.0, 440 * Math.Pow(2, 1.0 / 53), 550.0 };
@@ -125,10 +128,12 @@ namespace OpenUtau.Test {
             }
         }
 
-        static ClassicSinger PrepareClassic(string root, string output) {
-            string original = Path.Combine(root, "<classic voicebank>");
+        static string Setting(string name) => Path.GetFullPath(Environment.GetEnvironmentVariable(name)!);
+
+        static ClassicSinger PrepareClassic(string output) {
+            string original = Setting("OPENUTAU_XEN_CLASSIC_BANK");
             var info = new Voicebank();
-            VoicebankLoader.LoadInfo(info, Path.Combine(original, "character.txt"), root);
+            VoicebankLoader.LoadInfo(info, Path.Combine(original, "character.txt"), Path.GetDirectoryName(original)!);
             var originalSinger = new ClassicSinger(info);
             originalSinger.EnsureLoaded();
             // Select a Japanese /a/ vowel and retain its measured oto parameters.
@@ -154,7 +159,7 @@ namespace OpenUtau.Test {
         }
 
         static (string Name, string Directory) PrepareResampler() {
-            string source = Environment.GetEnvironmentVariable("OPENUTAU_XEN_UTAU_ENGINE") ?? @"<UTAU folder>";
+            string source = Setting("OPENUTAU_XEN_UTAU_ENGINE");
             Directory.CreateDirectory(PathManager.Inst.ResamplersPath);
             string stage = Path.Combine(PathManager.Inst.ResamplersPath, "xen-smoke-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(stage);
@@ -169,15 +174,15 @@ namespace OpenUtau.Test {
             return (resampler.ToString()!, stage);
         }
 
-        static USinger LoadDiffSinger(string root, string output) {
-            string bank = Path.Combine(root, "<diffsinger voicebank>", "configs");
+        static USinger LoadDiffSinger(string output) {
+            string bank = Setting("OPENUTAU_XEN_DIFFSINGER_BANK");
             var info = new Voicebank();
-            VoicebankLoader.LoadInfo(info, Path.Combine(bank, "character.txt"), root);
+            VoicebankLoader.LoadInfo(info, Path.Combine(bank, "character.txt"), Path.GetDirectoryName(bank)!);
             Type type = typeof(USinger).Assembly.GetType("OpenUtau.Core.DiffSinger.DiffSingerSinger")!;
             var singer = (USinger)Activator.CreateInstance(type, info)!;
             string vocoder = Path.Combine(output, "vocoder");
             Directory.CreateDirectory(vocoder);
-            var config = new DsVocoderConfig { model = Path.Combine(root, "<diffsinger voicebank>", "tgm_hifigan", "tgm_hifigan_v110.onnx"),
+            var config = new DsVocoderConfig { model = Setting("OPENUTAU_XEN_DIFFSINGER_VOCODER"),
                 mel_base = "e", mel_scale = "slaney", sample_rate = 44100, hop_size = 512,
                 num_mel_bins = 128, mel_fmin = 40, mel_fmax = 16000 };
             File.WriteAllText(Path.Combine(vocoder, "vocoder.yaml"), Yaml.DefaultSerializer.Serialize(config));

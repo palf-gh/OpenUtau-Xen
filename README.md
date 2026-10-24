@@ -56,7 +56,7 @@ External voice tests are opt-in and need the documented local voicebanks. Run th
 serially, after the ordinary tests:
 
 ```powershell
-pwsh -NoProfile -File tools/verify-xen-voices.ps1 -VoiceRoot '<voice folder>' -UtauEngine '<UTAU folder>'
+pwsh -NoProfile -File tools/verify-xen-voices.ps1 -ClassicBank '<UTAU voicebank>' -DiffSingerBank '<DiffSinger configs>' -DiffSingerVocoder '<vocoder.onnx>' -UtauEngine '<folder with resampler.exe>'
 ```
 
 The synthesis smoke checks use the supplied Classic and DiffSinger assets
@@ -223,7 +223,7 @@ dotnet publish OpenUtau -c Release -r win-x64 --self-contained true
 単独で実行してください。
 
 ```powershell
-pwsh -NoProfile -File tools/verify-xen-voices.ps1 -VoiceRoot '<voice folder>' -UtauEngine '<UTAU folder>'
+pwsh -NoProfile -File tools/verify-xen-voices.ps1 -ClassicBank '<UTAU voicebank>' -DiffSingerBank '<DiffSinger configs>' -DiffSingerVocoder '<vocoder.onnx>' -UtauEngine '<folder with resampler.exe>'
 ```
 
 この合成スモークテストは提供された Classic と DiffSinger の音源を使います。元の音源は

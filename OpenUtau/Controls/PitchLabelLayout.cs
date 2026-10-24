@@ -8,7 +8,7 @@ using Avalonia.Media.TextFormatting;
 namespace OpenUtau.App.Controls {
     /// <summary>Uses the music font only for SMuFL runs; names keep the application font.</summary>
     internal static class PitchLabelLayout {
-        static readonly Typeface music = new Typeface(new FontFamily("avares://OpenUtau/Assets/Fonts#Bravura Text"));
+        static readonly Typeface music = new Typeface(new FontFamily(XenStrings.AssetRoot + "Assets/Fonts#Bravura Text"));
         static readonly Dictionary<(string, IBrush, double), TextLayout[]> cache = new();
         public static void Draw(DrawingContext context, string text, IBrush brush, double fontSize,
             double right, double top, double availableHeight) {

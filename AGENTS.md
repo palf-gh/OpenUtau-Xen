@@ -52,6 +52,23 @@ dotnet test OpenUtau.Test -m:1
 - Native formats (`.ustxen`, `.tunxen`) have their own identifier and version;
   never reuse upstream `ustx_version`.
 
+## Versioning
+
+- OpenUtau Xen has its own version, `MAJOR.MINOR.PATCH`, independent of upstream
+  OpenUtau. It starts at `0.1.0`.
+- Stay on `0.x` until every first-release check in `docs/microtonal/PLAN.md` passes;
+  the accepted first release is `1.0.0`.
+- Bump MINOR for new features or user-visible behaviour changes (on `0.x`, also for
+  breaking changes). Bump PATCH for fixes only. After `1.0.0`, bump MAJOR when
+  existing `.ustxen` or `.tunxen` files can no longer be opened as before.
+- Bump when preparing a release, not on every commit. Merging upstream changes does
+  not bump the version by itself.
+- Change these together in `OpenUtau/OpenUtau.csproj`: `Version`,
+  `CFBundleVersion` and `CFBundleShortVersionString`. Record the bump and its
+  reason in `docs/microtonal/PRODUCTION.md`, and tag the release commit `vX.Y.Z`.
+- The `.ustxen`/`.tunxen` format versions are separate: change them only when the
+  file format changes, with a migration and a round-trip test.
+
 ## Git
 
 - Work on feature branches; integrate tested commits into `develop`. `main`
