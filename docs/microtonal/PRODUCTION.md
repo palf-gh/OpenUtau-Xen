@@ -65,8 +65,6 @@
 - Verification above concerns the combined working tree; coherent commits are
   recorded separately so unfinished release requirements remain explicit.
 
-## Still required for first-release acceptance
-
 ## 2026-10-24 — Independent review corrections
 
 - Review found that missing native envelope fields could default to an empty
@@ -82,6 +80,16 @@
 - UI review also identified dependent scale definitions after degree-count
   changes, non-zero-fine-tuning drag offsets and comma-decimal parsing. These
   corrections are tracked with the editor changes and will be reverified.
+
+## 2026-10-24 — MIDI lifecycle integration
+
+- Captured key-down tuning snapshots, monotonic timing and common KBM mapping.
+- Added sustain/retrigger/panic/disconnect handling and duplicate-frequency
+  preview accounting. Native driver disposal runs outside its callback lock.
+- Recording retains out-of-range pitch addresses and explicitly rejects
+  unsupported preview rather than clamping musical data.
+- Device-independent lifecycle/recording cases pass in the combined suite.
+  Physical devices remain a separate unverified acceptance check.
 
 ## Remaining first-release checks
 
