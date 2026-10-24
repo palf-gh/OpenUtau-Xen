@@ -60,9 +60,10 @@ Every preset records provenance, intervals, reference and approximation policy.
 5. MIDI hardware/file mapping, recording, compatibility export and recovery.
 6. Combined tests, documentation and Windows distribution.
 
-Each coherent change is tested and committed with a production record. `main`
-retains the initial baseline; tested changes integrate into `develop`. No remote
-publication is authorised by this plan. External engines and voices require a
+Each coherent change is tested and committed with a production record. Tested
+changes integrate into `develop`; `main` follows the latest versioned commit and the
+upstream fork point is tagged `upstream-base`. Publication on GitHub as a fork was
+authorised by the user on 2026-10-24 (see `AGENTS.md` for the branch workflow). External engines and voices require a
 recorded usable version and licence; missing dependencies remain unverified.
 
 Acceptance covers old 12-EDO projects, 53-EDO spacing/enharmonics, 5/4, negative

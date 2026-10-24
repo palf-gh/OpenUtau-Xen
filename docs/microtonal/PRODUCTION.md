@@ -252,3 +252,21 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
 - Version set to `0.1.0` (first public pre-release); versioning rules added to
   `AGENTS.md`.
 
+## 2026-10-24 — Publication and version 0.1.0
+
+- With the user's authorisation, forked upstream as `palf-gh/OpenUtau-Xen` (public)
+  and pushed `main` and `develop`. Upstream tags and local backup branches were not
+  pushed.
+- Workflow for collaborators: `develop` is the default branch; work arrives by pull
+  request from `feature/` or `fix/` branches; `main` fast-forwards to each versioned
+  commit; `upstream-base` tags the fork point. Upstream's `master` was deleted from
+  the fork. Versions are bumped during development when `develop` is worth sharing.
+- Version 0.1.0 contains: exact tunings, presets, Scala interchange and native
+  `.ustxen`/`.tunxen` formats; continuous pitch for every renderer (Classic,
+  Worldline-R and DiffSinger verified with real voices); Full/Highlight/Compact rows;
+  SZG, Ups and Downs and Bohlen–Pierce names; the three-tier keyboard; microtonal
+  Tone input; MIDI input (no hardware verification); 20-language Xen UI; the palf
+  palette. Still open: VOICEVOX verification, broad GUI and high-DPI review.
+- README gained a bilingual "Contributing" section; the Japanese text was checked
+  with yomiyasu.
+

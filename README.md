@@ -75,6 +75,17 @@ high-DPI coverage, and DiffSinger automatic-pitch/retake combinations remain ope
 See the [production record](docs/microtonal/PRODUCTION.md) for details. The first
 release is not declared complete while these checks remain open.
 
+### Contributing
+
+- `develop` is the default branch. Create `feature/<topic>` or `fix/<topic>` from it
+  and open a pull request into `develop`. The pull-request tests must pass.
+- `main` always points to the latest version (`vX.Y.Z` tags); use it to try a
+  stable state.
+- Build and test serially with the commands above. Follow `AGENTS.md` for writing,
+  versioning and code conventions, and `DESIGN.md` for colours.
+- Japanese documents are checked with the yomiyasu skill before merging. If you do
+  not have it, mention the Japanese changes in your pull request.
+
 ### Attribution
 
 Upstream code remains under its original MIT licence. Bravura Text is included
@@ -241,6 +252,17 @@ ENUNU・Vogen・VOICEVOX での実際の合成、実機 MIDI 鍵盤、より広�
 DiffSinger の自動ピッチとリテイクの組合せは未検証です。詳細は
 [制作記録](docs/microtonal/PRODUCTION.md) を参照してください。これらが残っている間は、
 初版の完成とはしません。
+
+### 開発に参加するには
+
+- 既定ブランチは `develop` です。ここから `feature/<内容>` か `fix/<内容>` のブランチを作り、
+  `develop` へのプルリクエストを送ってください。プルリクエストのテストが通る必要があります。
+- `main` は常に最新のバージョン（`vX.Y.Z` タグ）を指します。安定した状態を試すときは
+  `main` を使ってください。
+- ビルドとテストは、上のコマンドで 1 つずつ順に実行してください。文章、バージョン、コードの
+  決まりは `AGENTS.md` に、配色は `DESIGN.md` にあります。
+- 日本語の文書はマージの前に yomiyasu スキルで確認します。yomiyasu を使えない場合は、
+  日本語を変更したことをプルリクエストに書いてください。
 
 ### 帰属表示
 
