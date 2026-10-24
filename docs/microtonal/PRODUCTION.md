@@ -79,7 +79,8 @@
   preferences/callbacks and require the dedicated filtered test-process wrapper.
 - UI review also identified dependent scale definitions after degree-count
   changes, non-zero-fine-tuning drag offsets and comma-decimal parsing. These
-  corrections are tracked with the editor changes and will be reverified.
+  corrections are tracked with the editor changes; TuningEditorReviewTest passes
+  in the 363-case serial run.
 
 ## 2026-10-24 — MIDI lifecycle integration
 
@@ -113,4 +114,21 @@ The first release is not declared complete while these checks remain open.
   metadata-only tuning changes retain residual cents and spellings.
 - The editor, MIDI dialog, localisation, app identity and tooling were committed
   as separate coherent changes and integrated into `develop`.
+- Earlier DiffSinger smoke figures were partly served from the render cache.
+  With the test-host cache cleared, all three engines passed again; the nine
+  tones are within 0.746 cent (DiffSinger +0.600, +0.746, -0.297).
+- Each intermediate commit (563caff, ce163b8) builds on its own.
+- `dotnet publish -c Release -r win-x64 --self-contained` succeeded. The
+  published build started with the title "OpenUtau Xen", used portable data
+  beside the executable and logged no errors. The automatic upstream update
+  check is not called, and the menu entry shows the manual-update notice.
+- The NSIS installer was not built: it needs `vc_redist.x64.exe`, which has not
+  been downloaded. makensis is installed.
+- VOICEVOX is installed locally (`<VOICEVOX folder>`) but no
+  OpenUtau VOICEVOX singer was found. No ENUNU or Vogen voice exists under
+  `D:oice`, the UTAU folder or existing OpenUtau installs.
+- `README-XEN.md` was merged into a single bilingual `README.md` (English and
+  Japanese, with language links at the top). The Japanese text was polished
+  with yomiyasu. Added `AGENTS.md` and `CLAUDE.md`; both require yomiyasu for
+  documents.
 - The remaining first-release checks listed below are unchanged.

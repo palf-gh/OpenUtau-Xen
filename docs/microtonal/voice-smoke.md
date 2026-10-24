@@ -17,12 +17,13 @@ configuration supplies the model path without editing the source bank.
 
 ## Results (2026-10-24)
 
-All three real-engine tests passed. Each synthesises 440 Hz, the adjacent
+All three real-engine tests passed, including a rerun with an empty render cache. Each synthesises 440 Hz, the adjacent
 53-EDO pitch (445.7922229309625 Hz), and the just 5/4 pitch (550 Hz).
 
 - Classic: errors +0.149, +0.261 and -0.418 cent.
 - Worldline-R: errors +0.300, +0.213 and -0.515 cent.
-- DiffSinger: errors +0.338, +0.267 and -0.196 cent.
+- DiffSinger: errors +0.338, +0.267 and -0.196 cent (first run); rerun with an
+  empty test-host render cache: +0.600, +0.746 and -0.297 cent.
 
 Measured using normalised autocorrelation with interpolated lag in a stable
 central voiced segment. The acceptance window is +/-5 cents for this smoke
