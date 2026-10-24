@@ -39,6 +39,9 @@ Compatibility export must report lost metadata and rounding.
   resolved pitch exactly once. Include pitch dependencies in all relevant caches.
 - Preserve upstream licences. Separate app data/cache/update identity. First
   release is Windows x64 with manual distribution; preserve other build targets.
+- Localise all Xen UI in every upstream language. Use independently maintained
+  Xen resource overlays, invariant serialised identifiers and automated
+  key/placeholder coverage checks. This requirement was added during implementation.
 
 ## Presets
 

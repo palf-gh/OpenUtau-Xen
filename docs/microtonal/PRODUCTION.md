@@ -100,3 +100,17 @@
 - Community/native-speaker review of specialist terminology is recommended.
 
 The first release is not declared complete while these checks remain open.
+
+## 2026-10-24 — Continuation checkpoint and commits
+
+- Work resumed after the previous implementation session reached its usage limit.
+- Serial solution build succeeded. Ordinary suite: 363 passed, 0 failed,
+  1 explicitly skipped external-voice theory. Separate opt-in voice run
+  (Classic, Worldline-R, DiffSinger): 3 passed.
+- Removed a personal command-proxy dependency from the voice script and README
+  build commands; both now call `dotnet`/`pwsh` directly.
+- Failed saves now leave the document path and saved state untouched, and
+  metadata-only tuning changes retain residual cents and spellings.
+- The editor, MIDI dialog, localisation, app identity and tooling were committed
+  as separate coherent changes and integrated into `develop`.
+- The remaining first-release checks listed below are unchanged.

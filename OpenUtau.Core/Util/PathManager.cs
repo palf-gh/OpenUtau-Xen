@@ -17,8 +17,8 @@ namespace OpenUtau.Core {
             RootPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             if (OS.IsMacOS()) {
                 string userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                DataPath = Path.Combine(userHome, "Library", "OpenUtau");
-                CachePath = Path.Combine(userHome, "Library", "Caches", "OpenUtau");
+                DataPath = Path.Combine(userHome, "Library", "OpenUtau Xen");
+                CachePath = Path.Combine(userHome, "Library", "Caches", "OpenUtau Xen");
                 HomePathIsAscii = true;
                 try {
                     // Deletes old cache.
@@ -33,12 +33,12 @@ namespace OpenUtau.Core {
                 if (string.IsNullOrEmpty(dataHome)) {
                     dataHome = Path.Combine(userHome, ".local", "share");
                 }
-                DataPath = Path.Combine(dataHome, "OpenUtau");
+                DataPath = Path.Combine(dataHome, "OpenUtau Xen");
                 string cacheHome = Environment.GetEnvironmentVariable("XDG_CACHE_HOME");
                 if (string.IsNullOrEmpty(cacheHome)) {
                     cacheHome = Path.Combine(userHome, ".cache");
                 }
-                CachePath = Path.Combine(cacheHome, "OpenUtau");
+                CachePath = Path.Combine(cacheHome, "OpenUtau Xen");
                 HomePathIsAscii = true;
             } else {
                 // AppContext.BaseDirectory correctly resolves to the application's output
@@ -51,7 +51,7 @@ namespace OpenUtau.Core {
                     DataPath = appDir;
                 } else {
                     string dataHome = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-                    DataPath = Path.Combine(dataHome, "OpenUtau");
+                    DataPath = Path.Combine(dataHome, "OpenUtau Xen");
                 }
                 CachePath = Path.Combine(DataPath, "Cache");
                 HomePathIsAscii = true;

@@ -11,15 +11,17 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Version>0.0.0</Version>
+    <Product>OpenUtau Xen</Product>
+    <Title>OpenUtau Xen</Title>
     <ApplicationIcon>Assets\open-utau.ico</ApplicationIcon>
     <PublishReadyToRun>true</PublishReadyToRun>
     <DebugType>embedded</DebugType>
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <CFBundleName>OpenUtau</CFBundleName>
-    <CFBundleDisplayName>OpenUtau</CFBundleDisplayName>
-    <CFBundleIdentifier>com.stakira.openutau</CFBundleIdentifier>
+    <CFBundleName>OpenUtau Xen</CFBundleName>
+    <CFBundleDisplayName>OpenUtau Xen</CFBundleDisplayName>
+    <CFBundleIdentifier>org.openutauxen.app</CFBundleIdentifier>
     <CFBundleVersion>0.0.0</CFBundleVersion>
     <CFBundleShortVersionString>0.0.0</CFBundleShortVersionString>
     <CFBundlePackageType>APPL</CFBundlePackageType>
@@ -32,10 +34,10 @@
         <array>
             <dict>
                 <key>CFBundleTypeName</key>
-                <string>OpenUtau Sequence File</string>
+                <string>OpenUtau Xen Project</string>
                 <key>CFBundleTypeExtensions</key>
                 <array>
-                    <string>ustx</string>
+                    <string>ustxen</string>
                 </array>
                 <key>CFBundleTypeIconFile</key>
                 <string>OpenUtau.icns</string>
@@ -43,7 +45,7 @@
                 <string>Editor</string>
                 <key>LSItemContentTypes</key>
                 <array>
-                    <string>com.stakira.openutau.ustx</string>
+                    <string>org.openutauxen.ustxen</string>
                 </array>
             </dict>
         </array>          
