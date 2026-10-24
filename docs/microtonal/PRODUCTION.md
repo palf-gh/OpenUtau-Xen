@@ -173,5 +173,17 @@ upstream first-launch behaviour (T or the "?" button); no code change.
 - Full suite after this change: one clean run (379 passed, 1 skipped) and runs
   with one unrelated failure each (UstTest.EqualInLyric, TimeAxisTest). The
   previous commit shows the same intermittent failures (TimeAxisTest,
-  XenProjectTest), so the cause predates this change: tests share global
-  DocManager/project state while xUnit runs classes in parallel. Open issue.
+  XenProjectTest), so the cause predates this change. Resolved below.
+
+## 2026-10-24 — Intermittent test failures
+
+- Cause: `PhonemizerFactory.Get` (upstream code) cached factories in an unlocked
+  static `Dictionary`. Every `UTrack` constructor calls it, so test classes
+  creating projects in parallel corrupted the dictionary ("Operations that change
+  non-concurrent collections must have exclusive access"). The app can hit the
+  same race when projects or tracks are created off the UI thread.
+- Fix: the cache, lookup by name and `BuildList` share one lock. Behaviour is
+  otherwise unchanged (types without a phonemiser attribute are still not cached).
+- Verification: before the fix, about half of full runs failed (different tests
+  each time, all traced to this exception). After it, 10 consecutive full runs
+  passed: 379 passed, 1 explicitly skipped external-voice theory.
