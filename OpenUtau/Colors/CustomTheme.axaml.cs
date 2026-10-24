@@ -141,36 +141,36 @@ public class CustomTheme {
         public string BorderColor = "#707070";
         public string BorderColorPointerOver = "#B0B0B0";
 
-        public string SystemAccentColor = "#4EA6EA";
-        public string SystemAccentColorLight1 = "#90CAF9";
-        public string SystemAccentColorDark1 = "#1E88E5";
+        public string SystemAccentColor = "#3344D6";
+        public string SystemAccentColorLight1 = "#8E98EE";
+        public string SystemAccentColorDark1 = "#2433B0";
 
-        public string NeutralAccentColor = "#ADA1B3";
-        public string NeutralAccentColorPointerOver = "#948A99";
-        public string AccentColor1 = "#4EA6EA";
-        public string AccentColor2 = "#FF679D";
-        public string AccentColor3 = "#E62E6E";
+        public string NeutralAccentColor = "#A8A8A0";
+        public string NeutralAccentColorPointerOver = "#8F8F88";
+        public string AccentColor1 = "#3344D6";
+        public string AccentColor2 = "#6B8F12";
+        public string AccentColor3 = "#4F6B0B";
 
-        public string TickLineColor = "#AFA3B5";
-        public string BarNumberColor = "#AFA3B5";
+        public string TickLineColor = "#B5B5AE";
+        public string BarNumberColor = "#9C9C95";
         public string FinalPitchColor = "#C0C0C0";
         public string TrackBackgroundAltColor = "#E8E8E4";
 
         public string WhiteKeyColorLeft = "Transparent";
         public string WhiteKeyColorRight = "Transparent";
-        public string WhiteKeyNameColor = "#FF347c";
+        public string WhiteKeyNameColor = "#5C7410";
             
-        public string CenterKeyColorLeft = "#FFDDE6";
-        public string CenterKeyColorRight = "#FFCEDC";
-        public string CenterKeyNameColor = "#FF347C";
+        public string CenterKeyColorLeft = "#EEF7C8";
+        public string CenterKeyColorRight = "#E2F1A3";
+        public string CenterKeyNameColor = "#4D5E0A";
             
-        public string BlackKeyColorLeft = "#FF71A3";
-        public string BlackKeyColorRight = "#FF347C";
-        public string BlackKeyNameColor = "#FFFFFF";
+        public string BlackKeyColorLeft = "#D9EF85";
+        public string BlackKeyColorRight = "#CBE960";
+        public string BlackKeyNameColor = "#101010";
 
-        public string BetweenKeyColorLeft = "#DDF08F";
-        public string BetweenKeyColorRight = "#CBE960";
-        public string BetweenKeyNameColor = "#101010";
+        public string BetweenKeyColorLeft = "#C9CEF8";
+        public string BetweenKeyColorRight = "#AEB6F4";
+        public string BetweenKeyNameColor = "#1E2BA8";
     }
 }
 

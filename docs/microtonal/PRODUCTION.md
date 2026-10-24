@@ -228,3 +228,9 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
 - Full suite 391 passed, 1 skipped. Trial build republished and started without
   new errors. Visual review by the user is pending.
 
+- Revised on user review: upstream pink is OpenUtau's main colour, so it is now
+  replaced by brand lime (fills `#CBE960` with `#101010` text; UI-adjusted
+  `#6B8F12`/`#4F6B0B` where white text sits on it), and upstream light blue by a
+  UI-adjusted deep blue `#3344D6` (white-text contrast 7.15:1) derived from brand
+  `#0000FF`. Between keys use the sub blue. Purple-tinted greys became neutral.
+  DESIGN.md rewritten and checked with yomiyasu. 391 passed, 1 skipped.
