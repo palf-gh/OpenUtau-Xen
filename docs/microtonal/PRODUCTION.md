@@ -94,8 +94,9 @@
 
 ## Remaining first-release checks
 
-- Actual ENUNU, Vogen and VOICEVOX voice/engine verification.
-- Real MIDI hardware, hot-unplug and audio-device interaction checks.
+- Actual VOICEVOX voice/engine verification.
+- ENUNU, Vogen and real MIDI hardware: accepted by the user as unverified for
+  the first release (2026-10-24). No assets or device are available.
 - Broader interactive editing, synthesis transitions, DiffSinger automatic
   pitch/retake, high-DPI and translated typography checks.
 - Community/native-speaker review of specialist terminology is recommended.
@@ -132,3 +133,11 @@ The first release is not declared complete while these checks remain open.
   with yomiyasu. Added `AGENTS.md` and `CLAUDE.md`; both require yomiyasu for
   documents.
 - The remaining first-release checks listed below are unchanged.
+
+## 2026-10-24 — Accepted unverified checks and local trial build
+
+- User decision: ENUNU and Vogen synthesis and real MIDI hardware stay
+  unverified for the first release. Their code paths and automated tests remain;
+  only actual-voice and physical-device verification are waived.
+- The published Windows x64 build was copied to the ignored folder
+  `work/OpenUtau-Xen-win-x64/` for trial use and started successfully.

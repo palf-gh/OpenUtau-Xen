@@ -54,4 +54,5 @@ dotnet test OpenUtau.Test -m:1
 - Keep commits small and coherent, and make each one build.
 - Do not push, publish or create remote forks without explicit authorisation.
 - Never declare the first release complete while any check in `PLAN.md`
-  (including ENUNU, Vogen, VOICEVOX and real MIDI hardware) remains unverified.
+  remains unverified. ENUNU, Vogen and real MIDI hardware are waived by the
+  user and recorded as unverified; VOICEVOX is still required.

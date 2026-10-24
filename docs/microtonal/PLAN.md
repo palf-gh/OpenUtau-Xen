@@ -81,3 +81,7 @@ The complete first release requires every feature above, native and interchange
 round trips, all six renderer families verified with actual voices, and no
 12-EDO editing/rendering regression. Partial implementation is never recorded as
 a completed first release.
+
+Amendment (2026-10-24, user decision): ENUNU and Vogen actual-voice
+verification and real MIDI hardware checks are waived for the first release
+and recorded as unverified. All other completion requirements are unchanged.
