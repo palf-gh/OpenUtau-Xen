@@ -36,6 +36,10 @@ dotnet test OpenUtau.Test -m:1
 
 ## Code conventions
 
+- Follow `DESIGN.md` for colours and appearance: keep upstream OpenUtau's look; the
+  brand lime is reserved for Xen-specific elements. A new theme colour goes into the
+  light, dark and custom themes and the theme editor.
+
 - Match the surrounding code's style, naming and comment density.
 - Integer `tone` is only an adapter for phonemisers and sample selection; exact
   pitch lives in `PitchAddress` and is resolved by `PitchResolver`.

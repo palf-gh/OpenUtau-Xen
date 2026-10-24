@@ -213,3 +213,18 @@ black, unlike the Fokker organ. The user supplied
   A core test now uses a 5/2 period for its "no notation" case, since 3/1 has names.
 - Full suite: 391 passed, 1 explicitly skipped. GUI appearance not yet checked.
 
+## 2026-10-24 — Fork design and default theme colours
+
+User request: base the fork's default theme on the palf brand (palf_strage
+DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md.
+
+- Added `DESIGN.md` (Japanese, checked with yomiyasu). Upstream layout, pink
+  keyboard and blue notes stay. Taken from the brand: canvas `#F2F2EF` and ink
+  `#181818` (light), ink `#F2F2F2` (dark), and lime `#CBE960` with `#101010` text,
+  reserved for Xen-specific elements. Brand blue is not used, to avoid clashing
+  with upstream's note blue.
+- Light and custom-theme defaults use the canvas and ink; dark keeps upstream's
+  background. Between keys changed from the provisional Fokker blue to lime.
+- Full suite 391 passed, 1 skipped. Trial build republished and started without
+  new errors. Visual review by the user is pending.
+

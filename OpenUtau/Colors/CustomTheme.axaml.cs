@@ -128,14 +128,14 @@ public class CustomTheme {
         public string Name = "Custom YAML";
             
         public bool IsDarkMode = false;
-        public string BackgroundColor = "#FFFFFF";
-        public string BackgroundColorPointerOver = "#F0F0F0";
-        public string BackgroundColorPressed = "#E0E0E0";
-        public string BackgroundColorDisabled = "#D0D0D0";
+        public string BackgroundColor = "#F2F2EF";
+        public string BackgroundColorPointerOver = "#E8E8E4";
+        public string BackgroundColorPressed = "#DADAD5";
+        public string BackgroundColorDisabled = "#CDCDC8";
 
-        public string ForegroundColor = "#000000";
-        public string ForegroundColorPointerOver = "#000000";
-        public string ForegroundColorPressed = "#202020";
+        public string ForegroundColor = "#181818";
+        public string ForegroundColorPointerOver = "#181818";
+        public string ForegroundColorPressed = "#2A2A2A";
         public string ForegroundColorDisabled = "#808080";
         
         public string BorderColor = "#707070";
@@ -154,7 +154,7 @@ public class CustomTheme {
         public string TickLineColor = "#AFA3B5";
         public string BarNumberColor = "#AFA3B5";
         public string FinalPitchColor = "#C0C0C0";
-        public string TrackBackgroundAltColor = "#F0F0F0";
+        public string TrackBackgroundAltColor = "#E8E8E4";
 
         public string WhiteKeyColorLeft = "Transparent";
         public string WhiteKeyColorRight = "Transparent";
@@ -168,9 +168,9 @@ public class CustomTheme {
         public string BlackKeyColorRight = "#FF347C";
         public string BlackKeyNameColor = "#FFFFFF";
 
-        public string BetweenKeyColorLeft = "#A8D4F5";
-        public string BetweenKeyColorRight = "#6DB5EE";
-        public string BetweenKeyNameColor = "#1B4F80";
+        public string BetweenKeyColorLeft = "#DDF08F";
+        public string BetweenKeyColorRight = "#CBE960";
+        public string BetweenKeyNameColor = "#101010";
     }
 }
 
