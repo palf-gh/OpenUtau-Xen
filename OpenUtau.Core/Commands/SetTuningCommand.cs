@@ -42,9 +42,10 @@ namespace OpenUtau.Core {
                     continue;
                 }
                 var source = project.GetTuning(partTrack);
+                bool retainAddress = displayOnly || SamePitchGrid(source, target);
                 foreach (var note in part.notes) {
                     double midi = note.pitchAddress == null ? note.tone : PitchResolver.ResolveMidi(source, note.pitchAddress);
-                    PitchAddress? address = displayOnly ? note.pitchAddress?.Clone()
+                    PitchAddress? address = retainAddress ? note.pitchAddress?.Clone()
                         : referenceOnly ? note.pitchAddress?.Clone() ?? PitchResolver.NearestAddress(source, midi, true)
                         : PitchResolver.NearestAddress(target, midi, preserveFrequency);
                     changes.Add((note, partTrack, note.pitchAddress?.Clone(), note.tone, address));
@@ -74,5 +75,16 @@ namespace OpenUtau.Core {
         }
 
         public override string ToString() => "Change tuning";
+
+        static bool SamePitchGrid(TuningDefinition left, TuningDefinition right) {
+            if (left.DegreeCount != right.DegreeCount || Math.Abs(left.PeriodCents - right.PeriodCents) > 1e-9)
+                return false;
+            if (Math.Abs(PitchResolver.ResolveMidi(left, new PitchAddress())
+                - PitchResolver.ResolveMidi(right, new PitchAddress())) > 1e-11) return false;
+            for (int degree = 0; degree < left.DegreeCount; degree++) {
+                if (Math.Abs(left.GetCents(degree) - right.GetCents(degree)) > 1e-9) return false;
+            }
+            return true;
+        }
     }
 }

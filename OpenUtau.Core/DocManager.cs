@@ -213,14 +213,12 @@ namespace OpenUtau.Core {
             }
             if (cmd is UNotification) {
                 if (cmd is SaveProjectNotification saveProjectNotif) {
-                    if (undoQueue.Count > 0) {
-                        savedPoint = undoQueue.Last();
+                    string path = string.IsNullOrEmpty(saveProjectNotif.Path) ? Project.FilePath : saveProjectNotif.Path;
+                    if (!Format.Ustx.TrySave(path, Project, out var error)) {
+                        ExecuteCmd(new ErrorMessageNotification(error!));
+                        return;
                     }
-                    if (string.IsNullOrEmpty(saveProjectNotif.Path)) {
-                        Format.Ustx.Save(Project.FilePath, Project);
-                    } else {
-                        Format.Ustx.Save(saveProjectNotif.Path, Project);
-                    }
+                    savedPoint = undoQueue.LastOrDefault();
                 } else if (cmd is LoadProjectNotification notification) {
                     undoQueue.Clear();
                     redoQueue.Clear();

@@ -99,6 +99,15 @@ namespace OpenUtau.Core.Format {
         }
 
         public static void Save(string filePath, UProject project) {
+            if (!TrySave(filePath, project, out var error)) {
+                DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(error!));
+            }
+        }
+
+        public static bool TrySave(string filePath, UProject project, out Exception? error) {
+            string previousPath = project.FilePath;
+            bool previousSaved = project.Saved;
+            error = null;
             try {
                 project.ustxVersion = kUstxVersion;
                 project.FilePath = filePath;
@@ -112,9 +121,12 @@ namespace OpenUtau.Core.Format {
                 Preferences.Default.RecoveryPath = string.Empty;
                 Preferences.Save();
                 DocManager.Inst.Recovered = false;
+                return true;
             } catch (Exception ex) {
-                var e = new MessageCustomizableException($"Failed to save ustx: {filePath}", $"<translate:errors.failed.save>: {filePath}", ex);
-                DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
+                project.FilePath = previousPath;
+                project.Saved = previousSaved;
+                error = new MessageCustomizableException($"Failed to save ustx: {filePath}", $"<translate:errors.failed.save>: {filePath}", ex);
+                return false;
             } finally {
                 project.AfterSave();
             }

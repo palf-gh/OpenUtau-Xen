@@ -45,6 +45,20 @@ namespace OpenUtau.Test {
             Assert.Throws<FileFormatException>(() => XenProjectFormat.Parse(text.Replace(XenProjectFormat.Identifier, "other-project")));
         }
 
+        [Fact]
+        public void FailedSaveDoesNotChangeDocumentPathOrSavedState() {
+            var (project, _, note) = Create();
+            project.FilePath = "previous.ustxen";
+            project.Saved = false;
+            string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "failure.ustxen");
+            Assert.False(Ustx.TrySave(missing, project, out var error));
+            Assert.NotNull(error);
+            Assert.Equal("previous.ustxen", project.FilePath);
+            Assert.False(project.Saved);
+            Assert.Null(project.voiceParts);
+            Assert.Equal(5, note.pitchAddress!.Degree);
+        }
+
         [Theory]
         [InlineData("")]
         [InlineData("{}")]
@@ -135,6 +149,19 @@ namespace OpenUtau.Test {
             command.Unexecute();
             Assert.Null(project.tracks[0].pitchSystem);
             Assert.Equal(before, note.ResolvedTone);
+        }
+
+        [Fact]
+        public void MetadataOnlyTuningChangesNeverDiscardResidualsOrSpellings() {
+            var (project, _, note) = Create();
+            double before = note.ResolvedTone;
+            var target = project.pitchSystem.Clone();
+            target.Name = "Renamed tuning";
+            target.Keyboard.ActiveScaleId = target.Scales.Last().Id;
+            new SetTuningCommand(project, null, target).Execute();
+            Assert.Equal(before, note.ResolvedTone);
+            Assert.Equal(0.123456789, note.pitchAddress!.ResidualCents);
+            Assert.Equal("C#4", note.pitchAddress.Spelling);
         }
 
         [Fact]
