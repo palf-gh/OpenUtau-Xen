@@ -59,6 +59,9 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public partial Color BlackKeyColorLeft { get; set; }
         [Reactive] public partial Color BlackKeyColorRight { get; set; }
         [Reactive] public partial Color BlackKeyNameColor { get; set; }
+        [Reactive] public partial Color BetweenKeyColorLeft { get; set; }
+        [Reactive] public partial Color BetweenKeyColorRight { get; set; }
+        [Reactive] public partial Color BetweenKeyNameColor { get; set; }
 
         public ThemeEditorViewModel(string customThemePath) {
             this.customThemePath = customThemePath;
@@ -110,6 +113,9 @@ namespace OpenUtau.App.ViewModels {
             BlackKeyColorLeft = Color.Parse(themeYaml.BlackKeyColorLeft);
             BlackKeyColorRight = Color.Parse(themeYaml.BlackKeyColorRight);
             BlackKeyNameColor = Color.Parse(themeYaml.BlackKeyNameColor);
+            BetweenKeyColorLeft = Color.Parse(themeYaml.BetweenKeyColorLeft);
+            BetweenKeyColorRight = Color.Parse(themeYaml.BetweenKeyColorRight);
+            BetweenKeyNameColor = Color.Parse(themeYaml.BetweenKeyNameColor);
 
             this.WhenAnyValue(vm => vm.IsDarkMode)
                 .Subscribe(v => {
@@ -222,6 +228,13 @@ namespace OpenUtau.App.ViewModels {
 
             this.WhenAnyValue(vm => vm.BlackKeyNameColor)
                 .Subscribe(v => Application.Current!.Resources["BlackKeyNameColor"] = v);
+
+            this.WhenAnyValue(vm => vm.BetweenKeyColorLeft)
+                .Subscribe(v => Application.Current!.Resources["BetweenKeyColorLeft"] = v);
+            this.WhenAnyValue(vm => vm.BetweenKeyColorRight)
+                .Subscribe(v => Application.Current!.Resources["BetweenKeyColorRight"] = v);
+            this.WhenAnyValue(vm => vm.BetweenKeyNameColor)
+                .Subscribe(v => Application.Current!.Resources["BetweenKeyNameColor"] = v);
         }
 
         public void Save() {
@@ -266,7 +279,10 @@ namespace OpenUtau.App.ViewModels {
 
                 BlackKeyColorLeft = BlackKeyColorLeft.ToString(),
                 BlackKeyColorRight = BlackKeyColorRight.ToString(),
-                BlackKeyNameColor = BlackKeyNameColor.ToString()
+                BlackKeyNameColor = BlackKeyNameColor.ToString(),
+                BetweenKeyColorLeft = BetweenKeyColorLeft.ToString(),
+                BetweenKeyColorRight = BetweenKeyColorRight.ToString(),
+                BetweenKeyNameColor = BetweenKeyNameColor.ToString()
             };
 
             File.WriteAllText(customThemePath, Yaml.DefaultSerializer.Serialize(themeYaml), Encoding.UTF8);

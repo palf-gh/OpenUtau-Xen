@@ -49,6 +49,7 @@
   <system:String x:Key="xen.notation.degree">Números dos graus</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
+  <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
   <system:String x:Key="xen.notation.custom">Nomes personalizados</system:String>
   <system:String x:Key="xen.notation.none">Nenhuma</system:String>
   <system:String x:Key="xen.notation.auto">Automática</system:String>

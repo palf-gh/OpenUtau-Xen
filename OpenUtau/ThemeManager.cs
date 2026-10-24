@@ -49,6 +49,8 @@ namespace OpenUtau.App {
         public static IBrush CenterKeyNameBrush = Brushes.Black;
         public static IBrush BlackKeyBrush = Brushes.Black;
         public static IBrush BlackKeyNameBrush = Brushes.White;
+        public static IBrush BetweenKeyBrush = Brushes.LightBlue;
+        public static IBrush BetweenKeyNameBrush = Brushes.Black;
         public static IBrush ExpBrush = Brushes.White;
         public static IBrush ExpNameBrush = Brushes.Black;
         public static IBrush ExpShadowBrush = Brushes.Gray;
@@ -185,6 +187,13 @@ namespace OpenUtau.App {
             IResourceDictionary resDict = Application.Current.Resources;
             object? outVar;
             var themeVariant = ThemeVariant.Default;
+            // Xen's third key role follows the theme in every mode, including track colours.
+            if (resDict.TryGetResource("BetweenKeyBrush", themeVariant, out outVar)) {
+                BetweenKeyBrush = (IBrush)outVar!;
+            }
+            if (resDict.TryGetResource("BetweenKeyNameBrush", themeVariant, out outVar)) {
+                BetweenKeyNameBrush = (IBrush)outVar!;
+            }
 
             if (Preferences.Default.UseTrackColor) {
                 if (IsDarkMode) {

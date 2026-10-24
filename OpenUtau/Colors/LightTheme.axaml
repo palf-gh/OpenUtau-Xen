@@ -47,4 +47,9 @@
   <Color x:Key="BlackKeyColorLeft">#FF71A3</Color>
   <Color x:Key="BlackKeyColorRight">#FF347C</Color>
   <Color x:Key="BlackKeyNameColor">#FFFFFF</Color>
+
+  <!--Xen: microtonal keys between naturals and conventional accidentals (Fokker blue)-->
+  <Color x:Key="BetweenKeyColorLeft">#A8D4F5</Color>
+  <Color x:Key="BetweenKeyColorRight">#6DB5EE</Color>
+  <Color x:Key="BetweenKeyNameColor">#1B4F80</Color>
 </ResourceDictionary>

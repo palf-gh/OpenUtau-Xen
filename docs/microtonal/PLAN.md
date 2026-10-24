@@ -96,3 +96,8 @@ Amendment (2026-10-24, user review of the first trial build):
 - Key colour follows the note name (natural white, altered black), by degree index.
 - The note Tone field accepts natural ± steps (53-EDO `C4+4`, `D4-4`), spelled
   names and relative steps, and sets exact degrees.
+- Key colours follow `docs/microtonal_keyboard_algorithm_spec.md` (user-supplied,
+  2026-10-24): White / Black / Between roles from generator-derived anchors, a
+  dilation radius scaled to 31-EDO (octave) or 13-EDT (tritave), conflict and
+  short-gap rules. Between is a third themed colour. Equal divisions of the
+  tritave use Bohlen–Pierce Lambda names. This supersedes the name-based colours.

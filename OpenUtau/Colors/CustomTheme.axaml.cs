@@ -108,6 +108,10 @@ public class CustomTheme {
             SetResourceColor("BlackKeyColorLeft", Default.BlackKeyColorLeft);
             SetResourceColor("BlackKeyColorRight", Default.BlackKeyColorRight);
             SetResourceColor("BlackKeyNameColor", Default.BlackKeyNameColor);
+
+            SetResourceColor("BetweenKeyColorLeft", Default.BetweenKeyColorLeft);
+            SetResourceColor("BetweenKeyColorRight", Default.BetweenKeyColorRight);
+            SetResourceColor("BetweenKeyNameColor", Default.BetweenKeyNameColor);
         }
     }
 
@@ -163,6 +167,10 @@ public class CustomTheme {
         public string BlackKeyColorLeft = "#FF71A3";
         public string BlackKeyColorRight = "#FF347C";
         public string BlackKeyNameColor = "#FFFFFF";
+
+        public string BetweenKeyColorLeft = "#A8D4F5";
+        public string BetweenKeyColorRight = "#6DB5EE";
+        public string BetweenKeyNameColor = "#1B4F80";
     }
 }
 

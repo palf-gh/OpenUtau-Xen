@@ -187,3 +187,29 @@ upstream first-launch behaviour (T or the "?" button); no code change.
 - Verification: before the fix, about half of full runs failed (different tests
   each time, all traced to this exception). After it, 10 consecutive full runs
   passed: 379 passed, 1 explicitly skipped external-voice theory.
+
+## 2026-10-24 — Three-tier keyboard and Bohlen–Pierce names
+
+User review: 31-EDO showed only the seven naturals as white and everything else as
+black, unlike the Fokker organ. The user supplied
+`docs/microtonal_keyboard_algorithm_spec.md` and chose to add a third key colour.
+
+- `KeyboardTheory` derives generator, large, small and chromatic steps for the
+  octave (3/2, C–B, reference 31) and tritave (9/7, Lambda C–B with H and J,
+  reference 13) families; invalid theories (for example 7-EDO) fall back.
+- `KeyboardRegionizer` places White and Black anchors, flags White/Black anchor
+  conflicts as Between, dilates by floor(n / 2·reference), resolves equal
+  distances to Between and joins sharp/flat regions across at most one step.
+- `PitchNotation.Role` replaces the boolean accidental test: explicit key classes,
+  then the regioniser, then note names.
+- New theme colours `BetweenKeyColorLeft/Right/NameColor` in the light, dark and
+  custom themes and the theme editor (Fokker blue). Between rows in the note area
+  are drawn at half the black-row shade.
+- `PitchNotation.BohlenPierce` names every valid EDT (13-EDT: C C♯ D E F F♯ G H H♯
+  J A A♯ B, flats as aliases). The Bohlen–Pierce preset now uses them; the Tone
+  field accepts H and J. View menu and all 20 overlays gained `xen.notation.bp`.
+- `XenKeyboardTest` implements every required case of spec §25 (12, 22, 24, 31,
+  41, 53, 72, 73-EDO; 13, 31, 53-EDT) plus fallback and explicit-class cases.
+  A core test now uses a 5/2 period for its "no notation" case, since 3/1 has names.
+- Full suite: 391 passed, 1 explicitly skipped. GUI appearance not yet checked.
+

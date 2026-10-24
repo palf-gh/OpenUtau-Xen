@@ -156,15 +156,32 @@ namespace OpenUtau.App.Controls {
                     int periodDegree = mod(degree, tuning.DegreeCount);
                     bool active = mapper.IsScaleRow(row);
                     bool root = periodDegree == 0;
-                    bool accidental = PitchNotation.IsAccidental(tuning, degree);
-                    var brush = IsKeyboard
-                        ? (root ? ThemeManager.CenterKeyBrush : accidental ? ThemeManager.BlackKeyBrush : ThemeManager.WhiteKeyBrush)
-                        : (mapper.Mode == PitchDisplayMode.ScaleHighlight && active ? ThemeManager.CenterKeyBrush
-                            : (accidental ^ ThemeManager.IsDarkMode ? Foreground : Background));
-                    context.DrawRectangle(brush, null, new Rect(0, Math.Floor(top), Bounds.Width, TrackHeight));
+                    var role = PitchNotation.Role(tuning, degree);
+                    var rect = new Rect(0, Math.Floor(top), Bounds.Width, TrackHeight);
+                    if (IsKeyboard) {
+                        context.DrawRectangle(root ? ThemeManager.CenterKeyBrush : role switch {
+                            KeyRole.Black => ThemeManager.BlackKeyBrush,
+                            KeyRole.Between => ThemeManager.BetweenKeyBrush,
+                            _ => ThemeManager.WhiteKeyBrush,
+                        }, null, rect);
+                    } else if (mapper.Mode == PitchDisplayMode.ScaleHighlight && active) {
+                        context.DrawRectangle(ThemeManager.CenterKeyBrush, null, rect);
+                    } else {
+                        // Between rows sit halfway between the white- and black-row shades of the note area.
+                        bool shaded = role == KeyRole.Black;
+                        context.DrawRectangle(shaded ^ ThemeManager.IsDarkMode ? Foreground : Background, null, rect);
+                        if (role == KeyRole.Between) {
+                            using (context.PushOpacity(0.5)) {
+                                context.DrawRectangle(ThemeManager.IsDarkMode ? Background : Foreground, null, rect);
+                            }
+                        }
+                    }
                     if (IsKeyboard && TrackHeight >= 12) {
-                        var textBrush = root ? ThemeManager.CenterKeyNameBrush
-                            : accidental ? ThemeManager.BlackKeyNameBrush : ThemeManager.WhiteKeyNameBrush;
+                        var textBrush = root ? ThemeManager.CenterKeyNameBrush : role switch {
+                            KeyRole.Black => ThemeManager.BlackKeyNameBrush,
+                            KeyRole.Between => ThemeManager.BetweenKeyNameBrush,
+                            _ => ThemeManager.WhiteKeyNameBrush,
+                        };
                         string primaryId = PitchNotation.ResolvePrimary(tuning, Preferences.Default.XenPrimaryNotation);
                         string? secondaryId = PitchNotation.ResolveSecondary(tuning, primaryId, Preferences.Default.XenSecondaryNotation);
                         string primary = PitchNotation.Format(tuning, degree, primaryId);

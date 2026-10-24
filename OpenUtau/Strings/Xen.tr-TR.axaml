@@ -49,6 +49,7 @@
   <system:String x:Key="xen.notation.degree">Derece numaraları</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
+  <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
   <system:String x:Key="xen.notation.custom">Özel adlar</system:String>
   <system:String x:Key="xen.notation.none">Yok</system:String>
   <system:String x:Key="xen.notation.auto">Otomatik</system:String>

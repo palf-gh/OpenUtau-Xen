@@ -30,8 +30,12 @@ full first-release acceptance plan is tracked in
   settings and do not change the tuning or the project. Every layout retains continuous
   physical pitch; the compact layout adds rows for existing off-scale notes.
 - Key labels default to Stein–Zimmermann–Gould where a verified table exists (12, 24,
-  31 and 53-EDO and the twelve-note presets) and Ups and Downs for other equal divisions.
-  Natural names are white keys and altered names are black keys.
+  31 and 53-EDO and the twelve-note presets), Bohlen–Pierce Lambda names (C D E F G H J
+  A B) for equal divisions of the tritave, and Ups and Downs for other equal divisions.
+- Keys have three colours: white for naturals, black for sharps and flats, and blue
+  for the microtones between them, following the 31-tone Fokker organ. The layout is
+  derived from each tuning's own generator and scales with the number of divisions
+  ([keyboard specification](docs/microtonal_keyboard_algorithm_spec.md)).
 - The note property **Tone** field accepts a natural plus or minus tuning steps
   (53-EDO: `C4`, `C4+1` … `C4+4`, `D4-4` … `D4-1`, `D4`), spelled names such as
   `C#4` or `Db4`, and relative steps such as `+3`.
@@ -194,8 +198,11 @@ OpenUtau Xen は [OpenUtau](https://github.com/stakira/OpenUtau) を基にした
   プロジェクトは変わりません。どの表示方式でも連続した実際の音高を保ち、圧縮表示では
   スケール外にある既存ノート用の行を加えます。
 - 鍵盤の表記は、検証済みの対応表がある音律（12・24・31・53 平均律と 12 音のプリセット）では
-  Stein–Zimmermann–Gould、ほかの平均律では Ups and Downs を既定にしています。
-  変化記号のない音名は白鍵、変化記号のある音名は黒鍵で表示します。
+  Stein–Zimmermann–Gould、トリターブの等分平均律では Bohlen–Pierce の Lambda 音名
+  （C D E F G H J A B）、ほかの平均律では Ups and Downs を既定にしています。
+- 鍵盤は 3 色で表示します。幹音は白、シャープとフラットは黒、その間の微分音は青で、
+  31 音の Fokker オルガンにならっています。配置は音律ごとの生成音程から計算し、
+  分割数に応じて広がります（[鍵盤の仕様書](docs/microtonal_keyboard_algorithm_spec.md)）。
 - ノートのプロパティの **Tone** 欄には幹音に音律の段数を足し引きした形
   （53 平均律なら `C4`、`C4+1` … `C4+4`、`D4-4` … `D4-1`、`D4`）を入力できます。
   `C#4`・`Db4` のような音名や、`+3` のような相対的な段数も使えます。

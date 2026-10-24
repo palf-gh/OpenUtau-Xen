@@ -49,6 +49,7 @@
   <system:String x:Key="xen.notation.degree">Toontrapnummers</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
+  <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
   <system:String x:Key="xen.notation.custom">Eigen namen</system:String>
   <system:String x:Key="xen.notation.none">Geen</system:String>
   <system:String x:Key="xen.notation.auto">Automatisch</system:String>

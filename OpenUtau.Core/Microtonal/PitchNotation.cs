@@ -9,7 +9,7 @@ namespace OpenUtau.Core.Microtonal {
         public const string Auto = "auto";
         public const string None = "none";
         // Automatic labels prefer user-authored names, then verified accidentals, then Ups and Downs.
-        static readonly string[] AutoOrder = { "custom", "szg", "ups-downs" };
+        static readonly string[] AutoOrder = { "custom", "szg", "bp", "ups-downs" };
         static readonly ConcurrentDictionary<int, IReadOnlyList<NotationProfile>> builtIn = new ConcurrentDictionary<int, IReadOnlyList<NotationProfile>>();
 
         public static string Format(TuningDefinition tuning, int degree, string? notationId = null, bool includePeriod = true) {
@@ -34,9 +34,14 @@ namespace OpenUtau.Core.Microtonal {
         public static NotationProfile? FindProfile(TuningDefinition tuning, string id) {
             var own = tuning.Notations.FirstOrDefault(p => p.Id == id && p.Names.Count > 0);
             if (own != null) return own;
-            if (tuning.Divisions <= 0 || tuning.Divisions > 256 || Math.Abs(tuning.PeriodCents - 1200) > 1e-8) return null;
-            return builtIn.GetOrAdd(tuning.Divisions, n => TuningPresets.EqualDivision(n).Notations)
-                .FirstOrDefault(p => p.Id == id && p.Names.Count > 0);
+            if (tuning.Divisions <= 0 || tuning.Divisions > 256) return null;
+            var theory = KeyboardTheory.For(tuning);
+            if (theory == null) return null;
+            bool octave = theory.ReferenceDivision == 31;
+            var profiles = builtIn.GetOrAdd(octave ? tuning.Divisions : -tuning.Divisions, _ => octave
+                ? TuningPresets.EqualDivision(tuning.Divisions).Notations
+                : TuningPresets.EqualDivision(tuning.Divisions, PitchInterval.FromRatio("3/1")).Notations);
+            return profiles.FirstOrDefault(p => p.Id == id && p.Names.Count > 0);
         }
         public static bool IsAvailable(TuningDefinition tuning, string id) => id == "degree" || FindProfile(tuning, id) != null;
 
@@ -54,20 +59,69 @@ namespace OpenUtau.Core.Microtonal {
             return primary == "degree" ? null : "degree";
         }
 
-        /// <summary>Key colour by degree index, never by physical pitch, so it survives any reference frequency.</summary>
-        public static bool IsAccidental(TuningDefinition tuning, int degree) {
+        /// <summary>
+        /// Key role by degree index, never by physical pitch, so it survives any reference frequency.
+        /// Explicit key classes win; equal divisions of the octave or tritave use the keyboard regioniser;
+        /// other tunings fall back to their note names.
+        /// </summary>
+        public static KeyRole Role(TuningDefinition tuning, int degree) {
             int count = tuning.DegreeCount;
             int index = (degree % count + count) % count;
-            if (tuning.Keyboard.Classes.TryGetValue(index, out string? keyClass)) return keyClass is "accidental" or "secondary";
-            foreach (string id in new[] { "szg", "ups-downs", "custom" }) {
+            if (tuning.Keyboard.Classes.TryGetValue(index, out string? keyClass)) {
+                return keyClass switch {
+                    "accidental" => KeyRole.Black,
+                    "secondary" or "between" => KeyRole.Between,
+                    _ => KeyRole.White,
+                };
+            }
+            var roles = KeyboardRegionizer.Roles(tuning);
+            if (roles != null) return roles[index];
+            foreach (string id in new[] { "szg", "bp", "ups-downs", "custom" }) {
                 var profile = FindProfile(tuning, id);
                 if (profile != null && profile.Names.TryGetValue(index, out string? name)) {
-                    return profile.AccidentalIds.ContainsKey(index) || AccidentalMarks.Any(name.Contains);
+                    return profile.AccidentalIds.ContainsKey(index) || AccidentalMarks.Any(name.Contains) ? KeyRole.Black : KeyRole.White;
                 }
             }
-            return count == 12 && Math.Abs(tuning.PeriodCents - 1200) < 1e-8 && index is 1 or 3 or 6 or 8 or 10;
+            return count == 12 && Math.Abs(tuning.PeriodCents - 1200) < 1e-8 && index is 1 or 3 or 6 or 8 or 10
+                ? KeyRole.Black : KeyRole.White;
         }
         static readonly string[] AccidentalMarks = { "♯", "♭", "↑", "↓", "#", "𝄪", "𝄫" };
+
+        /// <summary>
+        /// Bohlen–Pierce Lambda names for equal divisions of the tritave: nominals C D E F G H J A B,
+        /// sharps and flats of the Lambda chromatic step, and ups and downs for any remainder.
+        /// 13-EDT gives the standard nine naturals and four sharp/flat pairs.
+        /// </summary>
+        public static NotationProfile? BohlenPierce(int divisions) {
+            var theory = KeyboardTheory.Tritave(divisions);
+            if (!theory.IsValid) return null;
+            return Nominal("bp", "Bohlen–Pierce (Lambda)", divisions, theory.Naturals, theory.NaturalNames, theory.Chromatic);
+        }
+
+        static NotationProfile Nominal(string id, string name, int divisions, IReadOnlyList<int> nominalDegrees, IReadOnlyList<string> nominals, int sharp) {
+            int Mod(int value) => (value % divisions + divisions) % divisions;
+            var profile = new NotationProfile { Id = id, Name = name };
+            for (int d = 0; d < divisions; d++) {
+                var candidates = new List<(string Name, int Cost, int Nominal, int PeriodOffset)>();
+                for (int n = 0; n < nominals.Count; n++) for (int accidental = -1; accidental <= 1; accidental++) {
+                    int baseDegree = Mod(nominalDegrees[n] + accidental * sharp);
+                    int arrows = Mod(d - baseDegree);
+                    if (arrows > divisions / 2) arrows -= divisions;
+                    string suffix = accidental == 1 ? "♯" : accidental == -1 ? "♭" : string.Empty;
+                    string prefix = arrows > 0 ? new string('↑', arrows) : new string('↓', -arrows);
+                    int cost = Math.Abs(arrows) * 10 + Math.Abs(accidental) * 4;
+                    if (accidental == 0 && arrows == 0) cost = -100;
+                    int nominalOffset = (int)Math.Floor((double)(d - nominalDegrees[n] - accidental * sharp - arrows) / divisions);
+                    candidates.Add((prefix + nominals[n] + suffix, cost, n, nominalOffset));
+                }
+                var ordered = candidates.OrderBy(c => c.Cost).ThenBy(c => c.Nominal).ThenBy(c => c.Name, StringComparer.Ordinal).ToList();
+                profile.Names[d] = ordered[0].Name;
+                if (ordered[0].PeriodOffset != 0) profile.PeriodOffsets[d] = ordered[0].PeriodOffset;
+                var aliases = ordered.Skip(1).Where(c => c.Cost <= ordered[0].Cost + 10).Select(c => c.Name).Distinct().ToList();
+                if (aliases.Count > 0) profile.Aliases[d] = aliases;
+            }
+            return profile;
+        }
 
         /// <summary>Twelve named keys for C-centred twelve-note presets, in degree order.</summary>
         public static NotationProfile Chromatic(string name, IReadOnlyList<string> names) {

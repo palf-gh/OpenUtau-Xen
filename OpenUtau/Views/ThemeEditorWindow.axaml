@@ -147,6 +147,18 @@
           <TextBlock VerticalAlignment="Center" Text="BlackKeyNameColor"/>
           <ColorPicker Color="{Binding BlackKeyNameColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
         </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="BetweenKeyColorLeft"/>
+          <ColorPicker Color="{Binding BetweenKeyColorLeft}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="BetweenKeyColorRight"/>
+          <ColorPicker Color="{Binding BetweenKeyColorRight}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="BetweenKeyNameColor"/>
+          <ColorPicker Color="{Binding BetweenKeyNameColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
       </StackPanel>
     </ScrollViewer>
     <Grid Grid.Row="1" HorizontalAlignment="Stretch" ColumnDefinitions="*,10,*" Margin="10,0,10,0">

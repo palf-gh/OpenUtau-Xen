@@ -49,6 +49,7 @@
   <system:String x:Key="xen.notation.degree">음도 번호</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
+  <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
   <system:String x:Key="xen.notation.custom">사용자 지정 음이름</system:String>
   <system:String x:Key="xen.notation.none">없음</system:String>
   <system:String x:Key="xen.notation.auto">자동</system:String>

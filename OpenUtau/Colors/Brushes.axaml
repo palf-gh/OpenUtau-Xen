@@ -149,4 +149,12 @@
   </LinearGradientBrush >
   <SolidColorBrush x:Key="BlackKeyNameBrush"
                    Color="{DynamicResource BlackKeyNameColor}"/>
+  <LinearGradientBrush x:Key="BetweenKeyBrush" StartPoint="0%,50%" EndPoint="100%,50%">
+    <LinearGradientBrush.GradientStops>
+      <GradientStop Color="{DynamicResource BetweenKeyColorLeft}" Offset="0"/>
+      <GradientStop Color="{DynamicResource BetweenKeyColorRight}" Offset="1"/>
+    </LinearGradientBrush.GradientStops>
+  </LinearGradientBrush >
+  <SolidColorBrush x:Key="BetweenKeyNameBrush"
+                   Color="{DynamicResource BetweenKeyNameColor}"/>
 </ResourceDictionary>

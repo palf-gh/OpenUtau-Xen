@@ -49,6 +49,7 @@
   <system:String x:Key="xen.notation.degree">Номера ступеней</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
+  <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
   <system:String x:Key="xen.notation.custom">Свои названия</system:String>
   <system:String x:Key="xen.notation.none">Нет</system:String>
   <system:String x:Key="xen.notation.auto">Автоматически</system:String>

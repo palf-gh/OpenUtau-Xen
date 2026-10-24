@@ -45,7 +45,7 @@ namespace OpenUtau.Core.Microtonal {
                 bp.Id = "bohlen-pierce-13edt"; bp.Name = "Bohlen–Pierce (13 equal divisions of 3/1)";
                 bp.Reference = new TuningReference { Degree = 0, Frequency = 440 };
                 bp.Description = "Equal-tempered Bohlen–Pierce: thirteen divisions of a tritave; degree zero is the 440 Hz reference.";
-                bp.Notations.Clear(); bp.Keyboard.PrimaryNotation = "degree";
+
                 all.Add(bp);
                 // A named modern approximation, not a claim that regional performance practice is fixed or equal-tempered.
                 var rast = EqualDivision(24); rast.Id = "rast-24edo-approximation"; rast.Name = "Rast (24-EDO approximation)";
@@ -72,6 +72,12 @@ namespace OpenUtau.Core.Microtonal {
                 tuning.Id = $"{divisions}ed-{tuning.PeriodCents.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}";
                 tuning.Name = $"{divisions}-ED ({periodText})";
                 tuning.Reference.Degree = 0;
+            }
+            if (divisions <= 256 && !octave && Math.Abs(tuning.PeriodCents - 1200 * Math.Log2(3)) < 1e-6
+                && PitchNotation.BohlenPierce(divisions) is NotationProfile lambda) {
+                tuning.Notations.Add(lambda);
+                tuning.Keyboard.PrimaryNotation = "bp";
+                tuning.Keyboard.SecondaryNotation = "degree";
             }
             if (divisions <= 256 && octave) {
                 tuning.Notations.Add(PitchNotation.UpsAndDowns(divisions));

@@ -49,6 +49,7 @@
   <system:String x:Key="xen.notation.degree">Degree numbers</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
+  <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
   <system:String x:Key="xen.notation.custom">Custom names</system:String>
   <system:String x:Key="xen.notation.none">None</system:String>
   <system:String x:Key="xen.notation.auto">Automatic</system:String>

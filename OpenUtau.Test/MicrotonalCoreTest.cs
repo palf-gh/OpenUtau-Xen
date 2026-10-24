@@ -8,7 +8,7 @@ namespace OpenUtau.Test {
         [Fact]
         public void NonOctaveEqualDivisionDoesNotInheritOctaveAccidentals() {
             foreach (int count in new[] { 12, 24, 53 }) {
-                var tuning = TuningPresets.EqualDivision(count, PitchInterval.FromRatio("3/1"));
+                var tuning = TuningPresets.EqualDivision(count, PitchInterval.FromRatio("5/2"));
                 Assert.Empty(tuning.Notations);
                 Assert.Empty(tuning.Keyboard.Classes);
                 Assert.Equal("degree", tuning.Keyboard.PrimaryNotation);

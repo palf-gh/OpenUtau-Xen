@@ -11,7 +11,7 @@ namespace OpenUtau.Core.Microtonal {
     /// notation profiles (C♯4, C#4, D♭4) and bare degree numbers are also accepted.
     /// </summary>
     public static class PitchNameInput {
-        static readonly Regex Named = new Regex(@"^([A-Ga-g])([♯#♭b↑↓^v]*)(\d+)?(?:\s*([+-]\s*\d+))?$", RegexOptions.CultureInvariant);
+        static readonly Regex Named = new Regex(@"^([A-HJa-hj])([♯#♭b↑↓^v]*)(\d+)?(?:\s*([+-]\s*\d+))?$", RegexOptions.CultureInvariant);
         static readonly Regex Numbered = new Regex(@"^(\d+)\s*[·.]\s*(\d+)$", RegexOptions.CultureInvariant);
 
         /// <summary>The nearest natural with a signed step offset; ties prefer the lower natural.</summary>
@@ -91,9 +91,9 @@ namespace OpenUtau.Core.Microtonal {
         static List<(string Name, int Degree)> Naturals(TuningDefinition tuning) => Spellings(tuning)
             .Where(s => s.Name.Length == 1).GroupBy(s => s.Name).Select(g => (g.Key, g.First().Degree)).ToList();
 
-        /// <summary>Plain-text names from custom, verified and Ups and Downs profiles, in that order.</summary>
+        /// <summary>Plain-text names from custom, verified, Bohlen–Pierce and Ups and Downs profiles, in that order.</summary>
         static IEnumerable<(string Name, int Degree, int PeriodOffset)> Spellings(TuningDefinition tuning) {
-            foreach (string id in new[] { "custom", "szg", "ups-downs" }) {
+            foreach (string id in new[] { "custom", "szg", "bp", "ups-downs" }) {
                 var profile = PitchNotation.FindProfile(tuning, id);
                 if (profile == null) continue;
                 foreach (var pair in profile.Names.OrderBy(p => p.Key)) {

@@ -49,6 +49,7 @@
   <system:String x:Key="xen.notation.degree">音級編號</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
+  <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
   <system:String x:Key="xen.notation.custom">自訂音名</system:String>
   <system:String x:Key="xen.notation.none">無</system:String>
   <system:String x:Key="xen.notation.auto">自動</system:String>

@@ -68,7 +68,7 @@ namespace OpenUtau.Test {
             Assert.Equal("C" + PitchNotation.AccidentalGlyph("accidentalQuarterToneSharpStein") + "4", PitchNotation.Format(tuning, 1, "szg"));
             Assert.Equal("C♯4", PitchNotation.Format(tuning, 2, "szg"));
             Assert.Equal("C" + PitchNotation.AccidentalGlyph("accidentalQuarterToneFlatStein") + "5", PitchNotation.Format(tuning, 30, "szg"));
-            var naturals = Enumerable.Range(0, 31).Where(d => !PitchNotation.IsAccidental(tuning, d));
+            var naturals = Enumerable.Range(0, 31).Where(d => PitchNotation.Role(tuning, d) == KeyRole.White);
             Assert.Equal(new[] { 0, 5, 10, 13, 18, 23, 28 }, naturals);
         }
 
@@ -83,19 +83,38 @@ namespace OpenUtau.Test {
             Assert.Equal("degree", PitchNotation.ResolveSecondary(tuning, primary, PitchNotation.Auto));
             Assert.Null(PitchNotation.ResolveSecondary(tuning, primary, PitchNotation.None));
             Assert.Equal("ups-downs", PitchNotation.ResolvePrimary(tuning, "ups-downs"));
-            Assert.True(PitchNotation.IsAccidental(tuning, 1));
-            Assert.False(PitchNotation.IsAccidental(tuning, 18));
+            Assert.Equal(KeyRole.Black, PitchNotation.Role(tuning, 2));
+            Assert.Equal(KeyRole.Between, PitchNotation.Role(tuning, 1));
+            Assert.Equal(KeyRole.White, PitchNotation.Role(tuning, 18));
             Assert.Empty(tuning.Notations);
         }
 
         [Fact]
         public void DegreeLabelsUseIndexWithinPeriod() {
+            var tuning = TuningPresets.EqualDivision(13, PitchInterval.FromRatio("5/2"));
+            Assert.Equal("degree", PitchNotation.ResolvePrimary(tuning, PitchNotation.Auto));
+            Assert.Null(PitchNotation.ResolveSecondary(tuning, "degree", PitchNotation.Auto));
+            Assert.Equal("5·5", PitchNotation.Format(tuning, 18, "degree"));
+            Assert.Equal("5", PitchNotation.Format(tuning, 18, "degree", false));
+            Assert.Equal("12·3", PitchNotation.Format(tuning, -1, "degree"));
+        }
+
+        [Fact]
+        public void BohlenPierceUsesLambdaNames() {
             var bp = TuningPresets.All.Single(t => t.Id == "bohlen-pierce-13edt");
-            Assert.Equal("degree", PitchNotation.ResolvePrimary(bp, PitchNotation.Auto));
-            Assert.Null(PitchNotation.ResolveSecondary(bp, "degree", PitchNotation.Auto));
-            Assert.Equal("5·5", PitchNotation.Format(bp, 18, "degree"));
-            Assert.Equal("5", PitchNotation.Format(bp, 18, "degree", false));
-            Assert.Equal("12·3", PitchNotation.Format(bp, -1, "degree"));
+            Assert.Equal("bp", PitchNotation.ResolvePrimary(bp, PitchNotation.Auto));
+            var names = Enumerable.Range(0, 13).Select(d => PitchNotation.Format(bp, d, "bp", false)).ToArray();
+            Assert.Equal(new[] { "C", "C♯", "D", "E", "F", "F♯", "G", "H", "H♯", "J", "A", "A♯", "B" }, names);
+            Assert.True(PitchNameInput.TryParse(bp, "J♭4", 0, out int jFlat), "J♭4");
+            Assert.Equal(8, jFlat);
+            Assert.Equal("H4", PitchNameInput.Format(bp, 7));
+            var edt = TuningPresets.EqualDivision(31, PitchInterval.FromRatio("3/1"));
+            Assert.Equal("bp", PitchNotation.ResolvePrimary(edt, PitchNotation.Auto));
+            for (int degree = -31; degree <= 62; degree++) {
+                string text = PitchNameInput.Format(edt, degree);
+                Assert.True(PitchNameInput.TryParse(edt, text, 0, out int parsed), text);
+                Assert.Equal(degree, parsed);
+            }
         }
 
         [Theory]
@@ -104,7 +123,7 @@ namespace OpenUtau.Test {
         public void TwelveNotePresetsColourKeysByDegree(double frequency) {
             foreach (var tuning in TuningPresets.All.Where(t => t.DegreeCount == 12)) {
                 tuning.Reference.Frequency = frequency;
-                var accidentals = Enumerable.Range(0, 12).Where(d => PitchNotation.IsAccidental(tuning, d)).ToArray();
+                var accidentals = Enumerable.Range(0, 12).Where(d => PitchNotation.Role(tuning, d) == KeyRole.Black).ToArray();
                 Assert.True(new[] { 1, 3, 6, 8, 10 }.SequenceEqual(accidentals), tuning.Id);
                 Assert.NotEqual("degree", PitchNotation.ResolvePrimary(tuning, PitchNotation.Auto));
             }
