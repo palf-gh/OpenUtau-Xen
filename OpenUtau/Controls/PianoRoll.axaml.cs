@@ -354,6 +354,12 @@ namespace OpenUtau.App.Controls {
             } catch { }
         }
 
+        async void OnMenuTuning(object sender, RoutedEventArgs args) {
+            await new TuningDialog(ViewModel.NotesViewModel).ShowDialog(RootWindow);
+        }
+        async void OnMenuMidiInput(object sender, RoutedEventArgs args) {
+            await new MidiInputDialog(ViewModel.NotesViewModel).ShowDialog(RootWindow);
+        }
         void OnMenuSearchNote(object sender, RoutedEventArgs args) {
             SearchNote();
         }
@@ -1691,6 +1697,10 @@ namespace OpenUtau.App.Controls {
                 #region navigate keys
                 // NAVIGATE/EDIT/SELECT HANDLERS
                 case Key.Up:
+                    if (isAlt) {
+                        notesVm.TransposeRawSelection(1);
+                        return true;
+                    }
                     if (isNone) {
                         notesVm.TransposeSelection(1);
                         return true;
@@ -1701,6 +1711,10 @@ namespace OpenUtau.App.Controls {
                     }
                     break;
                 case Key.Down:
+                    if (isAlt) {
+                        notesVm.TransposeRawSelection(-1);
+                        return true;
+                    }
                     if (isNone) {
                         notesVm.TransposeSelection(-1);
                         return true;
@@ -2003,7 +2017,7 @@ namespace OpenUtau.App.Controls {
                         double y = 0;
                         if (!notesVm.Selection.IsEmpty) {
                             x = (notesVm.Selection.Head!.position - notesVm.TickOffset) / notesVm.ViewportTicks;
-                            y = (ViewConstants.MaxTone - 1 - notesVm.Selection.Head.tone - notesVm.TrackOffset) / notesVm.ViewportTracks;
+                        y = (notesVm.TrackCount - 1 - notesVm.RowMapper.RowAtMidi(notesVm.Selection.Head.AdjustedTone) - notesVm.TrackOffset) / notesVm.ViewportTracks;
                         } else if (notesVm.TickOffset != 0) {
                             x = 0.5;
                             y = 0.5;
@@ -2019,7 +2033,7 @@ namespace OpenUtau.App.Controls {
                         double y = 0;
                         if (!notesVm.Selection.IsEmpty) {
                             x = (notesVm.Selection.Head!.position - notesVm.TickOffset) / notesVm.ViewportTicks;
-                            y = (ViewConstants.MaxTone - 1 - notesVm.Selection.Head.tone - notesVm.TrackOffset) / notesVm.ViewportTracks;
+                        y = (notesVm.TrackCount - 1 - notesVm.RowMapper.RowAtMidi(notesVm.Selection.Head.AdjustedTone) - notesVm.TrackOffset) / notesVm.ViewportTracks;
                         } else if (notesVm.TickOffset != 0) {
                             x = 0.5;
                             y = 0.5;

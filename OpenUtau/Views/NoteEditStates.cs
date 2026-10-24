@@ -9,6 +9,7 @@ using OpenUtau.App.Controls;
 using OpenUtau.App.ViewModels;
 using OpenUtau.Classic;
 using OpenUtau.Core;
+using OpenUtau.Core.Microtonal;
 using OpenUtau.Core.Format;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
@@ -17,7 +18,7 @@ namespace OpenUtau.App.Views {
     class KeyboardPlayState {
         private readonly TrackBackground element;
         private readonly PianoRollViewModel vm;
-        private int activeTone;
+        private double activeTone;
 
         public KeyboardPlayState(TrackBackground element, PianoRollViewModel vm) {
             this.element = element;
@@ -25,12 +26,12 @@ namespace OpenUtau.App.Views {
         }
         public void Begin(IPointer pointer, Point point) {
             pointer.Capture(element);
-            var tone = vm.NotesViewModel.PointToTone(point);
+            var tone = vm.NotesViewModel.PointToSnappedTone(point);
             PlaybackManager.Inst.PlayTone(MusicMath.ToneToFreq(tone));
             activeTone = tone;
         }
         public void Update(IPointer pointer, Point point) {
-            var tone = vm.NotesViewModel.PointToTone(point);
+            var tone = vm.NotesViewModel.PointToSnappedTone(point);
             if (activeTone != tone) {
                 PlaybackManager.Inst.EndTone(MusicMath.ToneToFreq(activeTone));
                 PlaybackManager.Inst.PlayTone(MusicMath.ToneToFreq(tone));
@@ -63,6 +64,7 @@ namespace OpenUtau.App.Views {
             this.valueTip = valueTip;
         }
         public virtual void Begin(IPointer pointer, Point point) {
+            vm.NotesViewModel.BeginPitchGesture();
             pointer.Capture(control);
             startPoint = point;
             DocManager.Inst.StartUndoGroup(commandNameKey);
@@ -73,6 +75,7 @@ namespace OpenUtau.App.Views {
         public virtual void End(IPointer pointer, Point point) {
             pointer.Capture(null);
             DocManager.Inst.EndUndoGroup();
+            vm.NotesViewModel.EndPitchGesture();
             if (ShowValueTip) {
                 valueTip.HideValueTip();
             }
@@ -94,7 +97,7 @@ namespace OpenUtau.App.Views {
         public readonly Rectangle selectionBox;
         protected override bool ShowValueTip => false;
         private int startTick;
-        private int startTone;
+        private double startTone;
 
         public NoteSelectionEditState(
             Control control,
@@ -109,7 +112,7 @@ namespace OpenUtau.App.Views {
             selectionBox.IsVisible = true;
             var notesVm = vm.NotesViewModel;
             startTick = notesVm.PointToTick(point);
-            startTone = notesVm.PointToTone(point);
+            startTone = notesVm.PointToToneDouble(point);
         }
         public override void End(IPointer pointer, Point point) {
             pointer.Capture(null);
@@ -120,18 +123,19 @@ namespace OpenUtau.App.Views {
         public override void Update(IPointer pointer, Point point) {
             var notesVm = vm.NotesViewModel;
             int tick = notesVm.PointToTick(point);
-            int tone = notesVm.PointToTone(point);
+            double tone = notesVm.PointToToneDouble(point);
 
             int minTick = Math.Min(tick, startTick);
             int maxTick = Math.Max(tick, startTick);
             notesVm.TickToLineTick(minTick, out int x0, out int _);
             notesVm.TickToLineTick(maxTick, out int _, out int x1);
 
-            int y0 = Math.Min(tone, startTone) - 1;
-            int y1 = Math.Max(tone, startTone);
+            double y0 = Math.Min(tone, startTone);
+            double y1 = Math.Max(tone, startTone);
 
             var leftTop = notesVm.TickToneToPoint(x0, y1);
-            var Size = notesVm.TickToneToSize(x1 - x0, y1 - y0);
+            var Size = new Size((x1 - x0) * notesVm.TickWidth,
+                Math.Abs(notesVm.RowMapper.RowAtMidi(y1) - notesVm.RowMapper.RowAtMidi(y0)) * notesVm.TrackHeight);
             Canvas.SetLeft(selectionBox, leftTop.X);
             Canvas.SetTop(selectionBox, leftTop.Y);
             selectionBox.Width = Size.Width + 1;
@@ -143,6 +147,7 @@ namespace OpenUtau.App.Views {
     class NoteMoveEditState : NoteEditState {
         public readonly UNote note;
         private double xOffset;
+        private PitchRowDragAnchor pitchAnchor;
         protected override bool ShowValueTip => false;
         protected override string? commandNameKey => "command.note.move";
 
@@ -161,6 +166,7 @@ namespace OpenUtau.App.Views {
             base.Begin(pointer, point);
             var notesVm = vm.NotesViewModel;
             xOffset = point.X - notesVm.TickToneToPoint(note.position, 0).X;
+            pitchAnchor = new PitchRowDragAnchor(notesVm.PointToRow(point), notesVm.RowMapper.RowAtMidi(note.ResolvedTone));
         }
         public override void Update(IPointer pointer, Point point) {
             var delta = point - startPoint;
@@ -174,18 +180,8 @@ namespace OpenUtau.App.Views {
                 return;
             }
 
-            int deltaTone = notesVm.PointToTone(point) - note.tone;
-            int minDeltaTone;
-            int maxDeltaTone;
+            int deltaTone = pitchAnchor.Delta(notesVm.PointToRow(point), notesVm.RowMapper.RowAtMidi(note.ResolvedTone));
             var selectedNotes = notesVm.Selection.ToList();
-            if (selectedNotes.Count > 0) {
-                minDeltaTone = -selectedNotes.Select(p => p.tone).Min();
-                maxDeltaTone = ViewConstants.MaxTone - 1 - selectedNotes.Select(p => p.tone).Max();
-            } else {
-                minDeltaTone = -note.tone;
-                maxDeltaTone = ViewConstants.MaxTone - 1 - note.tone;
-            }
-            deltaTone = Math.Clamp(deltaTone, minDeltaTone, maxDeltaTone);
 
             int snapUnit = project.resolution * 4 / notesVm.SnapDiv;
             int newPos = notesVm.PointToTick(point - new Point(xOffset, 0));
@@ -207,20 +203,14 @@ namespace OpenUtau.App.Views {
             if (deltaTone == 0 && deltaTick == 0) {
                 return;
             }
-            if (selectedNotes.Count == 0) {
-                DocManager.Inst.ExecuteCmd(new MoveNoteCommand(
-                    part, note, deltaTick, deltaTone));
-            } else {
-                DocManager.Inst.ExecuteCmd(new MoveNoteCommand(
-                    part, selectedNotes, deltaTick, deltaTone));
-            }
+            notesVm.MoveNoteRows(note, deltaTone, deltaTick, selectedNotes.Count == 0 ? new[] { note } : selectedNotes);
         }
     }
 
     class NoteDrawEditState : NoteEditState {
         private UNote? note;
         private bool playTone;
-        private int activeTone;
+        private double activeTone;
         protected override string? commandNameKey => "command.note.add";
 
         public NoteDrawEditState(
@@ -238,8 +228,8 @@ namespace OpenUtau.App.Views {
                     // Stop playback if playing project
                     PlaybackManager.Inst.StopPlayback();
                 }
-                activeTone = note.tone;
-                PlaybackManager.Inst.PlayTone(MusicMath.ToneToFreq(note.tone));
+                activeTone = note.AdjustedTone;
+                PlaybackManager.Inst.PlayTone(MusicMath.ToneToFreq(activeTone));
             }
             if (note != null) {
                 var prev = vm.NotesViewModel.Part!.notes.FirstOrDefault(n => n.position < note.position && note.position < n.End);
@@ -258,14 +248,14 @@ namespace OpenUtau.App.Views {
             if (part == null) {
                 return;
             }
-            int tone = notesVm.PointToTone(point);
-            if (activeTone != tone) {
+            double tone = notesVm.PointToSnappedTone(point);
+            if (playTone && activeTone != tone) {
                 // Tone has changed
                 PlaybackManager.Inst.EndTone(MusicMath.ToneToFreq(activeTone));
                 PlaybackManager.Inst.PlayTone(MusicMath.ToneToFreq(tone));
                 activeTone = tone;
             }
-            int deltaTone = tone - note.tone;
+            bool changeTone = Math.Abs(tone - note.ResolvedTone) > 1e-8;
             int snapUnit = project.resolution * 4 / notesVm.SnapDiv;
             int newEnd = notesVm.PointToTick(point);
             if (notesVm.IsSnapOn) {
@@ -283,8 +273,8 @@ namespace OpenUtau.App.Views {
                 }
                 deltaDuration = Math.Max(deltaDuration, -maxNegDelta);
             }
-            if (deltaTone != 0) {
-                DocManager.Inst.ExecuteCmd(new MoveNoteCommand(part, note, 0, deltaTone));
+            if (changeTone) {
+                DocManager.Inst.ExecuteCmd(new SetNotePitchAddressCommand(part, note, notesVm.PointToPitchAddress(point)));
             }
             if (deltaDuration != 0) {
                 DocManager.Inst.ExecuteCmd(new ResizeNoteCommand(part, note, deltaDuration));
@@ -1028,8 +1018,8 @@ namespace OpenUtau.App.Views {
         }
         public override void Update(IPointer pointer, Point point) {
             var notesVm = vm.NotesViewModel;
-            float tone = (float)notesVm.PointToToneDouble(point) - 0.5f;
-            float newDepth = note.vibrato.ToneToDepth(note, tone);
+            float newDepth = (float)((notesVm.PointToToneDouble(point.WithY(point.Y - 3 * notesVm.TrackHeight))
+                - note.AdjustedTone) * 50);
             if (newDepth != note.vibrato.depth && notesVm.Part != null) {
                 DocManager.Inst.ExecuteCmd(new VibratoDepthCommand(notesVm.Part, note, newDepth));
             }
@@ -1530,7 +1520,7 @@ namespace OpenUtau.App.Views {
 
             var pts = new Points();
             foreach (var (tick, tone) in ComputeSamples(start, end, 1)) {
-                pts.Add(notesVm.TickToneToPoint(tick, tone - 0.5));
+                pts.Add(notesVm.TickToneToCentrePoint(tick, tone));
             }
             previewLine.Points = pts;
         }

@@ -77,7 +77,7 @@ namespace OpenUtau.App.ViewModels {
                 result.note = note;
                 result.hitX = true;
                 var tone = viewModel.PointToToneDouble(point);
-                if (tone > note.AdjustedTone + 0.5 || tone < note.AdjustedTone - 0.5) {
+                if (Math.Abs(viewModel.PointToRow(point) - viewModel.RowMapper.RowAtMidi(note.AdjustedTone)) > 0.5) {
                     continue;
                 }
                 result.hitBody = true;
@@ -212,20 +212,25 @@ namespace OpenUtau.App.ViewModels {
                                 y2 = pitPoint2.Y + viewModel.TrackHeight / 2;
                             }
                             curve = new CubicSplineSegment(
-                                        x_1, y_1,
-                                        lastX, lastY,
-                                        x, y,
-                                        x2, y2);
-                            castY = curve.GetY(point.X) - point.Y;
+                            x_1, viewModel.PointToToneDouble(new Point(x_1, y_1)),
+                            lastX, viewModel.PointToToneDouble(new Point(lastX, lastY)),
+                            x, viewModel.PointToToneDouble(new Point(x, y)),
+                            x2, viewModel.PointToToneDouble(new Point(x2, y2)));
+                        castY = viewModel.TickToneToCentrePoint(0, curve.GetY(point.X)).Y - point.Y;
                         } else {
                             if (y >= lastY) {
                                 if (point.Y - y > 3 || lastY - point.Y > 3) break;
                             } else {
                                 if (y - point.Y > 3 || point.Y - lastY > 3) break;
                             }
-                            castY = MusicMath.InterpolateShape(lastX, x, lastY, y, point.X, lastShape) - point.Y;
+                        double castTone = MusicMath.InterpolateShape(lastX, x,
+                            viewModel.PointToToneDouble(new Point(lastX, lastY)),
+                            viewModel.PointToToneDouble(new Point(x, y)), point.X, lastShape);
+                        castY = viewModel.TickToneToCentrePoint(0, castTone).Y - point.Y;
                         }
-                        double castX = (curve?.GetX(point.Y) ?? MusicMath.InterpolateShapeX(lastX, x, lastY, y, point.Y, lastShape)) - point.X;
+                    double castX = (curve?.GetX(viewModel.PointToToneDouble(point)) ?? MusicMath.InterpolateShapeX(lastX, x,
+                        viewModel.PointToToneDouble(new Point(lastX, lastY)), viewModel.PointToToneDouble(new Point(x, y)),
+                        viewModel.PointToToneDouble(point), lastShape)) - point.X;
                         double dis = double.IsNaN(castX) ? Math.Abs(castY) : Math.Cos(Math.Atan2(Math.Abs(castY), Math.Abs(castX))) * Math.Abs(castY);
                         if (dis < 3) {
                             double msX = timeAxis.TickPosToMsPos(viewModel.PointToTick(point) + viewModel.Part.position) - note.PositionMs;
@@ -305,7 +310,7 @@ namespace OpenUtau.App.ViewModels {
                 }
                 result.note = note;
                 UVibrato vibrato = note.vibrato;
-                Point toggle = viewModel.TickToneToPoint(vibrato.GetToggle(note));
+                Point toggle = viewModel.VibratoTogglePoint(note);
                 toggle = toggle.WithX(toggle.X - 10);
                 if (WithIn(toggle, mousePos, 5)) {
                     result.hit = true;
@@ -315,9 +320,9 @@ namespace OpenUtau.App.ViewModels {
                 if (vibrato.length == 0) {
                     continue;
                 }
-                Point start = viewModel.TickToneToPoint(vibrato.GetEnvelopeStart(note));
-                Point fadeIn = viewModel.TickToneToPoint(vibrato.GetEnvelopeFadeIn(note));
-                Point fadeOut = viewModel.TickToneToPoint(vibrato.GetEnvelopeFadeOut(note));
+                Point start = viewModel.VibratoEnvelopePoint(note, vibrato.GetEnvelopeStart(note));
+                Point fadeIn = viewModel.VibratoEnvelopePoint(note, vibrato.GetEnvelopeFadeIn(note));
+                Point fadeOut = viewModel.VibratoEnvelopePoint(note, vibrato.GetEnvelopeFadeOut(note));
                 if (WithIn(start, mousePos, 3)) {
                     result.hit = true;
                     result.hitStart = true;
@@ -333,8 +338,8 @@ namespace OpenUtau.App.ViewModels {
                 }
 
                 vibrato.GetPeriodStartEnd(DocManager.Inst.Project, note, out var periodStartPos, out var periodEndPos);
-                Point periodStart = viewModel.TickToneToPoint(periodStartPos);
-                Point periodEnd = viewModel.TickToneToPoint(periodEndPos);
+                Point periodStart = viewModel.VibratoPeriodPoint(note, periodStartPos);
+                Point periodEnd = viewModel.VibratoPeriodPoint(note, periodEndPos);
                 if (Math.Abs(mousePos.Y - periodEnd.Y) < viewModel.TrackHeight / 6) {
                     if (Math.Abs(mousePos.X - periodEnd.X) < 3) {
                         result.hit = true;

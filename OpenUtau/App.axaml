@@ -20,6 +20,7 @@
       <ResourceInclude x:Key="strings-nl-NL" Source="/Strings/Strings.nl-NL.axaml"/>
       <ResourceInclude x:Key="strings-pl-PL" Source="/Strings/Strings.pl-PL.axaml"/>
       <ResourceInclude x:Key="strings-pt-BR" Source="/Strings/Strings.pt-BR.axaml"/>
+      <ResourceInclude x:Key="strings-ro-RO" Source="/Strings/Strings.ro-RO.axaml"/>
       <ResourceInclude x:Key="strings-ru-RU" Source="/Strings/Strings.ru-RU.axaml"/>
       <ResourceInclude x:Key="strings-vi-VN" Source="/Strings/Strings.vi-VN.axaml"/>
       <ResourceInclude x:Key="strings-zh-CN" Source="/Strings/Strings.zh-CN.axaml"/>

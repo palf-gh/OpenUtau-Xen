@@ -19,7 +19,10 @@ namespace OpenUtau.App {
         private static int NSAppInitState;
         #endif
         public static FilePickerFileType ProjectFiles { get; } = new("Project Files") {
-            Patterns = new[] { "*.ustx", "*.vsqx", "*.ust", "*.mid", "*.midi", "*.ufdata", "*.musicxml", "*.svp" },
+            Patterns = new[] { "*.ustxen", "*.ustx", "*.vsqx", "*.ust", "*.mid", "*.midi", "*.ufdata", "*.musicxml", "*.svp" },
+        };
+        public static FilePickerFileType USTXEN { get; } = new("OpenUtau Xen") {
+            Patterns = new[] { "*.ustxen" },
         };
         public static FilePickerFileType USTX { get; } = new("USTX") {
             Patterns = new[] { "*.ustx" },
@@ -249,6 +252,7 @@ namespace OpenUtau.App {
                      ShowOverwritePrompt = true,
                      SuggestedStartLocation = location,
                      SuggestedFileName = filename,
+                     DefaultExtension = types.FirstOrDefault() == USTXEN ? "ustxen" : null,
                  });
             return file?.TryGetLocalPath();
         }

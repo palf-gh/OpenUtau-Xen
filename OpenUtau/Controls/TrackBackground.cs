@@ -5,6 +5,8 @@ using Avalonia;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using OpenUtau.Core;
+using OpenUtau.Core.Microtonal;
+using OpenUtau.App.ViewModels;
 using OpenUtau.Core.Util;
 using ReactiveUI;
 using ReactiveUI.Primitives;
@@ -67,6 +69,8 @@ namespace OpenUtau.App.Controls {
         public TrackBackground() {
             MessageBus.Current.Listen<ThemeChangedEvent>()
                 .Subscribe(e => InvalidateVisual());
+            MessageBus.Current.Listen<NotesRefreshEvent>()
+                .Subscribe(e => InvalidateVisual());
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
@@ -85,6 +89,10 @@ namespace OpenUtau.App.Controls {
 
         public override void Render(DrawingContext context) {
             if (TrackHeight == 0) {
+                return;
+            }
+            if (IsPianoRoll && DataContext is NotesViewModel notes) {
+                RenderTuning(context, notes);
                 return;
             }
             int track = (int)TrackOffset;
@@ -132,6 +140,55 @@ namespace OpenUtau.App.Controls {
                     }
                 }
                 track++;
+                top += TrackHeight;
+            }
+        }
+
+        private void RenderTuning(DrawingContext context, NotesViewModel notes) {
+            var mapper = notes.RowMapper;
+            var tuning = notes.EffectiveTuning;
+            int topRow = (int)TrackOffset;
+            double top = TrackHeight * (topRow - TrackOffset);
+            while (top < Bounds.Height) {
+                int row = mapper.Count - 1 - topRow;
+                if (row >= 0 && row < mapper.Count) {
+                    int degree = mapper.DegreeAtRow(row);
+                    int periodDegree = mod(degree, tuning.DegreeCount);
+                    bool active = mapper.IsScaleRow(row);
+                    bool root = periodDegree == 0;
+                    bool accidental = tuning.Keyboard.Classes.TryGetValue(periodDegree, out string? keyClass)
+                        ? keyClass == "accidental" || keyClass == "secondary"
+                        : tuning.DegreeCount == 12 && MusicMath.IsBlackKey((int)Math.Round(mapper.MidiAtRow(row)));
+                    var brush = IsKeyboard
+                        ? (root ? ThemeManager.CenterKeyBrush : accidental ? ThemeManager.BlackKeyBrush : ThemeManager.WhiteKeyBrush)
+                        : (tuning.Keyboard.Mode == PitchDisplayMode.ScaleHighlight && active ? ThemeManager.CenterKeyBrush
+                            : (accidental ^ ThemeManager.IsDarkMode ? Foreground : Background));
+                    context.DrawRectangle(brush, null, new Rect(0, Math.Floor(top), Bounds.Width, TrackHeight));
+                    if (IsKeyboard && TrackHeight >= 12) {
+                        var textBrush = root ? ThemeManager.CenterKeyNameBrush
+                            : accidental ? ThemeManager.BlackKeyNameBrush : ThemeManager.WhiteKeyNameBrush;
+                        string primary = PitchNotation.Format(tuning, degree, tuning.Keyboard.PrimaryNotation);
+                        string? secondary = string.IsNullOrEmpty(tuning.Keyboard.SecondaryNotation) ? null
+                            : PitchNotation.Format(tuning, degree, tuning.Keyboard.SecondaryNotation);
+                        double primarySize = TrackHeight >= 22 ? 12 : 10;
+                        bool dual = secondary != null && secondary != primary && TrackHeight >= 24;
+                        using (context.PushClip(new Rect(secondary != null && !dual ? 27 : 0, top,
+                            Math.Max(1, Bounds.Width - (secondary != null && !dual ? 27 : 0)), TrackHeight))) {
+                            PitchLabelLayout.Draw(context, primary, textBrush, primarySize, Bounds.Width - 5,
+                                top, dual ? TrackHeight * 0.58 : TrackHeight);
+                        }
+                        if (secondary != null && secondary != primary && TrackHeight >= 24) {
+                            PitchLabelLayout.Draw(context, secondary, textBrush, 9, Bounds.Width - 5,
+                                top + TrackHeight * 0.55, TrackHeight * 0.45);
+                        }
+                        else if (secondary != null && secondary != primary) {
+                            using (context.PushClip(new Rect(0, top, 26, TrackHeight))) {
+                                PitchLabelLayout.Draw(context, secondary, textBrush, 8, 25, top, TrackHeight);
+                            }
+                        }
+                    }
+                }
+                topRow++;
                 top += TrackHeight;
             }
         }

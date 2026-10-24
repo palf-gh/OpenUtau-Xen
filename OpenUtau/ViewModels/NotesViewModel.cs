@@ -13,6 +13,7 @@ using DynamicData;
 using DynamicData.Binding;
 using OpenUtau.App.Views;
 using OpenUtau.Core;
+using OpenUtau.Core.Microtonal;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using OpenUtau.ViewModels;
@@ -38,7 +39,78 @@ namespace OpenUtau.App.ViewModels {
     public partial class NotesViewModel : ViewModelBase, ICmdSubscriber {
         [Reactive] public partial Rect Bounds { get; set; }
         public int TickCount => Part?.Duration ?? 480 * 4;
-        public int TrackCount => ViewConstants.MaxTone;
+        public int TrackCount => RowMapper.Count;
+        public TuningDefinition EffectiveTuning => Part != null && Part.trackNo >= 0 && Part.trackNo < Project.tracks.Count
+            ? Project.tracks[Part.trackNo].pitchSystem ?? Project.pitchSystem
+            : Project.pitchSystem;
+        PitchRowMapper? rowMapper;
+        bool pitchGesture;
+        public PitchRowMapper RowMapper => rowMapper ??= BuildRowMapper();
+        PitchRowMapper BuildRowMapper() {
+            var tuning = EffectiveTuning;
+            var scale = tuning.Scales.FirstOrDefault(s => s.Id == tuning.Keyboard.ActiveScaleId);
+            var supplementary = Part?.notes.Select(n => n.pitchAddress?.Degree
+                ?? PitchResolver.NearestAddress(tuning, n.tone).Degree).ToArray();
+            return new PitchRowMapper(tuning, tuning.Keyboard.Mode, scale?.Degrees, supplementary);
+        }
+        public void BeginPitchGesture() { _ = RowMapper; pitchGesture = true; }
+        public void EndPitchGesture() { pitchGesture = false; RefreshPitchRows(); }
+        public void RefreshPitchRows() {
+            if (pitchGesture) return;
+            double centre = rowMapper == null ? 60 : rowMapper.MidiAtRow(rowMapper.Count - 1 - TrackOffset - ViewportTracks / 2);
+            rowMapper = BuildRowMapper();
+            TrackOffset = Math.Clamp(rowMapper.Count - 1 - rowMapper.RowAtMidi(centre) - ViewportTracks / 2, 0, VScrollBarMax);
+            this.RaisePropertyChanged(nameof(RowMapper));
+            this.RaisePropertyChanged(nameof(EffectiveTuning));
+            Notify();
+            MessageBus.Current.SendMessage(new NotesRefreshEvent());
+        }
+        public double PointToRow(Point point) => TrackCount - 1 - (point.Y / TrackHeight + TrackOffset) + 0.5;
+        public PitchAddress PointToPitchAddress(Point point) => RowMapper.AddressAtRow(PointToRow(point));
+        public double PointToSnappedTone(Point point) => PitchResolver.ResolveMidi(EffectiveTuning, PointToPitchAddress(point));
+        public Point TickToneToCentrePoint(double tick, double tone) {
+            var point = TickToneToPoint(tick, tone);
+            return point.WithY(point.Y + TrackHeight / 2);
+        }
+        public Point VibratoTogglePoint(UNote note) {
+            var point = TickToneToCentrePoint(note.End, note.AdjustedTone);
+            return point.WithY(point.Y + 1.5 * TrackHeight);
+        }
+        public Point VibratoEnvelopePoint(UNote note, Vector2 point) {
+            double amplitude = point.Y - note.tone + 3;
+            var mapped = TickToneToCentrePoint(point.X, note.AdjustedTone + amplitude);
+            return mapped.WithY(mapped.Y + 3 * TrackHeight);
+        }
+        public Point VibratoPeriodPoint(UNote note, Vector2 point) {
+            var mapped = TickToneToCentrePoint(point.X, note.AdjustedTone);
+            return mapped.WithY(mapped.Y + 3.5 * TrackHeight);
+        }
+        public void MoveNoteRows(UNote anchor, int rowDelta, int deltaTick, IEnumerable<UNote>? selection = null) {
+            if (Part == null) return;
+            var notes = (selection ?? new[] { anchor }).ToList();
+            if (notes.Count == 0) return;
+            bool alreadyFrozen = pitchGesture;
+            BeginPitchGesture();
+            try {
+            int min = notes.Min(n => (int)Math.Round(RowMapper.RowAtMidi(n.ResolvedTone)));
+            int max = notes.Max(n => (int)Math.Round(RowMapper.RowAtMidi(n.ResolvedTone)));
+            rowDelta = Math.Clamp(rowDelta, -min, RowMapper.Count - 1 - max);
+            var moves = notes.Select(note => (note, address: RowMapper.AddressAtRow(RowMapper.RowAtMidi(note.ResolvedTone) + rowDelta))).ToArray();
+            if (rowDelta != 0) foreach (var move in moves) DocManager.Inst.ExecuteCmd(new SetNotePitchAddressCommand(Part, move.note, move.address));
+            if (deltaTick != 0) DocManager.Inst.ExecuteCmd(new MoveNoteCommand(Part, notes, deltaTick, 0));
+            } finally { if (!alreadyFrozen) EndPitchGesture(); }
+        }
+        public void TransposeRawSelection(int deltaDegree) {
+            if (Part == null || Selection.IsEmpty) return;
+            DocManager.Inst.StartUndoGroup("command.note.move");
+            try {
+                foreach (var note in Selection.ToList()) {
+                    var address = note.pitchAddress?.Clone() ?? PitchResolver.NearestAddress(EffectiveTuning, note.ResolvedTone, true);
+                    address.Degree += deltaDegree;
+                    DocManager.Inst.ExecuteCmd(new SetNotePitchAddressCommand(Part, note, address));
+                }
+            } finally { DocManager.Inst.EndUndoGroup(); }
+        }
         [Reactive] public partial double TickWidth { get; set; }
         public double TrackHeightMin => ViewConstants.NoteHeightMin;
         public double TrackHeightMax => ViewConstants.NoteHeightMax;
@@ -416,15 +488,15 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public int PointToTone(Point point) {
-            return ViewConstants.MaxTone - 1 - (int)(point.Y / TrackHeight + TrackOffset);
+            return (int)Math.Round(PointToSnappedTone(point), MidpointRounding.AwayFromZero);
         }
         public double PointToToneDouble(Point point) {
-            return ViewConstants.MaxTone - 1 - (point.Y / TrackHeight + TrackOffset) + 0.5;
+            return RowMapper.MidiAtRow(PointToRow(point));
         }
         public Point TickToneToPoint(double tick, double tone) {
             return new Point(
                 (tick - TickOffset) * TickWidth,
-                (ViewConstants.MaxTone - 1 - tone - TrackOffset) * TrackHeight);
+                (TrackCount - 1 - RowMapper.RowAtMidi(tone) - TrackOffset) * TrackHeight);
         }
         public Point TickToneToPoint(Vector2 tickTone) {
             return TickToneToPoint(tickTone.X, tickTone.Y);
@@ -447,6 +519,8 @@ namespace OpenUtau.App.ViewModels {
             int snappedTick = (int)Math.Floor((double)tick / snapUnit) * snapUnit;
             UNote note = project.CreateNote(tone, snappedTick,
                 useLastLength ? _lastNoteLength : IsSnapOn ? snapUnit : 15);
+            note.pitchAddress = PointToPitchAddress(point);
+            note.RefreshPitch(project, project.tracks[Part.trackNo]);
             DocManager.Inst.ExecuteCmd(new AddNoteCommand(Part, note));
             return note;
         }
@@ -457,6 +531,7 @@ namespace OpenUtau.App.ViewModels {
             }
             UnloadPart();
             Part = part as UVoicePart;
+            RefreshPitchRows();
             OnPartModified();
             RebuildPlaybackNoteIndex();
             LoadPortrait(part, project);
@@ -710,12 +785,12 @@ namespace OpenUtau.App.ViewModels {
             }
         }
 
-        public void TempSelectNotes(int x0, int x1, int y0, int y1) {
+        public void TempSelectNotes(int x0, int x1, double y0, double y1) {
             if (Part == null) {
                 return;
             }
             var tempNotes = Part.notes
-                .Where(note => note.End > x0 && note.position < x1 && note.tone > y0 && note.tone <= y1)
+                .Where(note => note.End > x0 && note.position < x1 && note.AdjustedTone > y0 && note.AdjustedTone <= y1)
                 .ToList();
 
             Selection.SetTemporarySelection(tempNotes);
@@ -750,6 +825,8 @@ namespace OpenUtau.App.ViewModels {
             int dur = fromNote?.duration ?? snapUnit;
             DocManager.Inst.StartUndoGroup("command.note.add");
             UNote note = DocManager.Inst.Project.CreateNote(tone, tick, dur);
+            note.pitchAddress = fromNote?.pitchAddress?.Clone() ?? PitchResolver.NearestAddress(EffectiveTuning, tone);
+            note.RefreshPitch(project, project.tracks[Part.trackNo]);
             DocManager.Inst.ExecuteCmd(new AddNoteCommand(Part, note));
             SelectNote(note);
             DocManager.Inst.EndUndoGroup();
@@ -760,11 +837,16 @@ namespace OpenUtau.App.ViewModels {
                 return;
             }
             var selectedNotes = Selection.ToList();
-            if (selectedNotes.Any(note => note.tone + deltaNoteNum <= 0 || note.tone + deltaNoteNum >= ViewConstants.MaxTone)) {
-                return;
-            }
             DocManager.Inst.StartUndoGroup("command.note.move");
-            DocManager.Inst.ExecuteCmd(new MoveNoteCommand(Part, selectedNotes, 0, deltaNoteNum));
+            if (Math.Abs(deltaNoteNum) == 12) {
+                foreach (var note in selectedNotes) {
+                    var address = note.pitchAddress?.Clone() ?? PitchResolver.NearestAddress(EffectiveTuning, note.ResolvedTone, true);
+                    address.Degree += Math.Sign(deltaNoteNum) * EffectiveTuning.DegreeCount;
+                    DocManager.Inst.ExecuteCmd(new SetNotePitchAddressCommand(Part, note, address));
+                }
+            } else {
+                MoveNoteRows(selectedNotes[0], deltaNoteNum, 0, selectedNotes);
+            }
             DocManager.Inst.EndUndoGroup();
         }
         public void MoveSelectedNotes(int deltaTicks) {
@@ -860,7 +942,15 @@ namespace OpenUtau.App.ViewModels {
                     return;
                 }
                 int offset = left - minPosition - Part.position;
-                var notes = DocManager.Inst.NotesClipboard.Select(note => note.Clone()).ToList();
+            var notes = DocManager.Inst.NotesClipboard.Select(note => {
+                var pasted = note.Clone();
+                double oldMidi = note.ResolvedTone;
+                if (pasted.pitchAddress == null || Math.Abs(PitchResolver.ResolveMidi(EffectiveTuning, pasted.pitchAddress) - oldMidi) > 1e-8) {
+                    pasted.pitchAddress = PitchResolver.NearestAddress(EffectiveTuning, oldMidi, true);
+                }
+                pasted.RefreshPitch(Project, Project.tracks[Part.trackNo]);
+                return pasted;
+            }).ToList();
                 notes.ForEach(note => note.position += offset);
                 DocManager.Inst.StartUndoGroup("command.note.paste");
                 DocManager.Inst.ExecuteCmd(new AddNoteCommand(Part, notes));
@@ -889,6 +979,8 @@ namespace OpenUtau.App.ViewModels {
                     note.position,
                     note.duration);
                 plainNote.lyric = note.lyric;
+            plainNote.pitchAddress = PitchResolver.NearestAddress(EffectiveTuning, note.ResolvedTone, true);
+            if (Part != null) plainNote.RefreshPitch(Project, Project.tracks[Part.trackNo]);
                 return plainNote;
             }
 
@@ -1056,7 +1148,7 @@ namespace OpenUtau.App.ViewModels {
 
         private void FocusNote(UNote note) {
             TickOffset = Math.Clamp(note.position + note.duration * 0.5 - ViewportTicks * 0.5, 0, HScrollBarMax);
-            TrackOffset = Math.Clamp(ViewConstants.MaxTone - note.tone + 2 - ViewportTracks * 0.5, 0, VScrollBarMax);
+            TrackOffset = Math.Clamp(TrackCount - RowMapper.RowAtMidi(note.AdjustedTone) + 2 - ViewportTracks * 0.5, 0, VScrollBarMax);
         }
 
         private void ScrollIntoView(UNote note) {
@@ -1064,7 +1156,7 @@ namespace OpenUtau.App.ViewModels {
                 AutoScroll(TickToneToPoint(note.position, 0).X);
             }
             var toneMargin = 4;
-            var noteOffset = ViewConstants.MaxTone - note.tone - 1;
+            var noteOffset = TrackCount - RowMapper.RowAtMidi(note.AdjustedTone) - 1;
             if (noteOffset < TrackOffset + toneMargin) {
                 TrackOffset = Math.Max(noteOffset - toneMargin, 0);
             } else if (noteOffset > TrackOffset + ViewportTracks - toneMargin) {
@@ -1109,6 +1201,7 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public void OnNext(UCommand cmd, bool isUndo) {
+            if (cmd is SetTuningCommand) RefreshPitchRows();
             if (cmd is UNotification notif) {
                 if (cmd is LoadPartNotification loadPart) {
                     LoadPart(loadPart.part, loadPart.project);
@@ -1182,6 +1275,7 @@ namespace OpenUtau.App.ViewModels {
                     LoadWindowTitle(Part, Project);
                 }
             } else if (cmd is NoteCommand noteCommand) {
+                RefreshPitchRows();
                 CleanupSelectedNotes();
                 if (noteCommand.Part == Part) {
                     RebuildPlaybackNoteIndex();

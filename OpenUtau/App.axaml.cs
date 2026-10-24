@@ -81,6 +81,7 @@ namespace OpenUtau.App {
             if (languages.TryGetValue(language, out var res1)) {
                 Current.Resources.MergedDictionaries.Add(res1);
             }
+            XenStrings.SetLanguage(languages.ContainsKey(language) ? language : "en-US");
         }
 
         static async void InitializeTheme() {

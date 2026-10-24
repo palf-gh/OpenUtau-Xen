@@ -701,7 +701,7 @@ namespace OpenUtau.App.Controls {
             var project = viewModel.Project;
             double p0Tick = project.timeAxis.MsPosToTickPos(note.PositionMs + pts[0].X) - viewModel.Part.position;
             double p0Tone = note.AdjustedTone + pts[0].Y / 10.0;
-            Point p0 = viewModel.TickToneToPoint(p0Tick, p0Tone - 0.5);
+            Point p0 = viewModel.TickToneToCentrePoint(p0Tick, p0Tone);
             Point p_1 = p0;
             var points = new Points();          
             points.Add(p0);
@@ -715,28 +715,28 @@ namespace OpenUtau.App.Controls {
             for (int i = 1; i < pts.Count; i++) {
                 double p1Tick = project.timeAxis.MsPosToTickPos(note.PositionMs + pts[i].X) - viewModel.Part.position;
                 double p1Tone = note.AdjustedTone + pts[i].Y / 10.0;
-                Point p1 = viewModel.TickToneToPoint(p1Tick, p1Tone - 0.5);
+                Point p1 = viewModel.TickToneToCentrePoint(p1Tick, p1Tone);
                 CubicSplineSegment? curve = null;
 
                 if (pts.Count > 2 && pts[i - 1].shape == PitchPointShape.sp) {
                     var p2 = p1;
                     if (i == 1) {
                         if (note.pitch.data[0].X > 0) {
-                            p_1 = viewModel.TickToneToPoint(note.position, p0Tone - 0.5);
+                            p_1 = viewModel.TickToneToCentrePoint(note.position, p0Tone);
                         }
                     }
                     if (i < pts.Count - 1) {
                         double p2Tick = project.timeAxis.MsPosToTickPos(note.PositionMs + pts[i + 1].X) - viewModel.Part.position;
                         double p2Tone = note.AdjustedTone + pts[i + 1].Y / 10.0;
-                        p2 = viewModel.TickToneToPoint(p2Tick, p2Tone - 0.5);
+                        p2 = viewModel.TickToneToCentrePoint(p2Tick, p2Tone);
                     } else if (pts[i].X < note.DurationMs) {
-                        p2 = viewModel.TickToneToPoint(note.End, note.AdjustedTone - 0.5);
+                        p2 = viewModel.TickToneToCentrePoint(note.End, note.AdjustedTone);
                     }
                     curve = new CubicSplineSegment(
-                                p_1.X, p_1.Y,
-                                p0.X, p0.Y,
-                                p1.X, p1.Y,
-                                p2.X, p2.Y);
+                        p_1.X, viewModel.PointToToneDouble(p_1),
+                        p0.X, viewModel.PointToToneDouble(p0),
+                        p1.X, viewModel.PointToToneDouble(p1),
+                        p2.X, viewModel.PointToToneDouble(p2));
                 }
                 // Draw arc
                 double x0 = p0.X;
@@ -749,7 +749,9 @@ namespace OpenUtau.App.Controls {
                     points.Add(new Point(x0, y0));
                     while (x0 < p1.X) {
                         x1 = Math.Min(x1 + 4, p1.X);
-                        y1 = curve?.GetY(x1) ?? MusicMath.InterpolateShape(p0.X, p1.X, p0.Y, p1.Y, x1, pts[i - 1].shape);
+                        double tone = curve?.GetY(x1) ?? MusicMath.InterpolateShape(p0.X, p1.X,
+                            viewModel.PointToToneDouble(p0), viewModel.PointToToneDouble(p1), x1, pts[i - 1].shape);
+                        y1 = viewModel.TickToneToCentrePoint(0, tone).Y;
                         points.Add(new Point(x1, y1));
                         x0 = x1;
                         y0 = y1;
@@ -776,11 +778,11 @@ namespace OpenUtau.App.Controls {
             float nPos = vibrato.NormalizedStart;
             var point = vibrato.Evaluate(nPos, nPeriod, note);
             var points = new Points();
-            points.Add(viewModel.TickToneToPoint(point.X, point.Y - 0.5));
+            points.Add(viewModel.TickToneToCentrePoint(point.X, point.Y));
             while (nPos < 1) {
                 nPos = Math.Min(1, nPos + nPeriod / 16);
                 point = vibrato.Evaluate(nPos, nPeriod, note);
-                points.Add(viewModel.TickToneToPoint(point.X, point.Y - 0.5));
+                points.Add(viewModel.TickToneToCentrePoint(point.X, point.Y));
             }
             var geometry = new PolylineGeometry(points, false);
             context.DrawGeometry(null, pen, geometry);
@@ -790,7 +792,7 @@ namespace OpenUtau.App.Controls {
         private void RenderVibratoToggle(UNote note, NotesViewModel viewModel, DrawingContext context) {
             var vibrato = note.vibrato;
             var togglePos = vibrato.GetToggle(note);
-            Point icon = viewModel.TickToneToPoint(togglePos.X, togglePos.Y);
+            Point icon = viewModel.VibratoTogglePoint(note);
             var pen = ThemeManager.BarNumberPen;
             using (var state = context.PushTransform(Matrix.CreateTranslation(icon.X - 10, icon.Y))) {
                 context.DrawGeometry(vibrato.length == 0 ? null : pen.Brush, pen, vibratoIcon);
@@ -803,10 +805,10 @@ namespace OpenUtau.App.Controls {
                 return;
             }
             var pen = ThemeManager.BarNumberPen!;
-            Point start = viewModel.TickToneToPoint(vibrato.GetEnvelopeStart(note));
-            Point fadeIn = viewModel.TickToneToPoint(vibrato.GetEnvelopeFadeIn(note));
-            Point fadeOut = viewModel.TickToneToPoint(vibrato.GetEnvelopeFadeOut(note));
-            Point end = viewModel.TickToneToPoint(vibrato.GetEnvelopeEnd(note));
+            Point start = viewModel.VibratoEnvelopePoint(note, vibrato.GetEnvelopeStart(note));
+            Point fadeIn = viewModel.VibratoEnvelopePoint(note, vibrato.GetEnvelopeFadeIn(note));
+            Point fadeOut = viewModel.VibratoEnvelopePoint(note, vibrato.GetEnvelopeFadeOut(note));
+            Point end = viewModel.VibratoEnvelopePoint(note, vibrato.GetEnvelopeEnd(note));
             context.DrawLine(pen, start, fadeIn);
             context.DrawLine(pen, fadeIn, fadeOut);
             context.DrawLine(pen, fadeOut, end);
@@ -820,8 +822,8 @@ namespace OpenUtau.App.Controls {
                 context.DrawGeometry(pen.Brush, pen, pointGeometry);
             }
             vibrato.GetPeriodStartEnd(DocManager.Inst.Project, note, out var periodStartPos, out var periodEndPos);
-            Point periodStart = viewModel.TickToneToPoint(periodStartPos);
-            Point periodEnd = viewModel.TickToneToPoint(periodEndPos);
+            Point periodStart = viewModel.VibratoPeriodPoint(note, periodStartPos);
+            Point periodEnd = viewModel.VibratoPeriodPoint(note, periodEndPos);
             float height = (float)TrackHeight / 3;
             periodStart = periodStart.WithY(periodStart.Y - height / 2 - 0.5f);
             double width = periodEnd.X - periodStart.X;
@@ -844,7 +846,7 @@ namespace OpenUtau.App.Controls {
                     for (int i = startIdx; i < endIdx; ++i) {
                         int t = pitchStart + i * 5;
                         float p = phrase.pitches[i];
-                        points.Add(viewModel.TickToneToPoint(t, p / 100 - 0.5));
+                        points.Add(viewModel.TickToneToCentrePoint(t, p / 100));
                     }
                     var geometry = new PolylineGeometry(points, false);
                     context.DrawGeometry(null, pen, geometry);

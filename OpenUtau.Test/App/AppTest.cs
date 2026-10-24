@@ -2,6 +2,11 @@
 using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Styling;
+using System;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Avalonia.Controls;
+using Avalonia.VisualTree;
 using OpenUtau.App;
 
 [assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]
@@ -34,6 +39,37 @@ namespace OpenUtau.App {
             foreach (var pair in languages) {
                 Assert.NotNull(pair.Value);
             }
+            Assert.Contains("ro-RO", languages.Keys);
+            var master = XenStrings.GetResources("en-US");
+            var keys = master.Keys.OfType<string>().OrderBy(k => k).ToArray();
+            Assert.True(keys.Length >= 100);
+            foreach (string language in languages.Keys) {
+                var resource = XenStrings.GetResources(language);
+                Assert.Equal(keys, resource.Keys.OfType<string>().OrderBy(k => k).ToArray());
+                foreach (string key in keys) {
+                    Assert.True(resource.TryGetResource(key, ThemeVariant.Default, out var value), $"{language}: {key}");
+                    string translated = Assert.IsType<string>(value);
+                    Assert.False(string.IsNullOrWhiteSpace(translated), $"{language}: {key}");
+                    master.TryGetResource(key, ThemeVariant.Default, out var original);
+                    string[] Placeholders(string text) => Regex.Matches(text, @"\{\d+(?:[^}]+)?\}")
+                        .Select(m => m.Value).OrderBy(v => v).ToArray();
+                    Assert.Equal(Placeholders((string)original!), Placeholders(translated));
+                }
+                App.SetLanguage(language);
+                resource.TryGetResource("xen.field.frequency", ThemeVariant.Default, out var expected);
+                Assert.Equal(expected, XenStrings.Get("field.frequency"));
+            }
+            App.SetLanguage("en-US");
+            var dialog = new OpenUtau.App.Views.TuningDialog(projectDefault: true);
+            dialog.Show();
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.InRange(dialog.Height, 320, 620);
+            var numbers = dialog.GetVisualDescendants().OfType<NumericUpDown>().ToArray();
+            Assert.NotEmpty(numbers);
+            foreach (var number in numbers.Where(n => n.IsEffectivelyVisible)) {
+                Assert.True(number.Bounds.Height >= 28);
+            }
+            dialog.Close();
         }
     }
 }

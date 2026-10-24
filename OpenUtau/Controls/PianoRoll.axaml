@@ -25,7 +25,7 @@
         <RowDefinition Height="4"/>
       </Grid.RowDefinitions>
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="60"/>
+        <ColumnDefinition Width="92"/>
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="24"/>
         <ColumnDefinition Width="Auto"/>
@@ -264,6 +264,8 @@
               <MenuItem Header="{DynamicResource menu.edit.selectall}" InputGesture="Ctrl+A" Command="{Binding SelectAll}"/>
               <MenuItem Header="-" Height="1"/>
               <MenuItem Header="{DynamicResource pianoroll.menu.part.singer}" Click="OnMenuSingers"/>
+              <MenuItem Header="{DynamicResource xen.menu.tuning}" Click="OnMenuTuning"/>
+              <MenuItem Header="{DynamicResource xen.menu.midi}" Click="OnMenuMidiInput"/>
               <MenuItem Header="{DynamicResource menu.edit.lockunselectednotes}">
                 <MenuItem Header="{DynamicResource menu.edit.lockunselectednotes.pitchpoints}" Click="OnMenuLockPitchPoints">
                   <MenuItem.Icon>

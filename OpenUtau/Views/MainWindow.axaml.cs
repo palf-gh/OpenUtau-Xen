@@ -110,10 +110,7 @@ namespace OpenUtau.App.Views {
             DocManager.Inst.AddSubscriber(this);
 
             Log.Information("Main window checking Update.");
-            UpdaterDialog.CheckForUpdate(
-                dialog => dialog.Show(this),
-                () => (Application.Current?.ApplicationLifetime as IControlledApplicationLifetime)?.Shutdown(),
-                TaskScheduler.FromCurrentSynchronizationContext());
+            // Xen releases use manual distribution, never the upstream updater.
             Log.Information("Created main window.");
             this.Cursor = null;
         }
@@ -331,7 +328,7 @@ namespace OpenUtau.App.Views {
         async void OnMenuSaveAs(object sender, RoutedEventArgs args) => await SaveAs();
         async Task SaveAs() {
             var file = await FilePicker.SaveFileAboutProject(
-                this, "menu.file.saveas", FilePicker.USTX);
+                this, "menu.file.saveas", FilePicker.USTXEN);
             if (!string.IsNullOrEmpty(file)) {
                 viewModel.SaveProject(file);
             }
@@ -347,7 +344,7 @@ namespace OpenUtau.App.Views {
                     return;
                 }
                 file = Path.GetFileNameWithoutExtension(file);
-                file = $"{file}.ustx";
+                file = $"{file}.ustxen";
                 file = Path.Combine(PathManager.Inst.TemplatesPath, file);
                 Ustx.Save(file, project.CloneAsTemplate());
             };
@@ -512,8 +509,29 @@ namespace OpenUtau.App.Views {
             }
         }
 
+        async void OnMenuProjectTuning(object sender, RoutedEventArgs e) {
+            var notes = pianoRoll?.ViewModel.NotesViewModel;
+            await new TuningDialog(notes, projectDefault: true).ShowDialog(this);
+        }
+
+        async void OnMenuExportCompatibleUstx(object sender, RoutedEventArgs e) {
+            var project = DocManager.Inst.Project;
+            var report = XenProjectFormat.GetCompatibilityReport(project);
+            if (await MessageBox.Show(this, XenStrings.Get("export.ustxLoss", report.MaximumErrorCents), XenStrings.Get("menu.exportUstx"), MessageBox.MessageBoxButtons.YesNo)
+                != MessageBox.MessageBoxResult.Yes) return;
+            var file = await FilePicker.SaveFileAboutProject(this, "menu.file.exportproject", FilePicker.USTX);
+            if (string.IsNullOrEmpty(file)) return;
+            try { XenProjectFormat.ExportUstx(file, project); }
+            catch (Exception ex) { await MessageBox.ShowError(this, ex); }
+        }
+
         async void OnMenuExportMidi(object sender, RoutedEventArgs e) {
             var project = DocManager.Inst.Project;
+            if (project.parts.OfType<UVoicePart>().Any(p => p.notes.Any(n => n.pitchAddress != null || n.tuning != 0))) {
+                var result = await MessageBox.Show(this, XenStrings.Get("export.midiLoss"),
+                    ThemeManager.GetString("menu.file.exportmidi"), MessageBox.MessageBoxButtons.YesNo);
+                if (result != MessageBox.MessageBoxResult.Yes) return;
+            }
             var file = await FilePicker.SaveFileAboutProject(
                 this, "menu.file.exportmidi", FilePicker.MIDI);
             if (!string.IsNullOrEmpty(file)) {
@@ -744,10 +762,7 @@ namespace OpenUtau.App.Views {
         }
 
         void OnMenuCheckUpdate(object sender, RoutedEventArgs args) {
-            var dialog = new UpdaterDialog();
-            dialog.ViewModel.CloseApplication =
-                () => (Application.Current?.ApplicationLifetime as IControlledApplicationLifetime)?.Shutdown();
-            dialog.ShowDialog(this);
+            _ = MessageBox.Show(this, XenStrings.Get("manualUpdates"), "OpenUtau Xen", MessageBox.MessageBoxButtons.Ok);
         }
 
         void OnMenuLogsLocation(object sender, RoutedEventArgs args) {
@@ -924,7 +939,7 @@ namespace OpenUtau.App.Views {
         }
 
         async void OnDrop(object? sender, DragEventArgs args) {
-            string[] ProjectExts = { ".ustx", ".ust", ".vsqx", ".ufdata", ".musicxml", ".mid", ".midi", ".svp" };
+            string[] ProjectExts = { ".ustxen", ".ustx", ".ust", ".vsqx", ".ufdata", ".musicxml", ".mid", ".midi", ".svp" };
             string[] ArchiveExts = { ".zip", ".rar", ".uar" };
             string[] AudioExts = { ".mp3", ".wav", ".ogg", ".flac" };
             string[] SupportedExts = ProjectExts

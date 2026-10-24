@@ -71,13 +71,15 @@ namespace OpenUtau.App.ViewModels {
             = new ObservableCollectionExtended<MenuItemViewModel>();
 
         [Reactive] public partial string ClearCacheHeader { get; set; }
-        public bool ProjectSaved => !string.IsNullOrEmpty(DocManager.Inst.Project.FilePath) && DocManager.Inst.Project.Saved;
+        public bool ProjectSaved => !string.IsNullOrEmpty(DocManager.Inst.Project.FilePath)
+            && Path.GetExtension(DocManager.Inst.Project.FilePath).Equals(".ustxen", StringComparison.OrdinalIgnoreCase)
+            && DocManager.Inst.Project.Saved;
         public string AppVersion {
             get {
                 Version? version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
                 string suffix = Core.Util.ReleaseChannel.FromVersion(version) is { } channel
                     ? $" ({channel})" : string.Empty;
-                return $"OpenUtau v{version}{suffix}";
+                return $"OpenUtau Xen v{version}{suffix}";
             }
         }
         [Reactive] public partial double Progress { get; set; }
@@ -115,7 +117,7 @@ namespace OpenUtau.App.ViewModels {
                 .OrderByDescending(f => f.LastWriteTime));
             TemplateFiles.Clear();
             Directory.CreateDirectory(PathManager.Inst.TemplatesPath);
-            TemplateFiles.AddRange(Directory.GetFiles(PathManager.Inst.TemplatesPath, "*.ustx")
+            TemplateFiles.AddRange(Directory.GetFiles(PathManager.Inst.TemplatesPath, "*.ustx*")
                 .Select(file => new RecentFileInfo(file)));
 
             // create async commands that consult the view's save prompt
@@ -210,7 +212,8 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public void NewProject() {
-            var defaultTemplate = Path.Combine(PathManager.Inst.TemplatesPath, "default.ustx");
+                var defaultTemplate = Path.Combine(PathManager.Inst.TemplatesPath, "default.ustxen");
+                if (!File.Exists(defaultTemplate)) defaultTemplate = Path.Combine(PathManager.Inst.TemplatesPath, "default.ustx");
             if (File.Exists(defaultTemplate)) {
                 try {
                     OpenProject(new[] { defaultTemplate });
@@ -342,7 +345,7 @@ namespace OpenUtau.App.ViewModels {
 
         public void RefreshTemplates() {
             Directory.CreateDirectory(PathManager.Inst.TemplatesPath);
-            var templates = Directory.GetFiles(PathManager.Inst.TemplatesPath, "*.ustx");
+            var templates = Directory.GetFiles(PathManager.Inst.TemplatesPath, "*.ustx*");
             openTemplatesMenuItems.Clear();
             openTemplatesMenuItems.AddRange(templates.Select(file => new MenuItemViewModel() {
                 Header = Path.GetRelativePath(PathManager.Inst.TemplatesPath, file),
