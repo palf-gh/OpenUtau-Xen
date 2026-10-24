@@ -127,7 +127,7 @@ The first release is not declared complete while these checks remain open.
   been downloaded. makensis is installed.
 - VOICEVOX is installed locally (`<VOICEVOX folder>`) but no
   OpenUtau VOICEVOX singer was found. No ENUNU or Vogen voice exists under
-  `D:oice`, the UTAU folder or existing OpenUtau installs.
+  `<voice folder>`, the UTAU folder or existing OpenUtau installs.
 - `README-XEN.md` was merged into a single bilingual `README.md` (English and
   Japanese, with language links at the top). The Japanese text was polished
   with yomiyasu. Added `AGENTS.md` and `CLAUDE.md`; both require yomiyasu for
