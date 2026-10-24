@@ -170,3 +170,8 @@ upstream first-launch behaviour (T or the "?" button); no code change.
   12-note key colours at 440 and 415 Hz. One existing assertion changed from
   `5/53` to `5·4` deliberately.
 
+- Full suite after this change: one clean run (379 passed, 1 skipped) and runs
+  with one unrelated failure each (UstTest.EqualInLyric, TimeAxisTest). The
+  previous commit shows the same intermittent failures (TimeAxisTest,
+  XenProjectTest), so the cause predates this change: tests share global
+  DocManager/project state while xUnit runs classes in parallel. Open issue.
