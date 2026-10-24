@@ -84,6 +84,7 @@ namespace OpenUtau.Core {
 
     public class MoveNoteCommand : NoteCommand {
         readonly int DeltaPos, DeltaNoteNum;
+        readonly Dictionary<UNote, Microtonal.PitchAddress> previousPitches = new();
         readonly int NewPartDuration;
         readonly int OldPartDuration;
         public MoveNoteCommand(UVoicePart part, UNote note, int deltaPos, int deltaNoteNum) : base(part, note) {
@@ -113,7 +114,16 @@ namespace OpenUtau.Core {
                 foreach (UNote note in Notes) {
                     Part.notes.Remove(note);
                     note.position += DeltaPos;
-                    note.tone += DeltaNoteNum;
+                    if (DeltaNoteNum != 0 && note.pitchAddress != null) {
+                        previousPitches.TryAdd(note, note.pitchAddress.Clone());
+                        var project = DocManager.Inst.Project;
+                        var track = project.tracks[Part.trackNo];
+                        note.RefreshPitch(project, track);
+                        note.pitchAddress = Microtonal.PitchResolver.NearestAddress(project.GetTuning(track), note.ResolvedTone + DeltaNoteNum, true);
+                        note.RefreshPitch(project, track);
+                    } else {
+                        note.tone += DeltaNoteNum;
+                    }
                     Part.notes.Add(note);
                 }
                 if (NewPartDuration > 0) {
@@ -126,7 +136,13 @@ namespace OpenUtau.Core {
                 foreach (UNote note in Notes) {
                     Part.notes.Remove(note);
                     note.position -= DeltaPos;
-                    note.tone -= DeltaNoteNum;
+                    if (previousPitches.TryGetValue(note, out var previous)) {
+                        note.pitchAddress = previous.Clone();
+                        var project = DocManager.Inst.Project;
+                        note.RefreshPitch(project, project.tracks[Part.trackNo]);
+                    } else {
+                        note.tone -= DeltaNoteNum;
+                    }
                     Part.notes.Add(note);
                 }
                 Part.Duration = OldPartDuration;

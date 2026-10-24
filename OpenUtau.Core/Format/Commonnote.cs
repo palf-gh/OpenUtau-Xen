@@ -18,6 +18,8 @@ namespace OpenUtau.Core.Format {
         public long length;
         public string label;
         public int pitch;
+        [JsonProperty("xen_midi", NullValueHandling = NullValueHandling.Ignore)]
+        public double? xenMidi;
     }
 
     public struct CommonnoteHeader {
@@ -38,6 +40,7 @@ namespace OpenUtau.Core.Format {
                 length = uNote.duration,
                 label = uNote.lyric,
                 pitch = uNote.tone,
+                xenMidi = uNote.pitchAddress != null ? uNote.ResolvedTone : null,
             };
         }
 
@@ -49,6 +52,10 @@ namespace OpenUtau.Core.Format {
                 lyric = NotePresets.Default.DefaultLyric;
             }
             var note = project.CreateNote(cNote.pitch, position, duration);
+            if (cNote.xenMidi.HasValue) {
+                note.pitchAddress = Microtonal.PitchResolver.NearestAddress(project.GetTuning(), cNote.xenMidi.Value, true);
+                note.RefreshPitch(project, new UTrack("Clipboard"));
+            }
             note.lyric = lyric;
             return note;
         }
@@ -58,7 +65,7 @@ namespace OpenUtau.Core.Format {
                 identifier = "commonnote",
                 header = new CommonnoteHeader {
                     resolution = project.resolution,
-                    origin = "openutau",
+                    origin = "openutau-xen",
                 },
                 notes = uNotes.Select(DumpNote).ToList(),
             };

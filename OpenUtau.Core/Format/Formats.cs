@@ -5,7 +5,7 @@ using OpenUtau.Classic;
 using OpenUtau.Core.Ustx;
 
 namespace OpenUtau.Core.Format {
-    public enum ProjectFormats { Unknown, Vsq3, Vsq4, Ust, Ustx, Midi, Ufdata, Musicxml, Svp };
+    public enum ProjectFormats { Unknown, Vsq3, Vsq4, Ust, Ustx, Midi, Ufdata, Musicxml, Svp, Ustxen };
 
     public static class Formats {
         const string ustMatch = "[#SETTING]";
@@ -28,7 +28,9 @@ namespace OpenUtau.Core.Format {
                 }
             }
             string contents = string.Join("\n", lines);
-            if (contents.Contains(ustMatch)) {
+            if (contents.Contains(XenProjectFormat.Identifier)) {
+                return ProjectFormats.Ustxen;
+            } else if (contents.Contains(ustMatch)) {
                 return ProjectFormats.Ust;
             } else if (contents.Contains(ustxMatchJson) || contents.Contains(ustxMatchYaml)) {
                 return ProjectFormats.Ustx;
@@ -71,6 +73,9 @@ namespace OpenUtau.Core.Format {
             switch (format) {
                 case ProjectFormats.Ustx:
                     project = Ustx.Load(files[0]);
+                    break;
+                case ProjectFormats.Ustxen:
+                    project = XenProjectFormat.Load(files[0]);
                     break;
                 case ProjectFormats.Vsq3:
                 case ProjectFormats.Vsq4:
@@ -136,7 +141,9 @@ namespace OpenUtau.Core.Format {
         public static void RecoveryProject(string[] files) {
             UProject project = ReadProject(files);
             if (project != null) {
-                string originalPath = project.FilePath.Replace("-autosave.ustx", ".ustx").Replace("-backup.ustx", ".ustx");
+                string originalPath = project.FilePath
+                    .Replace("-autosave.ustxen", ".ustxen").Replace("-backup.ustxen", ".ustxen")
+                    .Replace("-autosave.ustx", ".ustx").Replace("-backup.ustx", ".ustx");
                 if (File.Exists(originalPath)) {
                     project.FilePath = originalPath;
                 } else {
@@ -169,6 +176,7 @@ namespace OpenUtau.Core.Format {
                     }
                 }
                 foreach (var track in loaded.tracks) {
+                    track.pitchSystem ??= loaded.GetTuning().Clone();
                     track.TrackNo = project.tracks.Count;
                     project.tracks.Add(track);
                 }

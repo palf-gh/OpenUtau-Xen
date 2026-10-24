@@ -27,6 +27,7 @@ namespace OpenUtau.Classic {
         public UstNote() { }
 
         public UstNote(UProject project, UTrack track, UVoicePart part, UNote note) {
+            note.RefreshPitch(project, track);
             lyric = note.lyric;
             position = note.position;
             duration = note.duration;
@@ -44,6 +45,18 @@ namespace OpenUtau.Classic {
                 }
             }
             pitch = note.pitch.Clone();
+            // UST has an integer note number. Carry Xen's base/fine offset in
+            // the physical pitch curve rather than silently quantising it.
+            float offset = (note.AdjustedTone - noteNum) * 10;
+            if (Math.Abs(offset) > 0.000001f) {
+                if (pitch.data.Count == 0) {
+                    pitch.AddPoint(new PitchPoint(0, offset));
+                    pitch.AddPoint(new PitchPoint((float)note.DurationMs, offset));
+                } else {
+                    foreach (var point in pitch.data) point.Y += offset;
+                }
+                pitch.snapFirst = false;
+            }
             vibrato = note.vibrato.Clone();
         }
 

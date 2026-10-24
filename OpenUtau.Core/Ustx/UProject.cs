@@ -33,6 +33,9 @@ namespace OpenUtau.Core.Ustx {
     }
 
     public class UProject {
+        public Microtonal.TuningDefinition pitchSystem = Microtonal.TuningPresets.Default;
+        public Microtonal.TuningDefinition GetTuning(UTrack? track = null) =>
+            track?.pitchSystem ?? pitchSystem ?? Microtonal.TuningPresets.Default;
         public string name = "New Project";
         public string comment = string.Empty;
         public string outputDir = "Vocal";
@@ -163,6 +166,7 @@ namespace OpenUtau.Core.Ustx {
         public UProject CloneAsTemplate() {
             var project = new UProject() {
                 ustxVersion = ustxVersion,
+                pitchSystem = GetTuning().Clone(),
             };
             foreach (var kv in expressions) {
                 project.expressions.Add(kv.Key, kv.Value.Clone());

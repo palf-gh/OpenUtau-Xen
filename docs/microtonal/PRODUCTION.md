@@ -29,4 +29,66 @@
 - User supplied voice root `<voice folder>` and engines `<UTAU folder>`.
   Classic and DiffSinger assets were located. Real-engine smoke work is ongoing.
 
-All first-release requirements remain open until independently verified.
+## 2026-10-24 — Native projects, rendering and real voices
+
+- Added a versioned `.ustxen` envelope without changing upstream USTX versioning,
+  atomic file writes, embedded tuning snapshots, autosave/recovery and detached
+  compatibility export. Fine offsets are carried into UST pitch curves.
+- Added note pitch bindings, reversible tuning/reference/display changes, native
+  degree edits, frequency-preserving clipboard transport and cache invalidation.
+- Added actual shared RenderPhrase tests and opt-in local-voice tests. Corrected
+  a synthetic fixture's missing ExtendedDuration after its first full run.
+- Real Classic/Worldline-R/DiffSinger runs passed for 440 Hz, adjacent 53-EDO
+  pitch and 550 Hz. All nine measured stable vowels were within 0.515 cent.
+  This is a smoke result for the recorded assets, not general model accuracy.
+- Original voicebanks and UTAU binaries were not edited. Classic uses an isolated
+  sample/oto bank; DiffSinger reads the original model with a working vocoder
+  configuration. External assets are not tracked or redistributed.
+
+## 2026-10-24 — Editor, MIDI and all-language localisation
+
+- Added Full/Highlight/Compact row mapping, exact degree drawing/movement,
+  physical-domain pitch/curve editing, off-scale supplement rows and frozen
+  gesture geometry. Added tuning, scale/notation and MIDI dialogs.
+- MIDI input has timestamped recording, sustain, retrigger/disconnect cleanup
+  and shared KBM mapping. Real MIDI hardware remains unverified.
+- User explicitly requested localisation in every upstream language. Added
+  20 language overlays with 100 keys each, stable-ID selectors and translated
+  preset names. Registered the pre-existing Romanian upstream resource.
+- Compiled overlay coverage, formatting placeholders and runtime language
+  switching passed. Headless tuning-dialog creation/geometry passed.
+- Live Computer Use confirmed startup and revealed clipped numeric fields and
+  excessive dialog height. Added dialog-local styles and bounded dimensions.
+  User stopped Computer Use with Escape; no further GUI automation followed.
+- Final serial automated suite at this checkpoint: 333 passed, 0 failed,
+  1 explicitly skipped external-voice theory. Separate opt-in voice run: 3 passed.
+- Verification above concerns the combined working tree; coherent commits are
+  recorded separately so unfinished release requirements remain explicit.
+
+## Still required for first-release acceptance
+
+## 2026-10-24 — Independent review corrections
+
+- Review found that missing native envelope fields could default to an empty
+  project. Native loading now requires explicit identifier, version and project;
+  malformed/renamed legacy files are rejected. Seven rejection cases added.
+- Review found that partial UTAU-plugin output could subtract a pitch offset
+  from an already-relative curve. The parser now starts in exported coordinates
+  and converts back exactly once. Six partial/full plugin regression cases added.
+- Non-octave equal divisions no longer inherit octave-specific accidentals or
+  the misleading EDO name. Targeted core/persistence/plugin run: 42 passed.
+- Voice smoke tools now use a unique resampler staging directory, preserve
+  preferences/callbacks and require the dedicated filtered test-process wrapper.
+- UI review also identified dependent scale definitions after degree-count
+  changes, non-zero-fine-tuning drag offsets and comma-decimal parsing. These
+  corrections are tracked with the editor changes and will be reverified.
+
+## Remaining first-release checks
+
+- Actual ENUNU, Vogen and VOICEVOX voice/engine verification.
+- Real MIDI hardware, hot-unplug and audio-device interaction checks.
+- Broader interactive editing, synthesis transitions, DiffSinger automatic
+  pitch/retake, high-DPI and translated typography checks.
+- Community/native-speaker review of specialist terminology is recommended.
+
+The first release is not declared complete while these checks remain open.

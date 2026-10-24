@@ -17,6 +17,20 @@ namespace OpenUtau.Core.Ustx {
         public int position;
         public int duration;
         public int tone;
+        public Microtonal.PitchAddress? pitchAddress;
+        [YamlIgnore] private Microtonal.TuningDefinition? resolvedTuning;
+        [YamlIgnore] public double ResolvedTone => pitchAddress != null && resolvedTuning != null
+            ? Microtonal.PitchResolver.ResolveMidi(resolvedTuning, pitchAddress) : tone;
+        public void RefreshPitch(UProject project, UTrack track) {
+            resolvedTuning = project.GetTuning(track);
+            if (pitchAddress != null) {
+                var midi = ResolvedTone;
+                if (!double.IsFinite(midi) || midi < int.MinValue + 1.0 || midi > int.MaxValue - 1.0) {
+                    throw new ArgumentOutOfRangeException(nameof(pitchAddress), "Pitch is outside the supported numerical range.");
+                }
+                tone = (int)Math.Ceiling(midi - 0.5);
+            }
+        }
         public string lyric = NotePresets.Default.DefaultLyric;
         public UPitch pitch;
         public UVibrato vibrato;
@@ -31,7 +45,7 @@ namespace OpenUtau.Core.Ustx {
         /// <summary>
         /// The final tone, taking tuning into consideration
         /// </summary>
-        [YamlIgnore] public float AdjustedTone => tone + tuning / 100f;
+        [YamlIgnore] public float AdjustedTone => (float)(ResolvedTone + tuning / 100.0);
 
         /// <summary>
         /// Position of the note in milliseconds, relative to the beginning of the project.
@@ -76,6 +90,7 @@ namespace OpenUtau.Core.Ustx {
         }
 
         public void AfterLoad(UProject project, UTrack track, UVoicePart part) {
+            RefreshPitch(project, track);
             foreach (var exp in phonemeExpressions) {
                 if (track.TryGetExpDescriptor(project, exp.abbr, out var descriptor)) {
                     exp.descriptor = descriptor;
@@ -92,6 +107,7 @@ namespace OpenUtau.Core.Ustx {
         }
 
         public void Validate(ValidateOptions options, UProject project, UTrack track, UVoicePart part) {
+            RefreshPitch(project, track);
             duration = Math.Max(10, duration);
             PositionMs = project.timeAxis.TickPosToMsPos(part.position + position);
             EndMs = project.timeAxis.TickPosToMsPos(part.position + End);
@@ -252,6 +268,8 @@ namespace OpenUtau.Core.Ustx {
 
         public UNote Clone() {
             return new UNote() {
+                pitchAddress = pitchAddress?.Clone(),
+                resolvedTuning = resolvedTuning,
                 position = position,
                 duration = duration,
                 tone = tone,

@@ -103,7 +103,10 @@ namespace OpenUtau.Core.Format {
                 project.ustxVersion = kUstxVersion;
                 project.FilePath = filePath;
                 project.BeforeSave();
-                File.WriteAllText(filePath, Yaml.DefaultSerializer.Serialize(project), Encoding.UTF8);
+                XenProjectFormat.WriteAtomic(filePath,
+                    Path.GetExtension(filePath).Equals(XenProjectFormat.Extension, StringComparison.OrdinalIgnoreCase)
+                        ? XenProjectFormat.SerializePrepared(project)
+                        : XenProjectFormat.SerializeCompatibilityPrepared(project));
                 project.Saved = true;
                 project.AfterSave();
                 Preferences.Default.RecoveryPath = string.Empty;
@@ -112,6 +115,8 @@ namespace OpenUtau.Core.Format {
             } catch (Exception ex) {
                 var e = new MessageCustomizableException($"Failed to save ustx: {filePath}", $"<translate:errors.failed.save>: {filePath}", ex);
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
+            } finally {
+                project.AfterSave();
             }
         }
 
@@ -119,18 +124,27 @@ namespace OpenUtau.Core.Format {
             try {
                 project.ustxVersion = kUstxVersion;
                 project.BeforeSave();
-                File.WriteAllText(filePath, Yaml.DefaultSerializer.Serialize(project), Encoding.UTF8);
+                XenProjectFormat.WriteAtomic(filePath, XenProjectFormat.SerializePrepared(project));
                 project.AfterSave();
                 Preferences.Default.RecoveryPath = filePath;
                 Preferences.Save();
             } catch (Exception ex) {
                 Log.Error(ex, $"Failed to autosave: {filePath}");
+            } finally {
+                project.AfterSave();
             }
         }
 
         public static UProject Load(string filePath) {
+            if (Path.GetExtension(filePath).Equals(XenProjectFormat.Extension, StringComparison.OrdinalIgnoreCase)) {
+                return XenProjectFormat.Load(filePath);
+            }
             string text = File.ReadAllText(filePath, Encoding.UTF8);
             UProject project = Yaml.DefaultDeserializer.Deserialize<UProject>(text);
+            return InitialiseProject(project, filePath);
+        }
+
+        internal static UProject InitialiseProject(UProject project, string filePath) {
             AddDefaultExpressions(project);
             project.FilePath = filePath;
             project.Saved = true;

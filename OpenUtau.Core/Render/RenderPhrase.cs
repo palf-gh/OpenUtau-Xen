@@ -236,6 +236,9 @@ namespace OpenUtau.Core.Render {
             }
 
             singer = track.Singer;
+            foreach (var note in uNotes) {
+                note.RefreshPitch(project, track);
+            }
             renderer = track.RendererSettings.Renderer;
             wavtool = track.RendererSettings.wavtool;
             timeAxis = project.timeAxis.Clone();
@@ -524,6 +527,12 @@ namespace OpenUtau.Core.Render {
                     writer.Write(renderer?.ToString() ?? "");
                     writer.Write(wavtool ?? "");
                     writer.Write(timeAxis.Timestamp);
+                    // Pitch is also an input to pre-effect inference (not only synthesis).
+                    foreach (var note in notes) {
+                        writer.Write(note.adjustedTone);
+                        writer.Write(note.position);
+                        writer.Write(note.duration);
+                    }
                     foreach (var phone in phones) {
                         writer.Write(phone.hash);
                     }

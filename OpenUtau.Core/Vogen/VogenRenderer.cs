@@ -100,7 +100,7 @@ namespace OpenUtau.Core.Vogen {
             var result = Layout(phrase);
             var singer = phrase.singer as VogenSinger;
             var notePitches = phrase.notes
-                .Select(n => (float)n.tone)
+                        .Select(n => n.adjustedTone)
                 .Prepend(0)
                 .Append(0)
                 .ToList();

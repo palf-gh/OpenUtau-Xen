@@ -201,6 +201,10 @@ namespace OpenUtau.Core.Format {
                                 (int)(midiNote.Time * project.resolution / PPQ),
                                 (int)(midiNote.Length * project.resolution / PPQ)
                             );
+                        var address = Microtonal.PitchResolver.MapMidi(project.GetTuning(), midiNote.NoteNumber);
+                        if (address == null) continue;
+                        note.pitchAddress = address;
+                        note.tone = (int)System.Math.Ceiling(Microtonal.PitchResolver.ResolveMidi(project.GetTuning(), address) - 0.5);
                             //handle lyric import
                             bool hasLyric = lyrics.TryGetValue(midiNote.Time, out string lyric);
                             if (!hasLyric) {

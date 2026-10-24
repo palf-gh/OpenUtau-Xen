@@ -452,6 +452,8 @@ namespace OpenUtau.Classic {
                             if (index <= sequence.Count) {
                                 var newNote = project.CreateNote();
                                 ParseNote(project, newNote, 0, 0, block.lines, out var _);
+                            newNote.pitchAddress = Core.Microtonal.PitchResolver.NearestAddress(
+                                project.GetTuning(project.tracks[part.trackNo]), newNote.tone, true);
                                 newNote.AfterLoad(project, project.tracks[part.trackNo], part);
                                 sequence.Insert(index, newNote);
                                 toAdd.Add(newNote);
@@ -468,7 +470,25 @@ namespace OpenUtau.Classic {
                             if (index < sequence.Count) {
                                 toRemove.Add(sequence[index]);
                                 var newNote = sequence[index].Clone();
+                            int originalTone = newNote.tone;
+                            double originalMidi = newNote.ResolvedTone;
+                            bool hasNativePitch = newNote.pitchAddress != null;
+                            int originalTuning = newNote.tuning;
+                            // Plugins may return only selected pitch fields, or none at all.
+                            // Seed their parser with the same absolute UST offsets that were
+                            // exported, so untouched points survive the inverse conversion.
+                            newNote.pitch = new UstNote(project, project.tracks[part.trackNo], part, newNote).pitch;
                                 ParseNote(project, newNote, 0, 0, block.lines, out var _);
+                            int parsedTone = newNote.tone;
+                            if (hasNativePitch) {
+                                newNote.pitchAddress = Core.Microtonal.PitchResolver.NearestAddress(
+                                    project.GetTuning(project.tracks[part.trackNo]), originalMidi + parsedTone - originalTone, true);
+                            }
+                            if (hasNativePitch || originalTuning != 0) {
+                                newNote.RefreshPitch(project, project.tracks[part.trackNo]);
+                                float exportedOffset = (newNote.AdjustedTone - parsedTone) * 10;
+                                foreach (var point in newNote.pitch.data) point.Y -= exportedOffset;
+                            }
                                 newNote.AfterLoad(project, project.tracks[part.trackNo], part);
                                 sequence[index] = newNote;
                                 toAdd.Add(newNote);

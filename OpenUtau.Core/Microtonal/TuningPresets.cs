@@ -66,14 +66,21 @@ namespace OpenUtau.Core.Microtonal {
             };
             tuning.InputMapping.FormalOctave = divisions;
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, divisions).ToList() });
-            if (divisions <= 256 && tuning.Period.Ratio == "2/1") tuning.Notations.Add(PitchNotation.UpsAndDowns(divisions));
-            if (divisions == 12) {
+            bool octave = Math.Abs(tuning.PeriodCents - 1200) < 1e-8;
+            if (!octave) {
+                string periodText = tuning.Period.Ratio ?? tuning.PeriodCents.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+                tuning.Id = $"{divisions}ed-{tuning.PeriodCents.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}";
+                tuning.Name = $"{divisions}-ED ({periodText})";
+                tuning.Reference.Degree = 0;
+            }
+            if (divisions <= 256 && octave) tuning.Notations.Add(PitchNotation.UpsAndDowns(divisions));
+            if (divisions == 12 && octave) {
                 var standard = PitchNotation.UpsAndDowns(12); standard.Id = "szg"; standard.Name = "Standard accidentals (12-EDO)";
                 tuning.Notations.Add(standard); tuning.Keyboard.PrimaryNotation = "szg"; tuning.Keyboard.SecondaryNotation = "degree";
-            } else if (divisions == 24) {
+            } else if (divisions == 24 && octave) {
                 tuning.Notations.Add(PitchNotation.QuarterTone()); tuning.Keyboard.PrimaryNotation = "szg"; tuning.Keyboard.SecondaryNotation = "degree";
             }
-            if (divisions == 53) {
+            if (divisions == 53 && octave) {
                 tuning.Reference.Degree = 40;
                 tuning.Notations.Add(PitchNotation.FiftyThreeSzg());
                 tuning.Keyboard.PrimaryNotation = "szg";
@@ -81,7 +88,7 @@ namespace OpenUtau.Core.Microtonal {
                 var mos = MosGenerator.Generate(tuning, 31, 7).Scale;
                 tuning.Scales.Add(mos);
                 foreach (int degree in mos.Degrees) tuning.Keyboard.Classes[degree] = "natural";
-            } else if (divisions == 12 || divisions == 24) {
+            } else if (octave && (divisions == 12 || divisions == 24)) {
                 int multiplier = divisions / 12;
                 foreach (int degree in new[] { 0, 2, 4, 5, 7, 9, 11 }) tuning.Keyboard.Classes[degree * multiplier] = "natural";
             }

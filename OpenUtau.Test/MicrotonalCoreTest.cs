@@ -5,6 +5,17 @@ using Xunit;
 
 namespace OpenUtau.Test {
     public class MicrotonalCoreTest {
+        [Fact]
+        public void NonOctaveEqualDivisionDoesNotInheritOctaveAccidentals() {
+            foreach (int count in new[] { 12, 24, 53 }) {
+                var tuning = TuningPresets.EqualDivision(count, PitchInterval.FromRatio("3/1"));
+                Assert.Empty(tuning.Notations);
+                Assert.Empty(tuning.Keyboard.Classes);
+                Assert.Equal("degree", tuning.Keyboard.PrimaryNotation);
+                Assert.DoesNotContain("EDO", tuning.Name);
+                tuning.Validate();
+            }
+        }
         [Theory]
         [InlineData(440)]
         [InlineData(442)]

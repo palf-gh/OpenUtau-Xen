@@ -68,6 +68,7 @@ namespace OpenUtau.Core.Ustx {
     }
 
     public class UTrack {
+        public Microtonal.TuningDefinition? pitchSystem;
         public string singer;
         public string phonemizer;
         public URenderSettings RendererSettings { get; set; } = new URenderSettings();
