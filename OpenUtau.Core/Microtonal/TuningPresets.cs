@@ -73,7 +73,14 @@ namespace OpenUtau.Core.Microtonal {
                 tuning.Name = $"{divisions}-ED ({periodText})";
                 tuning.Reference.Degree = 0;
             }
-            if (divisions <= 256 && octave) tuning.Notations.Add(PitchNotation.UpsAndDowns(divisions));
+            if (divisions <= 256 && octave) {
+                tuning.Notations.Add(PitchNotation.UpsAndDowns(divisions));
+                tuning.Keyboard.PrimaryNotation = "ups-downs";
+                tuning.Keyboard.SecondaryNotation = "degree";
+            }
+            if (divisions == 31 && octave) {
+                tuning.Notations.Add(PitchNotation.ThirtyOneHalfAccidentals()); tuning.Keyboard.PrimaryNotation = "szg";
+            }
             if (divisions == 12 && octave) {
                 var standard = PitchNotation.UpsAndDowns(12); standard.Id = "szg"; standard.Name = "Standard accidentals (12-EDO)";
                 tuning.Notations.Add(standard); tuning.Keyboard.PrimaryNotation = "szg"; tuning.Keyboard.SecondaryNotation = "degree";
@@ -102,6 +109,9 @@ namespace OpenUtau.Core.Microtonal {
             };
             tuning.Reference.Degree = tuning.Degrees.Count == 12 ? 9 : 0;
             tuning.InputMapping.FormalOctave = tuning.DegreeCount;
+            // Spelling follows each ratio's 5-limit function (16/15 is D-flat, 45/32 is F-sharp); septimal
+            // intervals take the nearest chromatic name without marking their comma.
+            if (tuning.Degrees.Count == 12) AddChromaticNames(tuning, "Ratio-based chromatic names", JustNames);
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, tuning.DegreeCount).ToList() });
             tuning.Validate();
             return tuning;
@@ -117,6 +127,7 @@ namespace OpenUtau.Core.Microtonal {
                 Source = "Fifth-chain construction; fifth cents = " + fifth.ToString("R", System.Globalization.CultureInfo.InvariantCulture),
             };
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, 12).ToList() });
+            AddChromaticNames(tuning, "Fifth-chain names (E-flat to G-sharp)", FifthChainNames);
             tuning.Validate();
             return tuning;
         }
@@ -137,8 +148,16 @@ namespace OpenUtau.Core.Microtonal {
                 Description = description, Source = "Analytical construction from the stated tempered fifths; no external scale file copied.",
             };
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, 12).ToList() });
+            AddChromaticNames(tuning, "Conventional chromatic names", FifthChainNames);
             tuning.Validate();
             return tuning;
+        }
+        static readonly string[] FifthChainNames = { "C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "G♯", "A", "B♭", "B" };
+        static readonly string[] JustNames = { "C", "D♭", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B" };
+        static void AddChromaticNames(TuningDefinition tuning, string name, IReadOnlyList<string> names) {
+            tuning.Notations.Add(PitchNotation.Chromatic(name, names));
+            tuning.Keyboard.PrimaryNotation = "szg";
+            tuning.Keyboard.SecondaryNotation = "degree";
         }
     }
 }

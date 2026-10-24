@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">ชื่อเสียงที่กำหนดเอง</system:String>
   <system:String x:Key="xen.notation.none">ไม่มี</system:String>
+  <system:String x:Key="xen.notation.auto">อัตโนมัติ</system:String>
   <system:String x:Key="xen.display.full">เสียงทั้งหมด</system:String>
   <system:String x:Key="xen.display.highlight">เน้นบันไดเสียง</system:String>
   <system:String x:Key="xen.display.compact">บันไดเสียงแบบย่อ</system:String>

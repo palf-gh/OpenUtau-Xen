@@ -329,6 +329,9 @@
                   </MenuItem.Icon>
                 </MenuItem>
               </MenuItem>
+              <MenuItem Name="XenRowsMenu" Header="{DynamicResource xen.field.display}" SubmenuOpened="OnXenViewMenuOpened"/>
+              <MenuItem Name="XenPrimaryMenu" Header="{DynamicResource xen.field.primary}" SubmenuOpened="OnXenViewMenuOpened"/>
+              <MenuItem Name="XenSecondaryMenu" Header="{DynamicResource xen.field.secondary}" SubmenuOpened="OnXenViewMenuOpened"/>
               <MenuItem Header="{DynamicResource prefs.playback.lockstarttime}">
                 <MenuItem Header="{DynamicResource prefs.playback.lockstarttime.off}" Click="OnMenuLockStartTime" Tag="0">
                   <MenuItem.Icon>

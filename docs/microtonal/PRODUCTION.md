@@ -141,3 +141,32 @@ The first release is not declared complete while these checks remain open.
   only actual-voice and physical-device verification are waived.
 - The published Windows x64 build was copied to the ignored folder
   `work/OpenUtau-Xen-win-x64/` for trial use and started successfully.
+
+## 2026-10-24 — Trial feedback: labels, key colours, editor settings and Tone input
+
+User feedback on the trial build: degree-only labels (`0/31`) were unreadable,
+non-12 keyboards were all white, layout/label choices belonged to the editor,
+and the Tone field could not express microtonal pitch. The tips overlay is
+upstream first-launch behaviour (T or the "?" button); no code change.
+
+- Added `PitchNotation.ResolvePrimary/ResolveSecondary/IsAccidental/FindProfile`.
+  Automatic labels prefer custom names, then `szg`, then Ups and Downs; built-in
+  profiles of octave equal divisions apply at display time without editing files.
+- 31-EDO half-sharp/half-flat table (Fokker spelling, Stein glyphs as half
+  accidentals) with enharmonic aliases. xen.wiki could not be consulted: its bot
+  check blocked automated access, so a name-by-name comparison remains open.
+- Twelve-note JI, fifth-chain and circulating presets gained chromatic names
+  (fifth chains E♭–G♯; 5-limit JI by ratio function).
+- Degree labels are now the index within the period plus a period number (`5·4`).
+- Key colour is decided by degree index from the names, so A4 = 415 Hz no longer
+  turns a 12-note keyboard white (previously decided by rounded MIDI pitch).
+- Preferences `XenPitchRows`, `XenPrimaryNotation`, `XenSecondaryNotation` with
+  View menu items; the tuning dialog no longer shows or writes these fields.
+  New string `xen.notation.auto` in all 20 overlays.
+- `PitchNameInput` formats and parses the note Tone field; edits use
+  `SetNotePitchAddressCommand` in one undo group.
+- `XenNotationTest`: 53-EDO C…D sequence, round trips for 12–72-EDO, spelled and
+  relative input, 31-EDO names and key colours, unnamed snapshots, degree labels,
+  12-note key colours at 440 and 415 Hz. One existing assertion changed from
+  `5/53` to `5·4` deliberately.
+

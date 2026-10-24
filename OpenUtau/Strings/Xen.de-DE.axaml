@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Eigene Namen</system:String>
   <system:String x:Key="xen.notation.none">Keine</system:String>
+  <system:String x:Key="xen.notation.auto">Automatisch</system:String>
   <system:String x:Key="xen.display.full">Alle Tonhöhen</system:String>
   <system:String x:Key="xen.display.highlight">Skala hervorheben</system:String>
   <system:String x:Key="xen.display.compact">Kompakte Skala</system:String>

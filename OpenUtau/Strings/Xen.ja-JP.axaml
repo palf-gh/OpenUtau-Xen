@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">カスタム音名</system:String>
   <system:String x:Key="xen.notation.none">なし</system:String>
+  <system:String x:Key="xen.notation.auto">自動</system:String>
   <system:String x:Key="xen.display.full">すべての音</system:String>
   <system:String x:Key="xen.display.highlight">スケールを強調</system:String>
   <system:String x:Key="xen.display.compact">スケールを圧縮表示</system:String>

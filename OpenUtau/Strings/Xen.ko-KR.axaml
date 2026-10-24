@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">사용자 지정 음이름</system:String>
   <system:String x:Key="xen.notation.none">없음</system:String>
+  <system:String x:Key="xen.notation.auto">자동</system:String>
   <system:String x:Key="xen.display.full">모든 음</system:String>
   <system:String x:Key="xen.display.highlight">음계 강조</system:String>
   <system:String x:Key="xen.display.compact">음계 압축 표시</system:String>

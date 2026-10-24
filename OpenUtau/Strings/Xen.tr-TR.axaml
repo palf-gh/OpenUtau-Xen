@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Özel adlar</system:String>
   <system:String x:Key="xen.notation.none">Yok</system:String>
+  <system:String x:Key="xen.notation.auto">Otomatik</system:String>
   <system:String x:Key="xen.display.full">Tüm perdeler</system:String>
   <system:String x:Key="xen.display.highlight">Diziyi vurgula</system:String>
   <system:String x:Key="xen.display.compact">Kompakt dizi</system:String>

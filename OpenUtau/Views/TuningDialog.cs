@@ -31,12 +31,7 @@ namespace OpenUtau.App.Views {
         readonly TextBox period = new TextBox();
         readonly NumericUpDown referenceDegree = Number(-1000000, 1000000, 9, 0);
         readonly NumericUpDown frequency = Number(0.001m, 1000000000, 440, 6);
-        readonly ComboBox display = new ComboBox { ItemsSource = new[] {
-            XenStrings.Get("display.full"), XenStrings.Get("display.highlight"), XenStrings.Get("display.compact") } };
         readonly ComboBox scales = new ComboBox();
-        readonly ComboBox primary = new ComboBox();
-        readonly ComboBox secondary = new ComboBox();
-        string[] notationIds = Array.Empty<string>();
         readonly CheckBox preserve = new CheckBox { Content = XenStrings.Get("preserve") };
         readonly DataGrid degrees = new DataGrid { AutoGenerateColumns = false, MinHeight = 180 };
         readonly TextBox yaml = new TextBox { AcceptsReturn = true, AcceptsTab = true, FontFamily = new Avalonia.Media.FontFamily("Consolas"), MinHeight = 250, TextWrapping = Avalonia.Media.TextWrapping.NoWrap };
@@ -91,10 +86,7 @@ namespace OpenUtau.App.Views {
             content.Children.Add(Field(XenStrings.Get("field.referenceDegree"), referenceDegree));
             content.Children.Add(Field(XenStrings.Get("field.frequency"), frequency));
             content.Children.Add(preserve);
-            content.Children.Add(Field(XenStrings.Get("field.display"), display));
             content.Children.Add(Field(XenStrings.Get("field.scale"), scales));
-            content.Children.Add(Field(XenStrings.Get("field.primary"), primary));
-            content.Children.Add(Field(XenStrings.Get("field.secondary"), secondary));
             content.Children.Add(Button(XenStrings.Get("action.rebuild"), RebuildEntries));
             degrees.Columns.Add(new DataGridTextColumn { Header = XenStrings.Get("field.degree"), Binding = new Binding(nameof(DegreeEntry.Degree)), IsReadOnly = true });
             degrees.Columns.Add(new DataGridTextColumn { Header = XenStrings.Get("field.interval"), Binding = new Binding(nameof(DegreeEntry.Interval)) });
@@ -150,18 +142,9 @@ namespace OpenUtau.App.Views {
             period.Text = draft.Period.Ratio ?? draft.Period.Cents?.ToString("R", XenStrings.InputCulture);
             referenceDegree.Value = draft.Reference.Degree;
             frequency.Value = (decimal)draft.Reference.Frequency;
-            display.SelectedIndex = (int)draft.Keyboard.Mode;
             scales.ItemsSource = draft.Scales.Select(s => s.Id == "all" ? XenStrings.Get("scale.all")
                 : s.Id == "rast" ? XenStrings.Get("preset.rast") : s.Name).ToArray();
             scales.SelectedIndex = Math.Max(0, draft.Scales.FindIndex(s => s.Id == draft.Keyboard.ActiveScaleId));
-            string[] names = new[] { "degree", "ups-downs", "szg", "custom" }.Concat(draft.Notations.Select(n => n.Id)).Distinct().ToArray();
-            notationIds = names;
-            string NotationLabel(string id) => id is "degree" or "ups-downs" or "szg" or "custom"
-                ? XenStrings.Get("notation." + id) : draft.Notations.FirstOrDefault(n => n.Id == id)?.Name ?? id;
-            primary.ItemsSource = names.Select(NotationLabel).ToArray();
-            primary.SelectedIndex = Math.Max(0, Array.IndexOf(names, draft.Keyboard.PrimaryNotation));
-            secondary.ItemsSource = new[] { XenStrings.Get("notation.none") }.Concat(names.Select(NotationLabel)).ToArray();
-            secondary.SelectedIndex = draft.Keyboard.SecondaryNotation == null ? 0 : Array.IndexOf(names, draft.Keyboard.SecondaryNotation) + 1;
             LoadEntries();
             yaml.Text = TunxenFormat.Serialize(draft);
         }
@@ -186,7 +169,6 @@ namespace OpenUtau.App.Views {
             source.Name = name.Text?.Trim() ?? "";
             source.Reference.Degree = ReadInteger(referenceDegree, 0);
             source.Reference.Frequency = (double)(frequency.Value ?? 440);
-            source.Keyboard.Mode = (PitchDisplayMode)Math.Max(0, display.SelectedIndex);
             if (source.Divisions == 0) source.Degrees = entries.Select(entry => ParseInterval(entry.Interval)).ToList();
             int nextDivisions = ReadInteger(divisions, 0);
             int nextCount = ReadInteger(explicitCount, 12);
@@ -197,11 +179,8 @@ namespace OpenUtau.App.Views {
         }
         void ReadFields() {
             ReadStructure();
-            draft.Keyboard.Mode = (PitchDisplayMode)Math.Max(0, display.SelectedIndex);
             draft.Keyboard.ActiveScaleId = scales.SelectedIndex >= 0 && scales.SelectedIndex < draft.Scales.Count
                 ? draft.Scales[scales.SelectedIndex].Id : null;
-            draft.Keyboard.PrimaryNotation = primary.SelectedIndex >= 0 ? notationIds[primary.SelectedIndex] : "degree";
-            draft.Keyboard.SecondaryNotation = secondary.SelectedIndex > 0 ? notationIds[secondary.SelectedIndex - 1] : null;
             if (draft.Divisions == 0) draft.Degrees = entries.Select(e => ParseInterval(e.Interval)).ToList();
             var custom = new NotationProfile { Id = "custom", Name = XenStrings.Get("notation.custom") };
             foreach (var entry in entries) {

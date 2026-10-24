@@ -5,6 +5,7 @@ using System.Linq;
 using Avalonia.Media;
 using OpenUtau.Core;
 using OpenUtau.Core.Format;
+using OpenUtau.Core.Microtonal;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using ReactiveUI;
@@ -80,6 +81,20 @@ namespace OpenUtau.App.ViewModels {
         private NotePresets.VibratoPreset? appliedVibratoPreset = NotePresets.Default.DefaultVibrato;
 
         public UVoicePart? Part;
+        TuningDefinition? EffectiveTuning {
+            get {
+                var project = DocManager.Inst.Project;
+                if (Part == null || project == null) return null;
+                return Part.trackNo >= 0 && Part.trackNo < project.tracks.Count
+                    ? project.tracks[Part.trackNo].pitchSystem ?? project.pitchSystem : project.pitchSystem;
+            }
+        }
+        static int DegreeOf(TuningDefinition tuning, UNote note) =>
+            note.pitchAddress?.Degree ?? PitchResolver.NearestAddress(tuning, note.tone).Degree;
+        string ToneText(UNote note) {
+            var tuning = EffectiveTuning;
+            return tuning == null ? MusicMath.GetToneName(note.tone) : PitchNameInput.Format(tuning, DegreeOf(tuning, note));
+        }
         private HashSet<UNote> selectedNotes = new HashSet<UNote>();
         public List<NotePropertyExpViewModel> Expressions = new List<NotePropertyExpViewModel>();
         public static bool PanelControlPressed { get; set; } = false;
@@ -176,7 +191,7 @@ namespace OpenUtau.App.ViewModels {
                 }
 
                 Lyric = note.lyric;
-                Tone = MusicMath.GetToneName(note.tone);
+                Tone = ToneText(note);
                 Tuning = note.tuning;
                 SetTuningFontWeight();
                 if (note.pitch.data.Count >= 2) {
@@ -361,8 +376,8 @@ namespace OpenUtau.App.ViewModels {
                 if (cmd is ChangeNoteLyricCommand) {
                     Lyric = note.lyric;
                     this.RaisePropertyChanged(nameof(Lyric));
-                } else if (cmd is MoveNoteCommand) {
-                    Tone = MusicMath.GetToneName(note.tone);
+                } else if (cmd is MoveNoteCommand || cmd is SetNotePitchAddressCommand) {
+                    Tone = ToneText(note);
                     this.RaisePropertyChanged(nameof(Tone));
                 } else if (cmd is ChangeNoteTuningCommand) {
                     Tuning = note.tuning;
@@ -483,8 +498,26 @@ namespace OpenUtau.App.ViewModels {
                     try {
                         if (obj is string s && !string.IsNullOrEmpty(s)) {
                             int tone = MusicMath.NameToTone(s);
+                            var tuning = EffectiveTuning;
 
-                            if ((s.StartsWith("+") || s.StartsWith("-")) && int.TryParse(s, out int i) && i != 0) {
+                            if (tuning != null) {
+                                // Xen names and step offsets set exact degrees; relative input moves each note by steps.
+                                DocManager.Inst.StartUndoGroup("command.property.edit");
+                                try {
+                                    foreach (UNote note in selectedNotes) {
+                                        int current = DegreeOf(tuning, note);
+                                        if (!PitchNameInput.TryParse(tuning, s, current, out int degree)) throw new FormatException();
+                                        if (degree != current || note.pitchAddress?.ResidualCents != 0) {
+                                            DocManager.Inst.ExecuteCmd(new SetNotePitchAddressCommand(Part!, note, new PitchAddress { Degree = degree }));
+                                        }
+                                    }
+                                } finally {
+                                    DocManager.Inst.EndUndoGroup();
+                                }
+                                var head = selectedNotes.FirstOrDefault();
+                                Tone = head != null ? ToneText(head) : string.Empty;
+                                this.RaisePropertyChanged(nameof(Tone));
+                            } else if ((s.StartsWith("+") || s.StartsWith("-")) && int.TryParse(s, out int i) && i != 0) {
                                 foreach (UNote note in selectedNotes) {
                                     DocManager.Inst.ExecuteCmd(new MoveNoteCommand(Part, note, 0, i));
                                 }
@@ -500,7 +533,7 @@ namespace OpenUtau.App.ViewModels {
                         }
                     } catch {
                         var note = selectedNotes.FirstOrDefault();
-                        Tone = note != null ? MusicMath.GetToneName(note.tone) : string.Empty;
+                        Tone = note != null ? ToneText(note) : string.Empty;
                         this.RaisePropertyChanged(nameof(Tone));
                     }
                 } else if (tag == "Tuning") {

@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Tên nốt tùy chỉnh</system:String>
   <system:String x:Key="xen.notation.none">Không</system:String>
+  <system:String x:Key="xen.notation.auto">Tự động</system:String>
   <system:String x:Key="xen.display.full">Tất cả cao độ</system:String>
   <system:String x:Key="xen.display.highlight">Tô sáng thang âm</system:String>
   <system:String x:Key="xen.display.compact">Thang âm thu gọn</system:String>

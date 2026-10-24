@@ -85,3 +85,14 @@ a completed first release.
 Amendment (2026-10-24, user decision): ENUNU and Vogen actual-voice
 verification and real MIDI hardware checks are waived for the first release
 and recorded as unverified. All other completion requirements are unchanged.
+
+Amendment (2026-10-24, user review of the first trial build):
+- Key labels: Stein–Zimmermann–Gould where a tuning-specific table exists, then Ups
+  and Downs for every octave equal division, then degree numbers. This replaces
+  the earlier "no table → degree" rule. Old projects gain names at display time.
+- Row layout and primary/secondary key labels are editor preferences in the
+  piano-roll View menu, not tuning data. The tuning keeps its scale selection;
+  the stored layout and label fields remain serialised for compatibility only.
+- Key colour follows the note name (natural white, altered black), by degree index.
+- The note Tone field accepts natural ± steps (53-EDO `C4+4`, `D4-4`), spelled
+  names and relative steps, and sets exact degrees.

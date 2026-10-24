@@ -156,20 +156,19 @@ namespace OpenUtau.App.Controls {
                     int periodDegree = mod(degree, tuning.DegreeCount);
                     bool active = mapper.IsScaleRow(row);
                     bool root = periodDegree == 0;
-                    bool accidental = tuning.Keyboard.Classes.TryGetValue(periodDegree, out string? keyClass)
-                        ? keyClass == "accidental" || keyClass == "secondary"
-                        : tuning.DegreeCount == 12 && MusicMath.IsBlackKey((int)Math.Round(mapper.MidiAtRow(row)));
+                    bool accidental = PitchNotation.IsAccidental(tuning, degree);
                     var brush = IsKeyboard
                         ? (root ? ThemeManager.CenterKeyBrush : accidental ? ThemeManager.BlackKeyBrush : ThemeManager.WhiteKeyBrush)
-                        : (tuning.Keyboard.Mode == PitchDisplayMode.ScaleHighlight && active ? ThemeManager.CenterKeyBrush
+                        : (mapper.Mode == PitchDisplayMode.ScaleHighlight && active ? ThemeManager.CenterKeyBrush
                             : (accidental ^ ThemeManager.IsDarkMode ? Foreground : Background));
                     context.DrawRectangle(brush, null, new Rect(0, Math.Floor(top), Bounds.Width, TrackHeight));
                     if (IsKeyboard && TrackHeight >= 12) {
                         var textBrush = root ? ThemeManager.CenterKeyNameBrush
                             : accidental ? ThemeManager.BlackKeyNameBrush : ThemeManager.WhiteKeyNameBrush;
-                        string primary = PitchNotation.Format(tuning, degree, tuning.Keyboard.PrimaryNotation);
-                        string? secondary = string.IsNullOrEmpty(tuning.Keyboard.SecondaryNotation) ? null
-                            : PitchNotation.Format(tuning, degree, tuning.Keyboard.SecondaryNotation);
+                        string primaryId = PitchNotation.ResolvePrimary(tuning, Preferences.Default.XenPrimaryNotation);
+                        string? secondaryId = PitchNotation.ResolveSecondary(tuning, primaryId, Preferences.Default.XenSecondaryNotation);
+                        string primary = PitchNotation.Format(tuning, degree, primaryId);
+                        string? secondary = secondaryId == null ? null : PitchNotation.Format(tuning, degree, secondaryId, false);
                         double primarySize = TrackHeight >= 22 ? 12 : 10;
                         bool dual = secondary != null && secondary != primary && TrackHeight >= 24;
                         using (context.PushClip(new Rect(secondary != null && !dual ? 27 : 0, top,

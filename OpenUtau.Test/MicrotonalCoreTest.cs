@@ -161,7 +161,7 @@ namespace OpenUtau.Test {
         [Fact]
         public void UnsupportedNotationFallsBackToDegreeWithoutChangingPitch() {
             var tuning = TuningPresets.EqualDivision(53);
-            Assert.Equal("5/53", PitchNotation.Format(tuning, 5, "unsupported-profile"));
+            Assert.Equal("5·4", PitchNotation.Format(tuning, 5, "unsupported-profile"));
             var address = new PitchAddress { Degree = 5 };
             double before = PitchResolver.ResolveFrequency(tuning, address);
             tuning.Keyboard.PrimaryNotation = "ups-downs";

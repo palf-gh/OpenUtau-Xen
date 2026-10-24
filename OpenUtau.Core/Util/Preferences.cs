@@ -162,6 +162,11 @@ namespace OpenUtau.Core.Util {
             public int? PlaybackDeviceIndex;
             public bool ShowPrefs = true;
             public bool ShowTips = true;
+            /// <summary>Xen piano-roll rows: 0 all pitches, 1 highlight scale, 2 compact scale.</summary>
+            public int XenPitchRows = 0;
+            /// <summary>Xen key labels: "auto", a notation id, or for the secondary label "none".</summary>
+            public string XenPrimaryNotation = "auto";
+            public string XenSecondaryNotation = "auto";
             public string ThemeName = "Light";
             public int DegreeStyle;
             public bool UseTrackColor = false;

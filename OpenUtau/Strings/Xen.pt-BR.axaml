@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Nomes personalizados</system:String>
   <system:String x:Key="xen.notation.none">Nenhuma</system:String>
+  <system:String x:Key="xen.notation.auto">Automática</system:String>
   <system:String x:Key="xen.display.full">Todas as alturas</system:String>
   <system:String x:Key="xen.display.highlight">Destacar escala</system:String>
   <system:String x:Key="xen.display.compact">Escala compacta</system:String>

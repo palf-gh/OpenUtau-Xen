@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Nume personalizate</system:String>
   <system:String x:Key="xen.notation.none">Niciuna</system:String>
+  <system:String x:Key="xen.notation.auto">Automată</system:String>
   <system:String x:Key="xen.display.full">Toate înălțimile</system:String>
   <system:String x:Key="xen.display.highlight">Evidențiază gama</system:String>
   <system:String x:Key="xen.display.compact">Gamă compactă</system:String>

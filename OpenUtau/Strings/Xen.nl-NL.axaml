@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Eigen namen</system:String>
   <system:String x:Key="xen.notation.none">Geen</system:String>
+  <system:String x:Key="xen.notation.auto">Automatisch</system:String>
   <system:String x:Key="xen.display.full">Alle toonhoogten</system:String>
   <system:String x:Key="xen.display.highlight">Toonladder markeren</system:String>
   <system:String x:Key="xen.display.compact">Compacte toonladder</system:String>

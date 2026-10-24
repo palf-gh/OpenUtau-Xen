@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Nama nada khusus</system:String>
   <system:String x:Key="xen.notation.none">Tidak ada</system:String>
+  <system:String x:Key="xen.notation.auto">Otomatis</system:String>
   <system:String x:Key="xen.display.full">Semua nada</system:String>
   <system:String x:Key="xen.display.highlight">Sorot tangga nada</system:String>
   <system:String x:Key="xen.display.compact">Tangga nada ringkas</system:String>

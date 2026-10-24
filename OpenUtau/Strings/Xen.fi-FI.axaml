@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Omat nimet</system:String>
   <system:String x:Key="xen.notation.none">Ei mitään</system:String>
+  <system:String x:Key="xen.notation.auto">Automaattinen</system:String>
   <system:String x:Key="xen.display.full">Kaikki sävelet</system:String>
   <system:String x:Key="xen.display.highlight">Korosta asteikkoa</system:String>
   <system:String x:Key="xen.display.compact">Tiivis asteikko</system:String>

@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Свои названия</system:String>
   <system:String x:Key="xen.notation.none">Нет</system:String>
+  <system:String x:Key="xen.notation.auto">Автоматически</system:String>
   <system:String x:Key="xen.display.full">Все высоты</system:String>
   <system:String x:Key="xen.display.highlight">Выделить звукоряд</system:String>
   <system:String x:Key="xen.display.compact">Компактный звукоряд</system:String>

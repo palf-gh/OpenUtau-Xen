@@ -15,6 +15,7 @@ using OpenUtau.App.ViewModels;
 using OpenUtau.App.Views;
 using OpenUtau.Core;
 using OpenUtau.Core.Editing;
+using OpenUtau.Core.Microtonal;
 using OpenUtau.Core.Ustx;
 using OpenUtau.Core.Util;
 using OpenUtau.ViewModels;
@@ -52,6 +53,7 @@ namespace OpenUtau.App.Controls {
 
         public PianoRoll(PianoRollViewModel model) {
             InitializeComponent();
+            BuildXenViewMenus();
             DataContext = ViewModel = model;
             ValueTip.IsVisible = false;
             SetPenToolIcon();
@@ -352,6 +354,45 @@ namespace OpenUtau.App.Controls {
                 }
                 DocManager.Inst.ExecuteCmd(new GotoOtoNotification(singer, oto));
             } catch { }
+        }
+
+        static readonly string[] XenPrimaryChoices = { PitchNotation.Auto, "szg", "ups-downs", "custom", "degree" };
+        static readonly string[] XenSecondaryChoices = { PitchNotation.Auto, PitchNotation.None, "degree", "szg", "ups-downs", "custom" };
+        void BuildXenViewMenus() {
+            XenRowsMenu.ItemsSource = new[] { "display.full", "display.highlight", "display.compact" }
+                .Select((key, index) => XenChoice(key, () => {
+                    Preferences.Default.XenPitchRows = index;
+                })).ToArray();
+            XenPrimaryMenu.ItemsSource = XenPrimaryChoices.Select(id => XenChoice("notation." + id, () => {
+                Preferences.Default.XenPrimaryNotation = id;
+            }, id)).ToArray();
+            XenSecondaryMenu.ItemsSource = XenSecondaryChoices.Select(id => XenChoice("notation." + id, () => {
+                Preferences.Default.XenSecondaryNotation = id;
+            }, id)).ToArray();
+        }
+        MenuItem XenChoice(string key, Action select, string? notationId = null) {
+            var item = new MenuItem { Header = XenStrings.Get(key), Tag = notationId, Icon = new CheckBox { IsHitTestVisible = false } };
+            item.Click += (_, _) => {
+                select();
+                Preferences.Save();
+                ViewModel.NotesViewModel.RefreshPitchRows();
+            };
+            return item;
+        }
+        void OnXenViewMenuOpened(object? sender, RoutedEventArgs args) {
+            var tuning = ViewModel.NotesViewModel.EffectiveTuning;
+            void Mark(MenuItem menu, Func<int, MenuItem, bool> isChecked) {
+                if (menu.ItemsSource is not MenuItem[] items) return;
+                for (int i = 0; i < items.Length; i++) {
+                    ((CheckBox)items[i].Icon!).IsChecked = isChecked(i, items[i]);
+                    if (items[i].Tag is string id && id != PitchNotation.Auto && id != PitchNotation.None) {
+                        items[i].IsEnabled = PitchNotation.IsAvailable(tuning, id);
+                    }
+                }
+            }
+            Mark(XenRowsMenu, (i, _) => i == Preferences.Default.XenPitchRows);
+            Mark(XenPrimaryMenu, (_, item) => (string?)item.Tag == Preferences.Default.XenPrimaryNotation);
+            Mark(XenSecondaryMenu, (_, item) => (string?)item.Tag == Preferences.Default.XenSecondaryNotation);
         }
 
         async void OnMenuTuning(object sender, RoutedEventArgs args) {

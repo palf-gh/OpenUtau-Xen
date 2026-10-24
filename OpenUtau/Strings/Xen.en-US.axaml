@@ -51,6 +51,7 @@
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.custom">Custom names</system:String>
   <system:String x:Key="xen.notation.none">None</system:String>
+  <system:String x:Key="xen.notation.auto">Automatic</system:String>
   <system:String x:Key="xen.display.full">All pitches</system:String>
   <system:String x:Key="xen.display.highlight">Highlight scale</system:String>
   <system:String x:Key="xen.display.compact">Compact scale</system:String>

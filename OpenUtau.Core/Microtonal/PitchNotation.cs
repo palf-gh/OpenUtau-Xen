@@ -1,22 +1,108 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
 namespace OpenUtau.Core.Microtonal {
     public static class PitchNotation {
+        public const string Auto = "auto";
+        public const string None = "none";
+        // Automatic labels prefer user-authored names, then verified accidentals, then Ups and Downs.
+        static readonly string[] AutoOrder = { "custom", "szg", "ups-downs" };
+        static readonly ConcurrentDictionary<int, IReadOnlyList<NotationProfile>> builtIn = new ConcurrentDictionary<int, IReadOnlyList<NotationProfile>>();
+
         public static string Format(TuningDefinition tuning, int degree, string? notationId = null, bool includePeriod = true) {
             int count = tuning.DegreeCount;
             int period = (int)Math.Floor((double)degree / count);
             int index = degree - period * count;
             string id = notationId ?? tuning.Keyboard.PrimaryNotation;
-            var profile = tuning.Notations.FirstOrDefault(p => p.Id == id);
-            string label = profile != null && profile.Names.TryGetValue(index, out string? name)
-                ? name : index.ToString(CultureInfo.InvariantCulture);
-            if (profile != null && profile.AccidentalIds.TryGetValue(index, out var accidental)) label += AccidentalGlyph(accidental);
-            if (id == "degree" || profile == null) return includePeriod ? $"{degree}/{count}" : label;
+            var profile = id == "degree" ? null : FindProfile(tuning, id);
+            if (profile == null || !profile.Names.TryGetValue(index, out string? label)) {
+                string number = index.ToString(CultureInfo.InvariantCulture);
+                return includePeriod ? number + "·" + (period + 4).ToString(CultureInfo.InvariantCulture) : number;
+            }
+            if (profile.AccidentalIds.TryGetValue(index, out var accidental)) label += AccidentalGlyph(accidental);
             int nominalPeriodOffset = profile.PeriodOffsets.TryGetValue(index, out int offset) ? offset : 0;
             return includePeriod ? label + (period + 4 + nominalPeriodOffset).ToString(CultureInfo.InvariantCulture) : label;
+        }
+
+        /// <summary>
+        /// The tuning's own profile, or for an octave equal division the built-in profile of the same name,
+        /// so projects saved before a notation table existed still show names. Nothing is written back.
+        /// </summary>
+        public static NotationProfile? FindProfile(TuningDefinition tuning, string id) {
+            var own = tuning.Notations.FirstOrDefault(p => p.Id == id && p.Names.Count > 0);
+            if (own != null) return own;
+            if (tuning.Divisions <= 0 || tuning.Divisions > 256 || Math.Abs(tuning.PeriodCents - 1200) > 1e-8) return null;
+            return builtIn.GetOrAdd(tuning.Divisions, n => TuningPresets.EqualDivision(n).Notations)
+                .FirstOrDefault(p => p.Id == id && p.Names.Count > 0);
+        }
+        public static bool IsAvailable(TuningDefinition tuning, string id) => id == "degree" || FindProfile(tuning, id) != null;
+
+        public static string ResolvePrimary(TuningDefinition tuning, string? preference) {
+            if (!string.IsNullOrEmpty(preference) && preference != Auto && IsAvailable(tuning, preference)) return preference;
+            string stored = tuning.Keyboard.PrimaryNotation;
+            if (stored != "degree" && IsAvailable(tuning, stored)) return stored;
+            return AutoOrder.FirstOrDefault(id => IsAvailable(tuning, id)) ?? "degree";
+        }
+        public static string? ResolveSecondary(TuningDefinition tuning, string primary, string? preference) {
+            if (preference == None) return null;
+            if (!string.IsNullOrEmpty(preference) && preference != Auto && IsAvailable(tuning, preference)) {
+                return preference == primary ? null : preference;
+            }
+            return primary == "degree" ? null : "degree";
+        }
+
+        /// <summary>Key colour by degree index, never by physical pitch, so it survives any reference frequency.</summary>
+        public static bool IsAccidental(TuningDefinition tuning, int degree) {
+            int count = tuning.DegreeCount;
+            int index = (degree % count + count) % count;
+            if (tuning.Keyboard.Classes.TryGetValue(index, out string? keyClass)) return keyClass is "accidental" or "secondary";
+            foreach (string id in new[] { "szg", "ups-downs", "custom" }) {
+                var profile = FindProfile(tuning, id);
+                if (profile != null && profile.Names.TryGetValue(index, out string? name)) {
+                    return profile.AccidentalIds.ContainsKey(index) || AccidentalMarks.Any(name.Contains);
+                }
+            }
+            return count == 12 && Math.Abs(tuning.PeriodCents - 1200) < 1e-8 && index is 1 or 3 or 6 or 8 or 10;
+        }
+        static readonly string[] AccidentalMarks = { "♯", "♭", "↑", "↓", "#", "𝄪", "𝄫" };
+
+        /// <summary>Twelve named keys for C-centred twelve-note presets, in degree order.</summary>
+        public static NotationProfile Chromatic(string name, IReadOnlyList<string> names) {
+            if (names.Count != 12) throw new ArgumentException("Twelve names are required.", nameof(names));
+            var profile = new NotationProfile { Id = "szg", Name = name };
+            for (int i = 0; i < 12; i++) profile.Names[i] = names[i];
+            return profile;
+        }
+
+        /// <summary>
+        /// 31-EDO with half-sharps and half-flats (Fokker's 31-tone spelling): sharp = 2 steps, half-sharp = 1.
+        /// Stein quarter-tone glyphs denote the half-sharp/half-flat here. Each enharmonic is kept as an alias.
+        /// </summary>
+        public static NotationProfile ThirtyOneHalfAccidentals() {
+            var profile = new NotationProfile { Id = "szg", Name = "Stein–Zimmermann half accidentals (31-EDO)" };
+            const string halfSharp = "accidentalQuarterToneSharpStein", halfFlat = "accidentalQuarterToneFlatStein";
+            var table = new (string Name, string? Accidental)[] {
+                ("C", null), ("C", halfSharp), ("C♯", null), ("D♭", null), ("D", halfFlat),
+                ("D", null), ("D", halfSharp), ("D♯", null), ("E♭", null), ("E", halfFlat),
+                ("E", null), ("E", halfSharp), ("F", halfFlat), ("F", null), ("F", halfSharp),
+                ("F♯", null), ("G♭", null), ("G", halfFlat), ("G", null), ("G", halfSharp),
+                ("G♯", null), ("A♭", null), ("A", halfFlat), ("A", null), ("A", halfSharp),
+                ("A♯", null), ("B♭", null), ("B", halfFlat), ("B", null), ("B", halfSharp), ("C", halfFlat),
+            };
+            for (int degree = 0; degree < table.Length; degree++) {
+                profile.Names[degree] = table[degree].Name;
+                if (table[degree].Accidental != null) profile.AccidentalIds[degree] = table[degree].Accidental!;
+            }
+            profile.PeriodOffsets[30] = 1;
+            profile.Aliases[1] = new List<string> { "D𝄫" };
+            profile.Aliases[11] = new List<string> { "F♭" };
+            profile.Aliases[12] = new List<string> { "E♯" };
+            profile.Aliases[29] = new List<string> { "C♭" };
+            profile.Aliases[30] = new List<string> { "B♯" };
+            return profile;
         }
         public static string AccidentalGlyph(string semanticId) => string.Concat(semanticId.Split('|').Select(SingleAccidentalGlyph));
         static string SingleAccidentalGlyph(string semanticId) => semanticId switch {

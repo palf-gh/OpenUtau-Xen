@@ -18,15 +18,23 @@ full first-release acceptance plan is tracked in
 - Use **Project → Project tuning** for the project default, or the piano-roll
   tuning menu for a track override. References, including the A4 frequency, are editable.
 - **Apply tuning** snaps existing notes to the new tuning. **Change reference**
-  keeps degrees. **Apply display** changes only notation, scale and layout. The option
+  keeps degrees. **Apply display** changes only the active scale. The option
   to retain existing frequencies converts notes into a degree plus residual cents.
 - `.ustxen` stores complete projects with embedded definitions. `.tunxen` stores
   reusable tuning, scale, notation and keyboard presets.
 - Import upstream `.ustx`, Scala `.scl` and `.kbm`. Export compatible USTX as a
   separate file. MIDI export quantises to semitones; UST carries converted pitch
   offsets in its curves. Interchange formats cannot preserve all Xen metadata.
-- Full, Scale Highlight and Compact layouts retain continuous physical pitch.
-  Compact includes supplementary rows for existing off-scale notes.
+- The piano roll's **View** menu sets the row layout (all pitches, highlighted scale
+  or compact scale) and the primary and secondary key labels. These are editor
+  settings and do not change the tuning or the project. Every layout retains continuous
+  physical pitch; the compact layout adds rows for existing off-scale notes.
+- Key labels default to Stein–Zimmermann–Gould where a verified table exists (12, 24,
+  31 and 53-EDO and the twelve-note presets) and Ups and Downs for other equal divisions.
+  Natural names are white keys and altered names are black keys.
+- The note property **Tone** field accepts a natural plus or minus tuning steps
+  (53-EDO: `C4`, `C4+1` … `C4+4`, `D4-4` … `D4-1`, `D4`), spelled names such as
+  `C#4` or `Db4`, and relative steps such as `+3`.
 - Tuning and MIDI controls, warnings and preset labels are localised in all
   20 registered languages. The source locale identifier en-US uses British English.
 
@@ -174,15 +182,23 @@ OpenUtau Xen は [OpenUtau](https://github.com/stakira/OpenUtau) を基にした
   ピアノロールの音律メニューで設定します。A4 の周波数を含む基準音も変更できます。
 - **Apply tuning** は既存ノートを新しい音律の最寄りの degree へ合わせます。
   **Change reference** は degree を保ったまま基準を変えます。**Apply display** は
-  記法・スケール・表示だけを変えます。既存の周波数を保つ選択肢では、ノートを
+  使用するスケールだけを変えます。既存の周波数を保つ選択肢では、ノートを
   degree と残差セントで表します。
 - `.ustxen` は音律定義を埋め込んだプロジェクト全体を保存します。`.tunxen` は
   再利用できる音律・スケール・記法・鍵盤設定のプリセットを保存します。
 - 本家の `.ustx`、Scala の `.scl`・`.kbm` を読み込めます。互換 USTX は別ファイルとして
   書き出します。MIDI 書出しは半音単位に量子化され、UST は変換後の音高差をピッチ曲線に
   含めます。交換形式では Xen 固有の情報をすべては保持できません。
-- Full・Scale Highlight・Compact のどの表示でも、連続した実際の音高を保ちます。
-  Compact ではスケール外にある既存ノート用の補助行も表示します。
+- 行の表示方式（すべての音・スケールを強調・スケールを圧縮表示）と、鍵盤の主表記・副表記は、
+  ピアノロールの **View** メニューで選びます。これらはエディターの設定で、音律と
+  プロジェクトは変わりません。どの表示方式でも連続した実際の音高を保ち、圧縮表示では
+  スケール外にある既存ノート用の行を加えます。
+- 鍵盤の表記は、検証済みの対応表がある音律（12・24・31・53 平均律と 12 音のプリセット）では
+  Stein–Zimmermann–Gould、ほかの平均律では Ups and Downs を既定にしています。
+  変化記号のない音名は白鍵、変化記号のある音名は黒鍵で表示します。
+- ノートのプロパティの **Tone** 欄には幹音に音律の段数を足し引きした形
+  （53 平均律なら `C4`、`C4+1` … `C4+4`、`D4-4` … `D4-1`、`D4`）を入力できます。
+  `C#4`・`Db4` のような音名や、`+3` のような相対的な段数も使えます。
 - 音律と MIDI の操作部、警告、プリセット名は、登録済みの 20 言語すべてに翻訳しています。
   元言語の識別子 en-US の文言はイギリス英語です。
 
