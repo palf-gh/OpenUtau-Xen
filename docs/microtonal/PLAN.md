@@ -97,8 +97,13 @@ Amendment (2026-10-24, user review of the first trial build):
 - Key colour follows the note name (natural white, altered black), by degree index.
 - The note Tone field accepts natural ± steps (53-EDO `C4+4`, `D4-4`), spelled
   names and relative steps, and sets exact degrees.
-- Key colours follow `docs/microtonal_keyboard_algorithm_spec.md` (user-supplied,
-  2026-10-24): White / Black / Between roles from generator-derived anchors, a
-  dilation radius scaled to 31-EDO (octave) or 13-EDT (tritave), conflict and
-  short-gap rules. Between is a third themed colour. Equal divisions of the
-  tritave use Bohlen–Pierce Lambda names. This supersedes the name-based colours.
+- Key colours use the general MOS engine described in `keyboard-mos.md` and the
+  user's latest supplied general-MOS specification (2026-10-25). Each tuning's
+  baseline MOS supplies the nominal and accidental anchors. The central third
+  of an anchor interval remains Between; White-to-White interiors also remain
+  Between. This supersedes the fixed dilation radius and short-gap closure in
+  `docs/microtonal_keyboard_algorithm_spec.md`. Performance-scale selection only
+  changes scale markers, never the baseline key roles or shapes. Equal divisions
+  of the tritave retain Bohlen–Pierce Lambda names. Settings previews use
+  interlocking notched shapes with at most five degrees in each balanced column;
+  piano-roll row geometry remains in `PitchRowMapper`.

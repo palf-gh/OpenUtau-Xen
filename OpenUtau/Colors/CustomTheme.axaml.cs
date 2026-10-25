@@ -111,6 +111,8 @@ public class CustomTheme {
             SetResourceColor("BlackKeyColorLeft", Default.BlackKeyColorLeft);
             SetResourceColor("BlackKeyColorRight", Default.BlackKeyColorRight);
             SetResourceColor("BlackKeyNameColor", Default.BlackKeyNameColor);
+            SetResourceColor("KeyboardPreviewBlackColor", Default.KeyboardPreviewBlackColor);
+            SetResourceColor("KeyboardPreviewBlackNameColor", Default.KeyboardPreviewBlackNameColor);
 
             SetResourceColor("BetweenKeyColorLeft", Default.BetweenKeyColorLeft);
             SetResourceColor("BetweenKeyColorRight", Default.BetweenKeyColorRight);
@@ -179,6 +181,8 @@ public class CustomTheme {
         public string BlackKeyColorLeft = "#D9EF85";
         public string BlackKeyColorRight = "#CBE960";
         public string BlackKeyNameColor = "#101010";
+        public string KeyboardPreviewBlackColor = "#202020";
+        public string KeyboardPreviewBlackNameColor = "#F2F2F2";
 
         public string BetweenKeyColorLeft = "#C9CEF8";
         public string BetweenKeyColorRight = "#AEB6F4";

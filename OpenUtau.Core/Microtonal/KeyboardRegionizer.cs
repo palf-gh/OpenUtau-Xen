@@ -9,7 +9,7 @@ namespace OpenUtau.Core.Microtonal {
     /// <summary>
     /// Theory behind a piano-style keyboard for one equal division: natural anchors from a generator,
     /// and a chromatic alteration splitting each large step into sharp and flat anchors.
-    /// See docs/microtonal_keyboard_algorithm_spec.md.
+    /// Family presets feed the general engine described in docs/microtonal/keyboard-mos.md.
     /// </summary>
     public sealed class KeyboardTheory {
         public int Divisions { get; }
@@ -65,65 +65,33 @@ namespace OpenUtau.Core.Microtonal {
     }
 
     public static class KeyboardRegionizer {
-        static readonly ConcurrentDictionary<(int, int, int), KeyRole[]?> cache = new ConcurrentDictionary<(int, int, int), KeyRole[]?>();
+        static readonly ConcurrentDictionary<(int, int, int), MosKeyboard> cache = new ConcurrentDictionary<(int, int, int), MosKeyboard>();
 
         /// <summary>Roles per degree index, or null when the tuning has no valid piano-style theory.</summary>
         public static KeyRole[]? Roles(TuningDefinition tuning) {
-            var theory = KeyboardTheory.For(tuning);
-            if (theory == null) return null;
-            return cache.GetOrAdd((theory.Divisions, theory.ReferenceDivision, theory.Generator),
-                _ => theory.IsValid ? Regionize(theory) : null);
+            return Model(tuning)?.Roles;
         }
 
-        public static KeyRole[] Regionize(KeyboardTheory theory) {
+        /// <summary>The tuning's baseline MOS, independent of its active performance scale.</summary>
+        public static MosKeyboard? Model(TuningDefinition tuning) {
+            var theory = KeyboardTheory.For(tuning);
+            if (theory == null || !theory.IsValid) return null;
+            return cache.GetOrAdd((theory.Divisions, theory.ReferenceDivision, theory.Generator), _ => Baseline(theory));
+        }
+
+        public static KeyRole[] Regionize(KeyboardTheory theory) => Baseline(theory).Roles;
+
+        static MosKeyboard Baseline(KeyboardTheory theory) {
             if (!theory.IsValid) throw new ArgumentException("The theory has no positive large, small and chromatic steps.", nameof(theory));
-            int n = theory.Divisions;
-            int Mod(int value) => (value % n + n) % n;
-            var white = new HashSet<int>(theory.Naturals.Select(Mod));
-            var black = new HashSet<int>();
-            var pairs = new List<(int Low, int High)>();
-            foreach (int gap in theory.LargeGaps) {
-                int x = theory.Naturals[gap];
-                int sharp = x + theory.Chromatic, flat = x + theory.Small;
-                black.Add(Mod(sharp));
-                black.Add(Mod(flat));
-                pairs.Add((Math.Min(sharp, flat), Math.Max(sharp, flat)));
-            }
-            var roles = Enumerable.Repeat(KeyRole.Between, n).ToArray();
-            foreach (int step in black) roles[step] = KeyRole.Black;
-            foreach (int step in white) roles[step] = KeyRole.White;
-            // A White and a Black exact anchor on one step is a conflict, never silently resolved.
-            foreach (int step in white.Intersect(black)) roles[step] = KeyRole.Between;
-            var anchors = new HashSet<int>(white.Union(black));
-
-            int radius = n / (2 * theory.ReferenceDivision);
-            if (radius > 0) {
-                int Distance(int a, int b) { int d = Math.Abs(Mod(a - b)); return Math.Min(d, n - d); }
-                var dilated = (KeyRole[])roles.Clone();
-                for (int step = 0; step < n; step++) {
-                    if (anchors.Contains(step)) continue;
-                    int whiteDistance = white.Where(a => !black.Contains(a)).Select(a => Distance(step, a)).DefaultIfEmpty(int.MaxValue).Min();
-                    int blackDistance = black.Where(a => !white.Contains(a)).Select(a => Distance(step, a)).DefaultIfEmpty(int.MaxValue).Min();
-                    bool nearWhite = whiteDistance <= radius, nearBlack = blackDistance <= radius;
-                    dilated[step] = nearWhite && nearBlack
-                        ? whiteDistance < blackDistance ? KeyRole.White : blackDistance < whiteDistance ? KeyRole.Black : KeyRole.Between
-                        : nearWhite ? KeyRole.White : nearBlack ? KeyRole.Black : KeyRole.Between;
+            // Family definitions choose a baseline mode; both families then use the same orbit engine.
+            // Retain C-diatonic and C-Lambda roots rather than assigning western names to a different mode.
+            for (int rotation = 0; rotation < theory.Naturals.Count; rotation++) {
+                if (MosKeyboard.NominalSteps(theory.Divisions, theory.Generator, theory.Naturals.Count, rotation)
+                    .SequenceEqual(theory.Naturals)) {
+                    return MosKeyboard.Generate(theory.Divisions, theory.Generator, theory.Naturals.Count, rotation);
                 }
-                roles = dilated;
             }
-
-            // Short-gap closure: within one large step, join the sharp and flat regions when at most one
-            // Between step separates them. Natural regions are never bridged.
-            foreach (var (low, high) in pairs) {
-                if (low == high) continue;
-                int top = low;
-                while (top + 1 < high && roles[Mod(top + 1)] == KeyRole.Black) top++;
-                int bottom = high;
-                while (bottom - 1 > top && roles[Mod(bottom - 1)] == KeyRole.Black) bottom--;
-                int between = bottom - top - 1;
-                if (between == 1 && roles[Mod(top + 1)] == KeyRole.Between) roles[Mod(top + 1)] = KeyRole.Black;
-            }
-            return roles;
+            throw new ArgumentException("The baseline mode is not on the generator orbit.", nameof(theory));
         }
     }
 }

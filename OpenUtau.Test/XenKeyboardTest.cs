@@ -3,7 +3,7 @@ using OpenUtau.Core.Microtonal;
 using Xunit;
 
 namespace OpenUtau.Test {
-    /// <summary>Required cases of docs/microtonal_keyboard_algorithm_spec.md §25.</summary>
+    /// <summary>Baseline cases for the current central-third MOS keyboard heuristic.</summary>
     public class XenKeyboardTest {
         static KeyRole[] Octave(int n) => KeyboardRegionizer.Regionize(KeyboardTheory.Octave(n));
         static KeyRole[] Tritave(int n) => KeyboardRegionizer.Regionize(KeyboardTheory.Tritave(n));
@@ -17,10 +17,10 @@ namespace OpenUtau.Test {
         }
 
         [Fact]
-        public void TwentyTwoClosesTheBlackClusterToThreeKeys() {
+        public void TwentyTwoKeepsBetweenInsideTheBlackCluster() {
             var theory = KeyboardTheory.Octave(22);
             Assert.Equal((13, 4, 1, 3), (theory.Generator, theory.Large, theory.Small, theory.Chromatic));
-            Assert.Equal(new[] { W, K, K, K, W }, Octave(22).Take(5));
+            Assert.Equal(new[] { W, K, B, K, W }, Octave(22).Take(5));
         }
 
         [Fact]
@@ -48,14 +48,15 @@ namespace OpenUtau.Test {
             var roles = Octave(53);
             Assert.Equal(K, roles[4]);
             Assert.Equal(K, roles[5]);
-            Assert.Equal((7, 10, 36), Count(roles));
+            Assert.Equal(new[] { W, W, B, K, K, K, K, B, W, W }, roles.Take(10));
+            Assert.Equal((17, 20, 16), Count(roles));
         }
 
         [Fact]
-        public void SeventyTwoDilatesAnchorsByOneStep() {
+        public void SeventyTwoPartitionsAnchorIntervalsButLeavesNaturalGapsBetween() {
             var roles = Octave(72);
             Assert.Equal(new[] { W, W, B, B, B, K, K, K, B, B, B, W, W }, roles.Take(13));
-            Assert.Equal(W, roles[71]);
+            Assert.Equal(B, roles[71]);
         }
 
         [Fact]
@@ -74,6 +75,7 @@ namespace OpenUtau.Test {
         [Theory]
         [InlineData(31, 7, 4, 3)]
         [InlineData(53, 12, 7, 5)]
+        [InlineData(73, 17, 12, 5)]
         public void LargerEdtsRecomputeTheLambdaStructure(int n, int g, int large, int small) {
             var theory = KeyboardTheory.Tritave(n);
             Assert.Equal((g, large, small), (theory.Generator, theory.Large, theory.Small));

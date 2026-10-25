@@ -12,8 +12,8 @@ When the mother tuning matches the applied tuning, the scale and display pages
 apply display metadata without retuning notes. A different mother tuning keeps
 the explicitly labelled tuning-conversion action. The tuning, conversion and
 definition pages also retain that action.
-Each page has a bounded vertical viewport; the generator settings and preview
-stack when their available width falls below 560 device-independent pixels.
+Each page has a bounded vertical viewport. Generator parameters share a compact
+row, with the horizontally scrolling keyboard beneath them.
 
 The tuning page groups the preset, period and division count before the reference
 pitch. The scale page shows the selected subset as a count of the mother's
@@ -24,12 +24,17 @@ and selects that subset. Invalid or repeating generators clear the candidate
 preview. Equal-step and non-MOS results retain the core's distinct result names.
 Modes are presented from 1 while their stored indices remain zero-based.
 
-Both keyboard lists run from high to low pitch and use `PitchNotation.Role`,
-including the shared White/Black/Between classification and Bohlen–Pierce names.
+The three keyboard previews now use interlocking horizontal shapes, following
+the user's latest general-MOS keyboard specification and the baseline-MOS
+decision. They share White/Black/Between classification and Bohlen–Pierce names.
+Performance-scale edits change the selected-degree markers without changing
+the tuning's baseline keyboard. See `keyboard-mos.md` for classification,
+balanced columns, complete tiling and notch selection.
 Music accidentals use `PitchLabelLayout` with Bravura Text, as in the piano roll.
-Existing theme brushes provide the colours. These are degree lists within one
-period; they introduce no additional pitch-to-row conversion. Small degree maps
-show up to 256 degrees; larger tunings retain the exact virtualised list.
+Theme brushes provide the colours, with dedicated black backgrounds and light
+lettering for settings Black keys. Shapes represent one period and
+introduce no additional piano-roll pitch-to-row conversion. Small degree maps
+show up to 256 degrees; larger tunings retain the full scrolling keyboard.
 
 Explicit intervals, custom subsets, editable names/aliases/key classes,
 frequency-preserving conversion, reference-only/display-only application,
@@ -44,7 +49,7 @@ The additional navigation label is supplied in all 20 Xen language overlays.
 The headless application check exercises all five pages at 960 × 620 and
 650 × 440, checks horizontal scroll extents, selects 31-EDO and 13-EDT,
 and generates seven-/nine-degree subsets. It rejects a repeating generator,
-checks candidate row counts and
+checks candidate key counts and
 the selected-degree outlines after generation. The full localisation coverage
 check includes the new navigation key.
 

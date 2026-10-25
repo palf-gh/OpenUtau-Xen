@@ -10,6 +10,7 @@ using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 using OpenUtau.App.ViewModels;
+using OpenUtau.App.Controls;
 using OpenUtau.Core;
 using OpenUtau.Core.Microtonal;
 using OpenUtau.Core.Ustx;
@@ -46,9 +47,9 @@ namespace OpenUtau.App.Views {
         readonly TextBlock scaleResult = new TextBlock { TextWrapping = Avalonia.Media.TextWrapping.Wrap };
         readonly TextBlock tuningSummary = new TextBlock { FontSize = 18, FontWeight = Avalonia.Media.FontWeight.SemiBold };
         readonly TextBlock scaleSummary = new TextBlock { TextWrapping = Avalonia.Media.TextWrapping.Wrap };
-        readonly ListBox pitchPreview = new ListBox { Height = 220, Name = "TuningPitchPreview" };
-        readonly ListBox scalePreview = new ListBox { Height = 220, Name = "ScalePitchPreview" };
-        readonly ListBox generatorPreview = new ListBox { Height = 180, Name = "GeneratorPitchPreview" };
+        readonly NotchedKeyboardPreview pitchPreview = new NotchedKeyboardPreview { Name = "TuningPitchPreview" };
+        readonly NotchedKeyboardPreview scalePreview = new NotchedKeyboardPreview { Name = "ScalePitchPreview" };
+        readonly NotchedKeyboardPreview generatorPreview = new NotchedKeyboardPreview { Name = "GeneratorPitchPreview" };
         readonly Grid degreeMap = new Grid { Name = "TuningDegreeMap", ColumnSpacing = 3, RowSpacing = 3 };
         readonly Grid subsetMap = new Grid { Name = "ScaleDegreeMap", ColumnSpacing = 3, RowSpacing = 3 };
         bool loading;
@@ -97,7 +98,7 @@ namespace OpenUtau.App.Views {
             tuningPage.Children.Add(Button(XenStrings.Get("action.rebuild"), RebuildEntries));
             tuningPage.Children.Add(tuningSummary);
             tuningPage.Children.Add(degreeMap);
-            tuningPage.Children.Add(pitchPreview);
+            tuningPage.Children.Add(KeyboardViewport(pitchPreview));
             tuningPage.Children.Add(new Separator());
             tuningPage.Children.Add(Field(XenStrings.Get("field.referenceDegree"), referenceDegree));
             tuningPage.Children.Add(Field(XenStrings.Get("field.frequency"), frequency));
@@ -108,29 +109,26 @@ namespace OpenUtau.App.Views {
             scalePage.Children.Add(Field(XenStrings.Get("field.scale"), scales));
             scalePage.Children.Add(subsetMap);
             scalePage.Children.Add(new Expander {
-                Header = XenStrings.Get("field.scale"), Content = scalePreview, IsExpanded = false,
+                Header = XenStrings.Get("field.scale"), Content = KeyboardViewport(scalePreview), IsExpanded = false,
                 HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
             });
             var mos = Page("tab.generator");
-            mos.Children.Add(Field(XenStrings.Get("field.generatorDegree"), generator));
-            mos.Children.Add(Field(XenStrings.Get("field.cardinality"), cardinality));
-            mos.Children.Add(Field(XenStrings.Get("field.mode"), mode));
-            mos.Children.Add(scaleResult);
-            mos.Children.Add(Button(XenStrings.Get("action.generateSubset"), GenerateScale));
-            var generatorBody = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), ColumnSpacing = 12 };
-            generatorBody.Children.Add(mos);
-            Grid.SetColumn(generatorPreview, 1);
-            generatorBody.Children.Add(generatorPreview);
-            // Stack at narrow window widths; each page keeps its own vertical scroll area.
-            generatorBody.SizeChanged += (_, _) => {
-                bool narrow = generatorBody.Bounds.Width < 560;
-                if (narrow == (generatorBody.ColumnDefinitions.Count == 1)) return;
-                generatorBody.ColumnDefinitions = new ColumnDefinitions(narrow ? "*" : "*,*");
-                generatorBody.RowDefinitions = new RowDefinitions(narrow ? "Auto,Auto" : "Auto");
-                Grid.SetColumn(generatorPreview, narrow ? 0 : 1);
-                Grid.SetRow(generatorPreview, narrow ? 1 : 0);
+            var parameters = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*"), ColumnSpacing = 12 };
+            var parameterControls = new[] {
+                Parameter("field.generatorDegree", generator), Parameter("field.cardinality", cardinality), Parameter("field.mode", mode),
             };
-            scalePage.Children.Add(Card(generatorBody));
+            for (int i = 0; i < parameterControls.Length; i++) {
+                Grid.SetColumn(parameterControls[i], i); parameters.Children.Add(parameterControls[i]);
+            }
+            mos.Children.Add(parameters);
+            var outcome = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };
+            outcome.Children.Add(scaleResult);
+            var generate = Button(XenStrings.Get("action.generateSubset"), GenerateScale);
+            Grid.SetColumn(generate, 1); outcome.Children.Add(generate);
+            mos.Children.Add(outcome);
+            var candidateKeyboard = KeyboardViewport(generatorPreview);
+            mos.Children.Add(candidateKeyboard);
+            scalePage.Children.Add(Card(mos));
             var custom = new StackPanel { Spacing = 10 };
             custom.Children.Add(Field(XenStrings.Get("field.scaleName"), customScaleName));
             custom.Children.Add(Field(XenStrings.Get("field.degrees"), customScaleDegrees));
@@ -205,9 +203,6 @@ namespace OpenUtau.App.Views {
             Grid.SetRow(body, 1);
             root.Children.Add(body);
             Content = root;
-            ConfigurePitchPreview(pitchPreview);
-            ConfigurePitchPreview(scalePreview);
-            ConfigurePitchPreview(generatorPreview);
             generator.ValueChanged += (_, _) => RefreshGeneratorPreview();
             cardinality.ValueChanged += (_, _) => RefreshGeneratorPreview();
             mode.ValueChanged += (_, _) => RefreshGeneratorPreview();
@@ -278,6 +273,13 @@ namespace OpenUtau.App.Views {
             return card;
         }
 
+        static StackPanel Parameter(string label, Control control) {
+            var field = new StackPanel { Spacing = 6 };
+            field.Children.Add(new TextBlock { Text = XenStrings.Get(label), TextWrapping = Avalonia.Media.TextWrapping.Wrap, MinHeight = 32 });
+            field.Children.Add(control);
+            return field;
+        }
+
         sealed class PreviewPitch {
             public TuningDefinition Tuning { get; set; } = null!;
             public string Notation { get; set; } = "degree";
@@ -288,61 +290,26 @@ namespace OpenUtau.App.Views {
             public bool Selected { get; set; }
         }
 
-        sealed class PitchPreviewLabel : Control {
-            public static readonly StyledProperty<Avalonia.Media.IBrush?> ForegroundProperty =
-                TextBlock.ForegroundProperty.AddOwner<PitchPreviewLabel>();
-            public Avalonia.Media.IBrush? Foreground => GetValue(ForegroundProperty);
-            public string Text { get; set; } = "";
-            static PitchPreviewLabel() => AffectsRender<PitchPreviewLabel>(ForegroundProperty);
-            protected override Size MeasureOverride(Size availableSize) => new Size(80, 22);
-            public override void Render(Avalonia.Media.DrawingContext context) {
-                if (Foreground == null) return;
-                using (context.PushClip(new Rect(Bounds.Size))) {
-                    OpenUtau.App.Controls.PitchLabelLayout.Draw(context, Text ?? "", Foreground,
-                        13, Bounds.Width - 4, 0, Bounds.Height);
-                }
-            }
-        }
-
-        static void ConfigurePitchPreview(ListBox preview) {
-            preview.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<PreviewPitch>((pitch, _) => {
-                if (pitch == null) return new TextBlock();
-                var row = new Grid { ColumnDefinitions = new ColumnDefinitions("32,*,80"), ColumnSpacing = 8 };
-                row.Children.Add(new TextBlock { Text = pitch.Degree.ToString(XenStrings.InputCulture) });
-                var key = new Border { Padding = new Thickness(8, 2), CornerRadius = new CornerRadius(2) };
-                string role = pitch.Role.ToString();
-                key.Bind(Border.BackgroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(role + "KeyBrush"));
-                var label = new PitchPreviewLabel { Text = pitch.Label, MinHeight = 22 };
-                label.Bind(PitchPreviewLabel.ForegroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(role + "KeyNameBrush"));
-                key.Child = label;
-                Grid.SetColumn(key, 1);
-                row.Children.Add(key);
-                var cents = new TextBlock { Text = pitch.Cents, HorizontalAlignment = HorizontalAlignment.Right };
-                Grid.SetColumn(cents, 2);
-                row.Children.Add(cents);
-                // Keep the three keyboard roles intact; scale membership uses a separate column.
-                var result = new Grid { ColumnDefinitions = new ColumnDefinitions("20,*"), MinHeight = 26 };
-                result.Children.Add(new TextBlock { Text = pitch.Selected ? "●" : "", VerticalAlignment = VerticalAlignment.Center });
-                Grid.SetColumn(row, 1);
-                result.Children.Add(row);
-                return result;
-            });
-        }
+        static ScrollViewer KeyboardViewport(NotchedKeyboardPreview preview) => new ScrollViewer {
+            Content = preview, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, Height = 218,
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+        };
 
         void RefreshPitchPreviews(ScaleDefinition? candidate = null) {
             var selected = candidate ?? (scales.SelectedIndex >= 0 && scales.SelectedIndex < draft.Scales.Count
                 ? draft.Scales[scales.SelectedIndex] : null);
             var active = new HashSet<int>(selected?.Degrees ?? Enumerable.Range(0, draft.DegreeCount).ToList());
+            if (candidate != null) {
+                generatorPreview.SetTuning(draft, active);
+                return;
+            }
             string notation = PitchNotation.ResolvePrimary(draft, null);
             var rows = Enumerable.Range(0, draft.DegreeCount).Reverse().Select(degree => new PreviewPitch {
                 Tuning = draft, Notation = notation, Degree = degree, Selected = active.Contains(degree),
             }).ToArray();
-            if (candidate != null) {
-                generatorPreview.ItemsSource = rows;
-                return;
-            }
-            pitchPreview.ItemsSource = rows;
-            scalePreview.ItemsSource = rows;
+            pitchPreview.SetTuning(draft, active);
+            scalePreview.SetTuning(draft, active);
             FillDegreeMap(degreeMap, rows, false);
             FillDegreeMap(subsetMap, rows, true);
             tuningSummary.Text = $"{draft.DegreeCount} · {draft.Period.Ratio ?? draft.Period.ToCents().ToString("0.##", XenStrings.InputCulture) + " ¢"}";
@@ -365,12 +332,14 @@ namespace OpenUtau.App.Views {
                     Text = pitch.Degree.ToString(XenStrings.InputCulture), FontSize = 10,
                     HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
                 };
-                label.Bind(TextBlock.ForegroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(role + "KeyNameBrush"));
+                label.Bind(TextBlock.ForegroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(
+                    pitch.Role == KeyRole.Black ? "KeyboardPreviewBlackNameBrush" : role + "KeyNameBrush"));
                 var cell = new Border {
                     Child = label, Height = 26, CornerRadius = new CornerRadius(3),
                     BorderThickness = new Thickness(selection && pitch.Selected ? 2 : 1),
                 };
-                cell.Bind(Border.BackgroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(role + "KeyBrush"));
+                cell.Bind(Border.BackgroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(
+                    pitch.Role == KeyRole.Black ? "KeyboardPreviewBlackBrush" : role + "KeyBrush"));
                 cell.Bind(Border.BorderBrushProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(selection && pitch.Selected ? "AccentBrush1" : "NeutralAccentBrushSemi"));
                 ToolTip.SetTip(cell, $"{pitch.Label}  {pitch.Cents}");
                 Grid.SetRow(cell, pitch.Degree / columns);
@@ -389,7 +358,7 @@ namespace OpenUtau.App.Views {
                 // A candidate is previewed without replacing the chosen scale until generated.
                 RefreshPitchPreviews(result.Scale);
             } catch (Exception error) {
-                generatorPreview.ItemsSource = null;
+                generatorPreview.SetTuning(null);
                 scaleResult.Text = XenStrings.Get("error.invalid");
                 ToolTip.SetTip(scaleResult, error.Message);
                 RefreshPitchPreviews();

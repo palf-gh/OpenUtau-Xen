@@ -148,6 +148,14 @@
           <ColorPicker Color="{Binding BlackKeyNameColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
         </Panel>
         <Panel>
+          <TextBlock VerticalAlignment="Center" Text="KeyboardPreviewBlackColor"/>
+          <ColorPicker Color="{Binding KeyboardPreviewBlackColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="KeyboardPreviewBlackNameColor"/>
+          <ColorPicker Color="{Binding KeyboardPreviewBlackNameColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
           <TextBlock VerticalAlignment="Center" Text="BetweenKeyColorLeft"/>
           <ColorPicker Color="{Binding BetweenKeyColorLeft}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
         </Panel>

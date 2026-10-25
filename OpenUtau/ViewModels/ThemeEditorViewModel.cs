@@ -59,6 +59,8 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public partial Color BlackKeyColorLeft { get; set; }
         [Reactive] public partial Color BlackKeyColorRight { get; set; }
         [Reactive] public partial Color BlackKeyNameColor { get; set; }
+        [Reactive] public partial Color KeyboardPreviewBlackColor { get; set; }
+        [Reactive] public partial Color KeyboardPreviewBlackNameColor { get; set; }
         [Reactive] public partial Color BetweenKeyColorLeft { get; set; }
         [Reactive] public partial Color BetweenKeyColorRight { get; set; }
         [Reactive] public partial Color BetweenKeyNameColor { get; set; }
@@ -123,6 +125,8 @@ namespace OpenUtau.App.ViewModels {
             BlackKeyColorLeft = Color.Parse(themeYaml.BlackKeyColorLeft);
             BlackKeyColorRight = Color.Parse(themeYaml.BlackKeyColorRight);
             BlackKeyNameColor = Color.Parse(themeYaml.BlackKeyNameColor);
+            KeyboardPreviewBlackColor = Color.Parse(themeYaml.KeyboardPreviewBlackColor);
+            KeyboardPreviewBlackNameColor = Color.Parse(themeYaml.KeyboardPreviewBlackNameColor);
             BetweenKeyColorLeft = Color.Parse(themeYaml.BetweenKeyColorLeft);
             BetweenKeyColorRight = Color.Parse(themeYaml.BetweenKeyColorRight);
             BetweenKeyNameColor = Color.Parse(themeYaml.BetweenKeyNameColor);
@@ -246,6 +250,10 @@ namespace OpenUtau.App.ViewModels {
 
             this.WhenAnyValue(vm => vm.BlackKeyNameColor)
                 .Subscribe(v => Application.Current!.Resources["BlackKeyNameColor"] = v);
+            this.WhenAnyValue(vm => vm.KeyboardPreviewBlackColor)
+                .Subscribe(v => Application.Current!.Resources["KeyboardPreviewBlackColor"] = v);
+            this.WhenAnyValue(vm => vm.KeyboardPreviewBlackNameColor)
+                .Subscribe(v => Application.Current!.Resources["KeyboardPreviewBlackNameColor"] = v);
 
             this.WhenAnyValue(vm => vm.BetweenKeyColorLeft)
                 .Subscribe(v => Application.Current!.Resources["BetweenKeyColorLeft"] = v);
@@ -314,6 +322,8 @@ namespace OpenUtau.App.ViewModels {
                 BlackKeyColorLeft = BlackKeyColorLeft.ToString(),
                 BlackKeyColorRight = BlackKeyColorRight.ToString(),
                 BlackKeyNameColor = BlackKeyNameColor.ToString(),
+                KeyboardPreviewBlackColor = KeyboardPreviewBlackColor.ToString(),
+                KeyboardPreviewBlackNameColor = KeyboardPreviewBlackNameColor.ToString(),
                 BetweenKeyColorLeft = BetweenKeyColorLeft.ToString(),
                 BetweenKeyColorRight = BetweenKeyColorRight.ToString(),
                 BetweenKeyNameColor = BetweenKeyNameColor.ToString(),

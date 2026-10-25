@@ -12,8 +12,11 @@ using OpenUtau.App;
 [assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]
 
 public class TestAppBuilder {
-    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
-        .UseHeadless(new AvaloniaHeadlessPlatformOptions());
+    public static AppBuilder BuildAvaloniaApp() {
+        bool capture = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENUTAU_KEYBOARD_CAPTURES"));
+        var builder = AppBuilder.Configure<App>().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = !capture });
+        return capture ? builder.UseSkia() : builder;
+    }
 }
 
 namespace OpenUtau.App {
@@ -87,11 +90,32 @@ namespace OpenUtau.App {
                 Assert.Equal(division, map.Children.Count);
                 navigation.SelectedIndex = 1;
                 Layout();
-                var candidate = dialog.GetVisualDescendants().OfType<ListBox>().Single(c => c.Name == "GeneratorPitchPreview");
+                var candidate = dialog.GetVisualDescendants().OfType<OpenUtau.App.Controls.NotchedKeyboardPreview>()
+                    .Single(c => c.Name == "GeneratorPitchPreview");
                 Assert.Equal(division, candidate.ItemCount);
+                var baselineKinds = candidate.Cells.Select(cell => cell.Kind).ToArray();
+                var baselineGeometry = candidate.KeyLayout;
                 var cardinality = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosCardinality");
                 cardinality.Value = division == 31 ? 7 : 9;
                 Layout();
+                decimal? originalCardinality = cardinality.Value;
+                cardinality.Value = originalCardinality + 1;
+                Layout();
+                Assert.Equal(baselineKinds, candidate.Cells.Select(cell => cell.Kind));
+                Assert.Same(baselineGeometry, candidate.KeyLayout);
+                cardinality.Value = originalCardinality;
+                Layout();
+                var notch = candidate.KeyLayout!.Keys.SelectMany(key => key.Rectangles.Select(rect => (key, rect)))
+                    .First(pair => pair.rect.X < pair.key.Column || pair.rect.Right > pair.key.Column + 1);
+                double x = notch.rect.X < notch.key.Column ? (notch.rect.X + notch.key.Column) / 2
+                    : (notch.key.Column + 1 + notch.rect.Right) / 2;
+                double scaleX = candidate.Bounds.Width / candidate.KeyLayout.Width;
+                Assert.Equal(notch.key.Degree, candidate.SelectDegreeAt(new Point(x * scaleX,
+                    (notch.rect.Y + notch.rect.Bottom) / 2 * candidate.Bounds.Height)));
+                var peer = Avalonia.Automation.Peers.ControlAutomationPeer.CreatePeerForElement(candidate);
+                Assert.NotNull(peer);
+                Assert.Equal(Avalonia.Automation.AutomationProperties.GetName(candidate), peer.GetName());
+                Assert.Contains(XenStrings.Get("field.degree") + " " + notch.key.Degree, peer.GetName());
                 var generator = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosGenerator");
                 decimal? previousGenerator = generator.Value;
                 generator.Value = 0;
@@ -127,6 +151,45 @@ namespace OpenUtau.App {
                     var apply = dialog.GetVisualDescendants().OfType<Button>().Single(c => c.Name == "ApplyTuningDraft");
                     Assert.Equal(XenStrings.Get(page == 1 || page == 2 ? "action.applyDisplay" : "action.applyTuning"), apply.Content);
                 }
+            }
+            CaptureNotchedKeyboards();
+        }
+
+        static void CaptureNotchedKeyboards() {
+            string? directory = Environment.GetEnvironmentVariable("OPENUTAU_KEYBOARD_CAPTURES");
+            if (string.IsNullOrEmpty(directory)) return;
+            System.IO.Directory.CreateDirectory(directory);
+            string previousTheme = OpenUtau.Core.Util.Preferences.Default.ThemeName;
+            try {
+                foreach (string theme in new[] { "Light", "Dark" }) {
+                    OpenUtau.Core.Util.Preferences.Default.ThemeName = theme;
+                    App.SetTheme();
+                    foreach (var (n, period) in new[] { (12, "2/1"), (31, "2/1"), (53, "2/1"), (73, "2/1"), (13, "3/1") }) {
+                        var keyboard = new OpenUtau.App.Controls.NotchedKeyboardPreview();
+                        keyboard.SetTuning(OpenUtau.Core.Microtonal.TuningPresets.EqualDivision(n,
+                            OpenUtau.Core.Microtonal.PitchInterval.FromRatio(period)));
+                        keyboard.Measure(Size.Infinity);
+                        var window = new Window {
+                            Width = keyboard.DesiredSize.Width + 32, Height = 232,
+                            Content = new Border { Padding = new Thickness(16), Child = keyboard },
+                        };
+                        window.Show();
+                        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                        var notch = keyboard.KeyLayout!.Keys.SelectMany(key => key.Rectangles.Select(rect => (key, rect)))
+                            .FirstOrDefault(pair => pair.rect.X < pair.key.Column || pair.rect.Right > pair.key.Column + 1);
+                        if (notch.key != null) keyboard.SelectDegreeAt(new Point((notch.rect.X + notch.rect.Right) / 2
+                            * keyboard.Bounds.Width / keyboard.KeyLayout.Width,
+                            (notch.rect.Y + notch.rect.Bottom) / 2 * keyboard.Bounds.Height));
+                        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                        using (var frame = window.CaptureRenderedFrame()) {
+                            frame?.Save(System.IO.Path.Combine(directory, $"keyboard-{n}-{(period == "2/1" ? "edo" : "edt")}-{theme}.png"));
+                        }
+                        window.Close();
+                    }
+                }
+            } finally {
+                OpenUtau.Core.Util.Preferences.Default.ThemeName = previousTheme;
+                App.SetTheme();
             }
         }
     }

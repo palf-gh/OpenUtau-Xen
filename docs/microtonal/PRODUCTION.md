@@ -1,5 +1,39 @@
 # Production record
 
+## 2026-10-25 — Baseline MOS regions and notched settings keyboards
+
+- Implemented the user's latest general-MOS keyboard specification. A general
+  N/G/M/R orbit engine produces equal-step or two-gap MOS nominals, accidental
+  anchors, owners and detailed cell kinds. Region allocation uses exact integer
+  central-third comparisons, leaves White-to-White interiors Between and removes
+  the former fixed dilation radius and Black short-gap closure.
+- Applied the user's explicit choice of tuning-specific baseline MOS. Octave
+  C-diatonic and tritave C-Lambda presets feed the same engine; active performance
+  scales change degree markers without changing baseline roles or shapes.
+  Existing explicit key classes still take precedence. The piano roll receives
+  the updated roles through the shared lookup; its row mapper is unchanged.
+- Replaced all three settings key lists with interlocking horizontal previews.
+  Runs use balanced columns of at most five degrees, preserving left-to-right
+  and bottom-to-top degree order. Notch extensions tile the full frame and share
+  the exact hit-test ownership used for selection. Drawing retains run outlines
+  and horizontal degree divisions while omitting internal same-run column seams.
+  Selected pitches are exposed through an automation peer and accessible name.
+- Following the user's colour review, Black keys in settings previews and degree
+  maps now use a black background and light text. Added dedicated colours to
+  light, dark and custom themes, custom-theme persistence and the theme editor.
+  Recorded this settings-specific policy in `DESIGN.md`; Japanese additions
+  completed yomiyasu run/verify and manual diff review.
+- Serial solution build succeeded. Full suite: 432 passed and one external-voice
+  case skipped. After the colour change, the Skia-backed application check passed
+  again. Light/dark captures cover 12-, 31-, 53-, 73-EDO and 13-EDT. Tests cover
+  third boundaries, cyclic anchors, arbitrary cardinalities, invalid orbits,
+  exact hit boundaries, complete tiling, Black owners, run identity, baseline
+  stability, notch selection, accessibility and the small-window page layout.
+- Existing compiler, NuGet advisory and test-runner warnings remain. Native
+  high-DPI/physical-input review and first-release renderer checks remain open.
+  No voicebanks, engines, note-pitch data or native format versions were changed.
+  See `keyboard-mos.md` for baseline/fallback scope and capture instructions.
+
 ## 2026-10-25 — Tuning and MOS editor refresh
 
 - Used the user's v3 HTML mock as the layout reference. Replaced the three long

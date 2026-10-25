@@ -1,0 +1,109 @@
+# Baseline MOS classification and notched keyboard previews
+
+Date: 2026-10-25. Source: the user's supplied
+`docs/general_mos_microtonal_keyboard_algorithm_latest.md` and the referenced
+keyboard-tool conversation. The user explicitly chose a tuning-specific baseline
+MOS, independent of the selected performance scale.
+
+## Purpose and theory
+
+`MosKeyboard` accepts equal-division count N, generator step G, cardinality M and
+rotation R. It generates the distinct orbit `(i * G) mod N` for `0 <= i < M`,
+sorts the orbit, and measures cyclic gaps. One gap size is an equal-step MOS;
+two sizes are an ordinary MOS; three or more sizes are rejected. A generator
+that repeats before M distinct pitches is rejected. Rotating the gap pattern
+and accumulating from zero determines the nominal degrees.
+
+This calculation uses degree indices rather than frequencies. The same geometry
+engine therefore applies to any equave supplied by the caller. The automatic
+baseline policy currently retains the known seven-note C-diatonic octave family
+and nine-note C-Lambda tritave family. Their generator targets remain 3/2 and
+9/7 respectively. These families select a mode on the general generator orbit;
+they do not implement separate region-expansion algorithms.
+
+Other periods and invalid family configurations retain the existing fallback
+roles. The general core API also accepts custom N/G/M/R combinations, including
+25 divisions and cardinalities other than seven or nine. This change adds no
+serialised baseline configuration or new custom-baseline settings screen.
+
+## Keyboard heuristic
+
+Every nominal is a White/Natural anchor. In each large gap L, chroma `c = L - s`
+places the lower nominal's sharp at `x + c` and the upper nominal's flat at
+`x + s`. Coincident sharp/flat anchors are Shared Black anchors. Exact
+White/Black conflicts are represented as Between/Conflict.
+
+Between adjacent anchors A and B, an interior integer offset d is assigned to
+A only when `3*d < B-A`, or to B only when `3*d > 2*(B-A)`. Both exact third
+boundaries and the central interval remain Between. White-to-White interiors
+always remain Between. The final interval crosses the period boundary using
+the same rule. Fixed spreading radii and Black short-gap closure are removed.
+
+Cells retain their degree, role, detailed kind, owner and source anchor.
+Expanded cells do not become exact anchors or acquire an accidental spelling.
+Flat and Sharp runs remain distinct, even when both have the Black colour.
+
+For the canonical 73-EDO first large gap, degrees 0–13 are:
+
+`White 0–1; Between 2; Flat 3–5; Between 6–7; Sharp 8–10; Between 11; White 12–13`.
+
+Unlike the earlier algorithm, 22-EDO keeps its central Black-cluster gap Between.
+53-EDO expands around its anchors using the thirds rule; its baseline counts
+are 17 White, 20 Black and 16 Between. 31-EDO retains 7 White, 10 Black and
+14 Between, and 13-EDT retains 9 White and 4 Black.
+
+`KeyboardRegionizer` caches the tuning's baseline model. `PitchNotation.Role`
+continues to honour explicit key-class overrides. Choosing or generating a
+performance MOS changes only the selected-degree markers. Existing scale
+degrees, generator-scale mode semantics, note pitches and native formats are
+unchanged.
+
+## Shapes, drawing and selection
+
+`NotchedKeyboardLayout` consumes already classified degrees in ascending order.
+It groups contiguous kinds, distinguishing Black owners, then splits each run
+into `ceil(length / 5)` columns. Earlier columns receive any remainder, so seven
+cells split as `[4,3]` and thirteen as `[5,4,4]`. All degrees in a left column
+precede those in a right column. Degrees within a column increase bottom to top.
+
+Natural keys have depth 1, Between/Conflict keys 2/3, and Black keys 1/3. Below
+each ending depth, surviving columns divide the released horizontal interval
+at their centre midpoints. The finite outside edges extend to the outer frame.
+Intersecting each column's resulting polygon with its original vertical degree
+slices produces the full key shapes. Layouts with no Natural keys normalise
+the deepest remaining role to fill the frame.
+
+The union of all key rectangles fills the outer frame without overlaps or holes.
+`HitTest` uses those same partitions, including every notch extension. Internal
+boundaries have one owner; the outer right/bottom edges belong to the adjacent
+key. Selection fills and outlines the whole shape. Normal drawing preserves run
+outlines and horizontal degree divisions, while omitting internal column seams,
+duplicate rectangle borders and a background grid. The selected pitch is exposed
+through a control automation peer and an updated accessible name.
+
+`NotchedKeyboardPreview` uses theme brushes and `PitchLabelLayout` for
+Bravura accidentals. Following the user's colour review, Black keys in settings
+previews and degree maps use a dedicated black background and light lettering.
+`KeyboardPreviewBlackColor` and `KeyboardPreviewBlackNameColor` are present in
+light, dark and custom themes and the theme editor. Piano-roll key colours keep
+their existing theme settings. The preview supports pointer selection, arrow keys, Home/End and
+horizontal scrolling. Visible shapes are culled and their drawing geometries
+are cached. Performance-scale edits reuse the baseline layout. The tuning,
+selected-scale and generator-candidate previews all use this control. The main
+piano roll retains its vertical `PitchRowMapper` geometry and receives the new
+baseline role classification through the existing shared role lookup.
+
+## Verification and remaining checks
+
+Automated cases cover the specified octave and tritave divisions, arbitrary
+cardinalities, rotation, equal-step and invalid orbits, thirds boundaries,
+period boundaries, baseline independence, explicit overrides, balanced columns,
+ordered degrees, complete tiling, exact boundary ownership and notch hit areas.
+The headless application check also verifies that changing performance-MOS
+cardinality preserves the candidate keyboard's baseline geometry.
+
+Set `OPENUTAU_KEYBOARD_CAPTURES` to an output directory when running the filtered
+`StringsTest` to enable Skia-rendered light/dark review captures for 12-, 31-,
+53- and 73-EDO and 13-EDT. The ordinary test run uses the usual headless backend.
+Build/test results are recorded in `PRODUCTION.md`. Native high-DPI interaction
+and physical-input review remain separate checks.
