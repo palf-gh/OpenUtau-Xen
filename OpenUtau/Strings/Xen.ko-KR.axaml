@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">음도 (쉼표로 구분)</system:String>
   <system:String x:Key="xen.preserve">기존 주파수 유지</system:String>
   <system:String x:Key="xen.tab.tuning">조율</system:String>
-  <system:String x:Key="xen.tab.generator">음계 생성기</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">정의</system:String>
   <system:String x:Key="xen.notation.degree">음도 번호</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">피아노 롤을 창 안에서 확장</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">재생 중 음높이 따라가기</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">음높이 따라가기 경로 표시</system:String>
+  <system:String x:Key="xen.tab.conversion">노트 변환</system:String>
 </ResourceDictionary>
 

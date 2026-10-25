@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">Asteet (pilkuin eroteltuina)</system:String>
   <system:String x:Key="xen.preserve">Säilytä nykyiset taajuudet</system:String>
   <system:String x:Key="xen.tab.tuning">Viritys</system:String>
-  <system:String x:Key="xen.tab.generator">Asteikkogeneraattori</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Määritelmä</system:String>
   <system:String x:Key="xen.notation.degree">Asteiden numerot</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">Laajenna pianorulla ikkunaan</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">Seuraa sävelkorkeutta toiston aikana</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Näytä sävelkorkeuden seurantapolku</system:String>
+  <system:String x:Key="xen.tab.conversion">Muunna nuotit</system:String>
 </ResourceDictionary>
 

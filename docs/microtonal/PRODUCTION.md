@@ -1,5 +1,34 @@
 # Production record
 
+## 2026-10-25 — Tuning and MOS editor refresh
+
+- Used the user's v3 HTML mock as the layout reference. Replaced the three long
+  tabs with five left navigation pages and a fixed scope/action area. Grouped
+  tuning structure, selected degrees, generator candidates, conversion and
+  interchange operations. Details and remaining checks are in `tuning-ui.md`.
+- Added shared-role degree maps and virtualised vertical key previews, with
+  independent scale markers and Bravura Text accidentals. The MOS controls have
+  live candidate previews, cardinality bounds, one-based mode numbers and
+  explicit generation. Repeating generators clear the candidate preview.
+- Scale/display application preserves note pitch when the applied mother tuning
+  matches. A changed mother tuning keeps the explicit tuning-application action;
+  an incompatible display-only operation is rejected before any undo command.
+- Kept interval-generated tunings separate from EDO subsets and gave them an
+  independent pitch count. Kept piano-roll geometry and View-menu preferences
+  in their existing shared implementation. No file formats were changed.
+- Updated every Xen language overlay. Japanese resource changes passed the
+  yomiyasu run/verify checks.
+- Serial solution build succeeded. Full suite: 397 passed. The headless UI
+  check covers five pages at 960 × 620 and 650 × 440, 31-EDO and 13-EDT,
+  generated subset membership, repeating generators and application labels.
+- Temporarily used Skia rendering in the headless harness to inspect Japanese
+  light/dark previews, then restored the ordinary harness. Corrected missing
+  music glyphs and initially expanded degree lists found during that inspection.
+  Captures are local, ignored review artefacts under `work/`.
+- Existing NuGet dependency-advisory and test-runner resolution warnings remain.
+  Native high-DPI interaction and specialist translation review remain open;
+  first-release renderer/hardware checks are unchanged.
+
 ## 2026-10-24 — Environment and baseline
 
 - Created an independent local Git clone; original inspection

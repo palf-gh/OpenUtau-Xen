@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">Tonstufen (durch Kommas getrennt)</system:String>
   <system:String x:Key="xen.preserve">Vorhandene Frequenzen beibehalten</system:String>
   <system:String x:Key="xen.tab.tuning">Stimmung</system:String>
-  <system:String x:Key="xen.tab.generator">Skalengenerator</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definition</system:String>
   <system:String x:Key="xen.notation.degree">Tonstufennummern</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,4 +105,5 @@
   <system:String x:Key="xen.pianoroll.expand">Pianoroll im Fenster maximieren</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">Tonhöhe bei der Wiedergabe folgen</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Pfad der Tonhöhenverfolgung anzeigen</system:String>
+  <system:String x:Key="xen.tab.conversion">Noten umwandeln</system:String>
 </ResourceDictionary>

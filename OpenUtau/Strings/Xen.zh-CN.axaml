@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">音级（逗号分隔）</system:String>
   <system:String x:Key="xen.preserve">保留现有频率</system:String>
   <system:String x:Key="xen.tab.tuning">调律</system:String>
-  <system:String x:Key="xen.tab.generator">音阶生成器</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">定义</system:String>
   <system:String x:Key="xen.notation.degree">音级编号</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">在窗口内展开钢琴窗</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">播放时跟随音高</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">显示音高跟随路径</system:String>
+  <system:String x:Key="xen.tab.conversion">转换音符</system:String>
 </ResourceDictionary>
 

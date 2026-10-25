@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">Ступени (через запятую)</system:String>
   <system:String x:Key="xen.preserve">Сохранить текущие частоты</system:String>
   <system:String x:Key="xen.tab.tuning">Строй</system:String>
-  <system:String x:Key="xen.tab.generator">Генератор звукорядов</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Определение</system:String>
   <system:String x:Key="xen.notation.degree">Номера ступеней</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">Развернуть пианоролл в окне</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">Следовать за высотой при воспроизведении</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Показать путь следования за высотой</system:String>
+  <system:String x:Key="xen.tab.conversion">Преобразование нот</system:String>
 </ResourceDictionary>
 

@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">Dereceler (virgülle ayrılmış)</system:String>
   <system:String x:Key="xen.preserve">Mevcut frekansları koru</system:String>
   <system:String x:Key="xen.tab.tuning">Akort</system:String>
-  <system:String x:Key="xen.tab.generator">Dizi üreteci</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Tanım</system:String>
   <system:String x:Key="xen.notation.degree">Derece numaraları</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">Piyano rulosunu pencerede genişlet</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">Çalarken perdeyi izle</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Perde izleme yolunu göster</system:String>
+  <system:String x:Key="xen.tab.conversion">Notaları dönüştür</system:String>
 </ResourceDictionary>
 

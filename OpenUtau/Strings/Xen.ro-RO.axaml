@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">Trepte (separate prin virgulă)</system:String>
   <system:String x:Key="xen.preserve">Păstrează frecvențele existente</system:String>
   <system:String x:Key="xen.tab.tuning">Acordaj</system:String>
-  <system:String x:Key="xen.tab.generator">Generator de game</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definiție</system:String>
   <system:String x:Key="xen.notation.degree">Numerele treptelor</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">Extinde piano roll-ul în fereastră</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">Urmărește înălțimea în timpul redării</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Afișează traseul de urmărire a înălțimii</system:String>
+  <system:String x:Key="xen.tab.conversion">Conversie note</system:String>
 </ResourceDictionary>
 

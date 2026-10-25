@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">ขั้นเสียง (คั่นด้วยจุลภาค)</system:String>
   <system:String x:Key="xen.preserve">คงความถี่เดิม</system:String>
   <system:String x:Key="xen.tab.tuning">ระบบเสียง</system:String>
-  <system:String x:Key="xen.tab.generator">ตัวสร้างบันไดเสียง</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">นิยาม</system:String>
   <system:String x:Key="xen.notation.degree">หมายเลขขั้นเสียง</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">ขยายเปียโนโรลในหน้าต่าง</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">ติดตามระดับเสียงขณะเล่น</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">แสดงเส้นทางการติดตามระดับเสียง</system:String>
+  <system:String x:Key="xen.tab.conversion">แปลงโน้ต</system:String>
 </ResourceDictionary>
 

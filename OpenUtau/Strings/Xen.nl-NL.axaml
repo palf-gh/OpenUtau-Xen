@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">Toontrappen (gescheiden door komma's)</system:String>
   <system:String x:Key="xen.preserve">Bestaande frequenties behouden</system:String>
   <system:String x:Key="xen.tab.tuning">Stemming</system:String>
-  <system:String x:Key="xen.tab.generator">Toonladdergenerator</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definitie</system:String>
   <system:String x:Key="xen.notation.degree">Toontrapnummers</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">Pianorol in venster vergroten</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">Toonhoogte volgen tijdens afspelen</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Pad van toonhoogtevolgen tonen</system:String>
+  <system:String x:Key="xen.tab.conversion">Noten omzetten</system:String>
 </ResourceDictionary>
 

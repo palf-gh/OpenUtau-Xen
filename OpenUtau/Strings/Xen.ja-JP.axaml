@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">音度（コンマ区切り）</system:String>
   <system:String x:Key="xen.preserve">既存の周波数を維持</system:String>
   <system:String x:Key="xen.tab.tuning">音律</system:String>
-  <system:String x:Key="xen.tab.generator">スケール生成</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">定義</system:String>
   <system:String x:Key="xen.notation.degree">音度番号</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">ピアノロールをウィンドウ内で拡大</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">再生中に音高を追う</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">音高追従の経路を表示</system:String>
+  <system:String x:Key="xen.tab.conversion">ノート変換</system:String>
 </ResourceDictionary>
 

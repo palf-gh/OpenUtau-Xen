@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">Bậc âm (phân cách bằng dấu phẩy)</system:String>
   <system:String x:Key="xen.preserve">Giữ nguyên tần số hiện có</system:String>
   <system:String x:Key="xen.tab.tuning">Hệ chỉnh âm</system:String>
-  <system:String x:Key="xen.tab.generator">Bộ tạo thang âm</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Định nghĩa</system:String>
   <system:String x:Key="xen.notation.degree">Số bậc âm</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">Mở rộng piano roll trong cửa sổ</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">Theo cao độ khi phát</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Hiện đường theo cao độ</system:String>
+  <system:String x:Key="xen.tab.conversion">Chuyển đổi nốt</system:String>
 </ResourceDictionary>
 

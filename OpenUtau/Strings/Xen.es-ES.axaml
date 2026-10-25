@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">Grados (separados por comas)</system:String>
   <system:String x:Key="xen.preserve">Conservar las frecuencias existentes</system:String>
   <system:String x:Key="xen.tab.tuning">Afinación</system:String>
-  <system:String x:Key="xen.tab.generator">Generador de escalas</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definición</system:String>
   <system:String x:Key="xen.notation.degree">Números de grado</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,4 +105,5 @@
   <system:String x:Key="xen.pianoroll.expand">Ampliar el piano roll en la ventana</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">Seguir el tono durante la reproducción</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Mostrar la ruta de seguimiento del tono</system:String>
+  <system:String x:Key="xen.tab.conversion">Convertir notas</system:String>
 </ResourceDictionary>

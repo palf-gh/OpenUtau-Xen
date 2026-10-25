@@ -44,7 +44,7 @@
   <system:String x:Key="xen.field.degrees">Derajat nada (dipisahkan koma)</system:String>
   <system:String x:Key="xen.preserve">Pertahankan frekuensi yang ada</system:String>
   <system:String x:Key="xen.tab.tuning">Penalaan</system:String>
-  <system:String x:Key="xen.tab.generator">Pembangkit tangga nada</system:String>
+  <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definisi</system:String>
   <system:String x:Key="xen.notation.degree">Nomor derajat nada</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
@@ -105,5 +105,6 @@
   <system:String x:Key="xen.pianoroll.expand">Perluas piano roll di jendela</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollow">Ikuti nada saat pemutaran</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Tampilkan jalur pengikut nada</system:String>
+  <system:String x:Key="xen.tab.conversion">Konversi not</system:String>
 </ResourceDictionary>
 
