@@ -24,8 +24,12 @@
   Geometry tests cover equal fronts, distinct nominals, accidental positions,
   complete tiling, notch ownership, exact boundaries and profile fallback guards.
 - Native high-DPI interaction and first-release renderer checks remain open.
-  The current trial is running; trial packaging and any pending replacement
-  are recorded below when completed.
+- Published code commit `bfc9e21` as a self-contained Windows x64 Release trial
+  to `work/OpenUtau-Xen-staged-win-x64/`. The regular trial was running as process
+  170032 at preflight, so its folder was not replaced and no user session was
+  terminated. The staged executable matches its generated apphost; application
+  and core DLLs match the ReadyToRun outputs by SHA-256. Native interactive launch
+  was not checked. Replacement of the regular trial remains pending.
 
 ## 2026-10-25 — Mandatory trial packaging at task completion
 
