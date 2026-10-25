@@ -38,9 +38,10 @@ dotnet test OpenUtau.Test -m:1
 
 ## Code conventions
 
-- Follow `DESIGN.md` for colours and appearance: keep upstream OpenUtau's layout;
-  brand lime replaces upstream pink as the main colour and a UI-adjusted deep blue
-  replaces its light blue. Never put white text on brand lime. A new theme colour
+- Follow `DESIGN.md` for colours and appearance: the layout follows OpenUtau
+  Lunai's workspace (without its DiffSinger-only parts); brand lime replaces
+  upstream pink as the main colour and a UI-adjusted deep blue replaces its light
+  blue. Never put white text on brand lime. A new theme colour
   goes into the light, dark and custom themes and the theme editor.
 
 - Match the surrounding code's style, naming and comment density.

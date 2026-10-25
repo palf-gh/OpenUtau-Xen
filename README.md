@@ -88,7 +88,10 @@ release is not declared complete while these checks remain open.
 
 ### Attribution
 
-Upstream code remains under its original MIT licence. Bravura Text is included
+Upstream code remains under its original MIT licence. The workspace layout
+(welcome screen, docked piano roll, top bar and side toolbar) and pitch follow are
+reimplemented from [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai)
+(MIT, commit `01be298`). Bravura Text is included
 unmodified under SIL OFL 1.1, with the licence in `OpenUtau/Assets/Fonts/`.
 The font was retrieved from Steinberg's Bravura repository. Voicebanks, external
 resamplers and their licences remain separate from this repository and package.
@@ -266,7 +269,10 @@ DiffSinger の自動ピッチとリテイクの組合せは未検証です。詳
 
 ### 帰属表示
 
-本家のコードは元の MIT ライセンスのままです。Bravura Text は SIL OFL 1.1 に基づき
+本家のコードは元の MIT ライセンスのままです。ワークスペースの画面（ウェルカム画面、
+組み込みのピアノロール、上部バー、縦ツールバー）とピッチ追従は、
+[OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai)（MIT、コミット `01be298`）を
+参考に作り直したものです。Bravura Text は SIL OFL 1.1 に基づき
 無改変で同梱し、ライセンスを `OpenUtau/Assets/Fonts/` に置いています。このフォントは
 Steinberg の Bravura リポジトリから取得しました。音源、外部リサンプラーとそれらの
 ライセンスは、このリポジトリと配布物には含めません。Xen のアプリデータ、インストーラーの

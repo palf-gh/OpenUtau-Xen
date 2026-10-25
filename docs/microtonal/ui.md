@@ -45,3 +45,20 @@ The app compiled after removing the WPF-only `DataGrid.CanUserAddRows` property.
 ## UI copy
 
 Applied `stop-describing-ui` to new controls: action labels and specific numeric fields replace feature-description prose. The frequency-change preview is retained because it communicates the pitch-changing consequence.
+
+## Workspace layout from OpenUtau Lunai
+
+The workspace layout is reimplemented from
+[OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai) at commit
+`01be2980269b01fb2d3f90e311d1132e91588768` (MIT, same `Copyright (c) 2014 StAkira`
+notice as Xen). Lunai's commits are not cherry-picked: its UI changes are mixed with
+DiffSinger features (Singer Hub, quality presets, key/scale overlay, harmony, live
+pitch), which Xen does not take.
+
+### Design policy
+
+- Purpose: adopt Lunai's card-based workspace while keeping Xen's colours, the
+  92px three-tier keyboard column and the tuning menus.
+- Implementation: `DESIGN.md` §1 and §5, `AGENTS.md` and the README attribution
+  now describe the Lunai-based layout.
+- Verification: documentation only.
