@@ -52,4 +52,14 @@
   <Color x:Key="BetweenKeyColorLeft">#C9CEF8</Color>
   <Color x:Key="BetweenKeyColorRight">#AEB6F4</Color>
   <Color x:Key="BetweenKeyNameColor">#1E2BA8</Color>
+
+  <!--Xen: workspace surfaces from OpenUtau Lunai's layout, see DESIGN.md-->
+  <Color x:Key="WorkspaceCanvasColor">#E4E4DF</Color>
+  <Color x:Key="WorkspaceCardColor">#F2F2EF</Color>
+  <Color x:Key="WorkspaceElevatedSurfaceColor">#FAFAF8</Color>
+  <Color x:Key="MutedIconColor">#8F8F88</Color>
+  <Color x:Key="AppTopBarTransportStripColor">#E8E8E4</Color>
+  <Color x:Key="AppTopBarTransportHoverColor">#DADAD5</Color>
+  <Color x:Key="AppTopBarValueStripColor">#FAFAF8</Color>
+  <Color x:Key="AppTopBarValueDividerColor">#CDCDC8</Color>
 </ResourceDictionary>

@@ -26,6 +26,7 @@ public class CustomTheme {
 
     static CustomTheme() {
         Default = new ThemeYaml();
+        Default.FillWorkspaceDefaults();
         ListThemes();
     }
 
@@ -33,6 +34,7 @@ public class CustomTheme {
         if (!string.IsNullOrEmpty(themeName) && Themes.TryGetValue(themeName, out var themePath) && File.Exists(themePath)) {
             try {
                 Default = Yaml.DefaultDeserializer.Deserialize<ThemeYaml>(File.ReadAllText(themePath, Encoding.UTF8));
+                Default.FillWorkspaceDefaults();
                 return;
             } catch (Exception e) {
                 Log.Error(e, $"Failed to parse yaml in {themePath}");
@@ -41,6 +43,7 @@ public class CustomTheme {
 
         Preferences.Default.ThemeName = "Light";
         Default = new ThemeYaml();
+        Default.FillWorkspaceDefaults();
     }
 
     public static void ListThemes() {
@@ -112,6 +115,15 @@ public class CustomTheme {
             SetResourceColor("BetweenKeyColorLeft", Default.BetweenKeyColorLeft);
             SetResourceColor("BetweenKeyColorRight", Default.BetweenKeyColorRight);
             SetResourceColor("BetweenKeyNameColor", Default.BetweenKeyNameColor);
+
+            SetResourceColor("WorkspaceCanvasColor", Default.WorkspaceCanvasColor!);
+            SetResourceColor("WorkspaceCardColor", Default.WorkspaceCardColor!);
+            SetResourceColor("WorkspaceElevatedSurfaceColor", Default.WorkspaceElevatedSurfaceColor!);
+            SetResourceColor("MutedIconColor", Default.MutedIconColor!);
+            SetResourceColor("AppTopBarTransportStripColor", Default.AppTopBarTransportStripColor!);
+            SetResourceColor("AppTopBarTransportHoverColor", Default.AppTopBarTransportHoverColor!);
+            SetResourceColor("AppTopBarValueStripColor", Default.AppTopBarValueStripColor!);
+            SetResourceColor("AppTopBarValueDividerColor", Default.AppTopBarValueDividerColor!);
         }
     }
 
@@ -171,6 +183,28 @@ public class CustomTheme {
         public string BetweenKeyColorLeft = "#C9CEF8";
         public string BetweenKeyColorRight = "#AEB6F4";
         public string BetweenKeyNameColor = "#1E2BA8";
+
+        public string? WorkspaceCanvasColor;
+        public string? WorkspaceCardColor;
+        public string? WorkspaceElevatedSurfaceColor;
+        public string? MutedIconColor;
+        public string? AppTopBarTransportStripColor;
+        public string? AppTopBarTransportHoverColor;
+        public string? AppTopBarValueStripColor;
+        public string? AppTopBarValueDividerColor;
+
+        // Workspace colours were added after custom themes existed; a theme saved without them
+        // takes the built-in light or dark value that matches its mode.
+        public void FillWorkspaceDefaults() {
+            WorkspaceCanvasColor ??= IsDarkMode ? "#242424" : "#E4E4DF";
+            WorkspaceCardColor ??= IsDarkMode ? "#303030" : "#F2F2EF";
+            WorkspaceElevatedSurfaceColor ??= IsDarkMode ? "#3C3C3C" : "#FAFAF8";
+            MutedIconColor ??= IsDarkMode ? "#9A9A9A" : "#8F8F88";
+            AppTopBarTransportStripColor ??= IsDarkMode ? "#3C3C3C" : "#E8E8E4";
+            AppTopBarTransportHoverColor ??= IsDarkMode ? "#505050" : "#DADAD5";
+            AppTopBarValueStripColor ??= IsDarkMode ? "#262626" : "#FAFAF8";
+            AppTopBarValueDividerColor ??= IsDarkMode ? "#484848" : "#CDCDC8";
+        }
     }
 }
 

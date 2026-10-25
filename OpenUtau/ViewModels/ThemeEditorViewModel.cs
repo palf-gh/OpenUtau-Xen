@@ -63,6 +63,15 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public partial Color BetweenKeyColorRight { get; set; }
         [Reactive] public partial Color BetweenKeyNameColor { get; set; }
 
+        [Reactive] public partial Color WorkspaceCanvasColor { get; set; }
+        [Reactive] public partial Color WorkspaceCardColor { get; set; }
+        [Reactive] public partial Color WorkspaceElevatedSurfaceColor { get; set; }
+        [Reactive] public partial Color MutedIconColor { get; set; }
+        [Reactive] public partial Color AppTopBarTransportStripColor { get; set; }
+        [Reactive] public partial Color AppTopBarTransportHoverColor { get; set; }
+        [Reactive] public partial Color AppTopBarValueStripColor { get; set; }
+        [Reactive] public partial Color AppTopBarValueDividerColor { get; set; }
+
         public ThemeEditorViewModel(string customThemePath) {
             this.customThemePath = customThemePath;
 
@@ -72,6 +81,7 @@ namespace OpenUtau.App.ViewModels {
             } catch (Exception e) {
                 Log.Error(e, $"Failed to parse yaml in {customThemePath}");
             }
+            themeYaml.FillWorkspaceDefaults();
 
             Name = themeYaml.Name;
             IsDarkMode = themeYaml.IsDarkMode;
@@ -116,6 +126,14 @@ namespace OpenUtau.App.ViewModels {
             BetweenKeyColorLeft = Color.Parse(themeYaml.BetweenKeyColorLeft);
             BetweenKeyColorRight = Color.Parse(themeYaml.BetweenKeyColorRight);
             BetweenKeyNameColor = Color.Parse(themeYaml.BetweenKeyNameColor);
+            WorkspaceCanvasColor = Color.Parse(themeYaml.WorkspaceCanvasColor!);
+            WorkspaceCardColor = Color.Parse(themeYaml.WorkspaceCardColor!);
+            WorkspaceElevatedSurfaceColor = Color.Parse(themeYaml.WorkspaceElevatedSurfaceColor!);
+            MutedIconColor = Color.Parse(themeYaml.MutedIconColor!);
+            AppTopBarTransportStripColor = Color.Parse(themeYaml.AppTopBarTransportStripColor!);
+            AppTopBarTransportHoverColor = Color.Parse(themeYaml.AppTopBarTransportHoverColor!);
+            AppTopBarValueStripColor = Color.Parse(themeYaml.AppTopBarValueStripColor!);
+            AppTopBarValueDividerColor = Color.Parse(themeYaml.AppTopBarValueDividerColor!);
 
             this.WhenAnyValue(vm => vm.IsDarkMode)
                 .Subscribe(v => {
@@ -235,6 +253,22 @@ namespace OpenUtau.App.ViewModels {
                 .Subscribe(v => Application.Current!.Resources["BetweenKeyColorRight"] = v);
             this.WhenAnyValue(vm => vm.BetweenKeyNameColor)
                 .Subscribe(v => Application.Current!.Resources["BetweenKeyNameColor"] = v);
+            this.WhenAnyValue(vm => vm.WorkspaceCanvasColor)
+                .Subscribe(v => Application.Current!.Resources["WorkspaceCanvasColor"] = v);
+            this.WhenAnyValue(vm => vm.WorkspaceCardColor)
+                .Subscribe(v => Application.Current!.Resources["WorkspaceCardColor"] = v);
+            this.WhenAnyValue(vm => vm.WorkspaceElevatedSurfaceColor)
+                .Subscribe(v => Application.Current!.Resources["WorkspaceElevatedSurfaceColor"] = v);
+            this.WhenAnyValue(vm => vm.MutedIconColor)
+                .Subscribe(v => Application.Current!.Resources["MutedIconColor"] = v);
+            this.WhenAnyValue(vm => vm.AppTopBarTransportStripColor)
+                .Subscribe(v => Application.Current!.Resources["AppTopBarTransportStripColor"] = v);
+            this.WhenAnyValue(vm => vm.AppTopBarTransportHoverColor)
+                .Subscribe(v => Application.Current!.Resources["AppTopBarTransportHoverColor"] = v);
+            this.WhenAnyValue(vm => vm.AppTopBarValueStripColor)
+                .Subscribe(v => Application.Current!.Resources["AppTopBarValueStripColor"] = v);
+            this.WhenAnyValue(vm => vm.AppTopBarValueDividerColor)
+                .Subscribe(v => Application.Current!.Resources["AppTopBarValueDividerColor"] = v);
         }
 
         public void Save() {
@@ -282,7 +316,15 @@ namespace OpenUtau.App.ViewModels {
                 BlackKeyNameColor = BlackKeyNameColor.ToString(),
                 BetweenKeyColorLeft = BetweenKeyColorLeft.ToString(),
                 BetweenKeyColorRight = BetweenKeyColorRight.ToString(),
-                BetweenKeyNameColor = BetweenKeyNameColor.ToString()
+                BetweenKeyNameColor = BetweenKeyNameColor.ToString(),
+                WorkspaceCanvasColor = WorkspaceCanvasColor.ToString(),
+                WorkspaceCardColor = WorkspaceCardColor.ToString(),
+                WorkspaceElevatedSurfaceColor = WorkspaceElevatedSurfaceColor.ToString(),
+                MutedIconColor = MutedIconColor.ToString(),
+                AppTopBarTransportStripColor = AppTopBarTransportStripColor.ToString(),
+                AppTopBarTransportHoverColor = AppTopBarTransportHoverColor.ToString(),
+                AppTopBarValueStripColor = AppTopBarValueStripColor.ToString(),
+                AppTopBarValueDividerColor = AppTopBarValueDividerColor.ToString()
             };
 
             File.WriteAllText(customThemePath, Yaml.DefaultSerializer.Serialize(themeYaml), Encoding.UTF8);

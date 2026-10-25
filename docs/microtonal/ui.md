@@ -62,3 +62,21 @@ pitch), which Xen does not take.
 - Implementation: `DESIGN.md` §1 and §5, `AGENTS.md` and the README attribution
   now describe the Lunai-based layout.
 - Verification: documentation only.
+
+### Theme foundation
+
+- Purpose: provide the surfaces Lunai's workspace draws on, in Xen colours.
+- Implementation: eight colour keys (`WorkspaceCanvasColor`, `WorkspaceCardColor`,
+  `WorkspaceElevatedSurfaceColor`, `MutedIconColor`, `AppTopBarTransportStripColor`,
+  `AppTopBarTransportHoverColor`, `AppTopBarValueStripColor`,
+  `AppTopBarValueDividerColor`) are in the light, dark and custom themes, the custom
+  theme YAML and the theme editor. Lunai's fifteen per-toggle accent hues are replaced
+  by one `PianoRollSideAccentBrush` in the sub colour. A custom theme saved before
+  these keys existed takes the built-in light or dark value for its mode
+  (`ThemeYaml.FillWorkspaceDefaults`). `Styles/WorkspaceStyles.axaml` holds the
+  workspace, welcome-screen and top-bar styles without Lunai's appearance,
+  theme-editor, phoneme-panel, Singer Hub and track-colour styles. Controls now use
+  Lunai's 6px corner radius.
+- Not ported: `WorkspaceScrollbarHelper` and `RoundedClipBorder`, which only serve
+  Lunai's overlay scrollbars and re-skinned combo boxes.
+- Verification: `XenThemeTest` loads custom themes with and without the new keys.

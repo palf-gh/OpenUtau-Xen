@@ -157,4 +157,31 @@
   </LinearGradientBrush >
   <SolidColorBrush x:Key="BetweenKeyNameBrush"
                    Color="{DynamicResource BetweenKeyNameColor}"/>
+  <!--Xen: workspace brushes from OpenUtau Lunai's layout-->
+  <SolidColorBrush x:Key="WorkspaceCanvasBrush"
+                   Color="{DynamicResource WorkspaceCanvasColor}"/>
+  <SolidColorBrush x:Key="WorkspaceCardBrush"
+                   Color="{DynamicResource WorkspaceCardColor}"/>
+  <SolidColorBrush x:Key="WorkspaceElevatedSurfaceBrush"
+                   Color="{DynamicResource WorkspaceElevatedSurfaceColor}"/>
+  <SolidColorBrush x:Key="MutedIconBrush"
+                   Color="{DynamicResource MutedIconColor}"/>
+  <SolidColorBrush x:Key="AppTopBarTransportStripBrush"
+                   Color="{DynamicResource AppTopBarTransportStripColor}"/>
+  <SolidColorBrush x:Key="AppTopBarTransportHoverBrush"
+                   Color="{DynamicResource AppTopBarTransportHoverColor}"/>
+  <SolidColorBrush x:Key="AppTopBarValueStripBrush"
+                   Color="{DynamicResource AppTopBarValueStripColor}"/>
+  <SolidColorBrush x:Key="AppTopBarValueDividerBrush"
+                   Color="{DynamicResource AppTopBarValueDividerColor}"/>
+  <SolidColorBrush x:Key="WorkspaceCanvasBrushSemi"
+                   Color="{DynamicResource WorkspaceCanvasColor}" Opacity="0.6"/>
+  <SolidColorBrush x:Key="PianoRollSideIconOffBrush" Color="{DynamicResource MutedIconColor}"/>
+  <SolidColorBrush x:Key="TransportChipIconOffBrush" Color="{DynamicResource MutedIconColor}"/>
+  <SolidColorBrush x:Key="PianoRollSideHoverBackgroundBrush" Color="{DynamicResource AppTopBarTransportStripColor}"/>
+  <SolidColorBrush x:Key="TransportToolbarOffHoverBrush" Color="{DynamicResource AppTopBarTransportHoverColor}"/>
+  <SolidColorBrush x:Key="PianoRollToolbarButtonHoverBrush" Color="{DynamicResource AppTopBarTransportStripColor}"/>
+  <!--Xen: one checked accent for every side toggle instead of Lunai's per-toggle hues; sub colour blue, see DESIGN.md-->
+  <SolidColorBrush x:Key="PianoRollSideAccentBrush" Color="{DynamicResource SystemAccentColor}"/>
+  <SolidColorBrush x:Key="PianoRollSideAccentCheckedBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.14"/>
 </ResourceDictionary>

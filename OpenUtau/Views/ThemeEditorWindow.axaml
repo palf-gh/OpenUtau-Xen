@@ -159,6 +159,38 @@
           <TextBlock VerticalAlignment="Center" Text="BetweenKeyNameColor"/>
           <ColorPicker Color="{Binding BetweenKeyNameColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
         </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="WorkspaceCanvasColor"/>
+          <ColorPicker Color="{Binding WorkspaceCanvasColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="WorkspaceCardColor"/>
+          <ColorPicker Color="{Binding WorkspaceCardColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="WorkspaceElevatedSurfaceColor"/>
+          <ColorPicker Color="{Binding WorkspaceElevatedSurfaceColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="MutedIconColor"/>
+          <ColorPicker Color="{Binding MutedIconColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="AppTopBarTransportStripColor"/>
+          <ColorPicker Color="{Binding AppTopBarTransportStripColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="AppTopBarTransportHoverColor"/>
+          <ColorPicker Color="{Binding AppTopBarTransportHoverColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="AppTopBarValueStripColor"/>
+          <ColorPicker Color="{Binding AppTopBarValueStripColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
+        <Panel>
+          <TextBlock VerticalAlignment="Center" Text="AppTopBarValueDividerColor"/>
+          <ColorPicker Color="{Binding AppTopBarValueDividerColor}" ColorSpectrumShape="Ring" HorizontalAlignment="Right"/>
+        </Panel>
       </StackPanel>
     </ScrollViewer>
     <Grid Grid.Row="1" HorizontalAlignment="Stretch" ColumnDefinitions="*,10,*" Margin="10,0,10,0">

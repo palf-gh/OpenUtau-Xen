@@ -1,0 +1,377 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Xen: workspace, welcome-screen and top-bar styles reimplemented from OpenUtau Lunai
+       (commit 01be298). Colours come from the Xen theme keys; see DESIGN.md. -->
+  <Style Selector="Grid.workspaceLayout">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCanvasBrush}" />
+  </Style>
+  <Style Selector="Border.workspaceCard">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCardBrush}" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="ClipToBounds" Value="True" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="4" />
+  </Style>
+  <!-- Docked workspace tiles: flush to screen on outer edges; 8px gap only between blocks. -->
+  <Style Selector="Border.workspaceDockTop">
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="Margin" Value="0,0,0,8" />
+  </Style>
+  <Style Selector="Border.workspaceDockTracks">
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="Margin" Value="0,0,0,0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="Border.workspaceDockPianoHost">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Margin" Value="0" />
+  </Style>
+  <!-- Beat workspaceCard ClipToBounds=True so the side scrollbar can draw past the card edge. -->
+  <Style Selector="Border.workspaceDockPianoRoll,                  Border.workspaceDockPianoRollMain,                  Border.workspaceDockPianoRollExp">
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="Border.workspaceDockPianoRoll.FlushRight,                  Border.workspaceDockPianoRollMain.FlushRight,                  Border.workspaceDockPianoRollExp.FlushRight">
+    <Setter Property="CornerRadius" Value="8,0,0,8" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="Border.workspaceDockPianoRoll.FlushLeft,                  Border.workspaceDockPianoRollMain.FlushLeft,                  Border.workspaceDockPianoRollExp.FlushLeft">
+    <Setter Property="CornerRadius" Value="0,8,8,0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="Border.workspaceDockPianoRoll.FlushLeft.FlushRight,                  Border.workspaceDockPianoRollMain.FlushLeft.FlushRight,                  Border.workspaceDockPianoRollExp.FlushLeft.FlushRight">
+    <Setter Property="CornerRadius" Value="0,0,0,0" />
+  </Style>
+  <Style Selector="Border.workspaceDockPianoRollMain.FlushRight > Grid > Border.pianoRollTopBar,
+                 Border.workspaceDockPianoRoll.FlushRight > Grid > Border.pianoRollTopBar">
+    <Setter Property="Padding" Value="8,8,8,8" />
+  </Style>
+  <Style Selector="Border.workspaceCard.workspaceDockNoteProps,
+                 Border.workspaceDockNoteProps">
+    <Setter Property="CornerRadius" Value="8,0,0,8" />
+    <Setter Property="Margin" Value="0" />
+    <!-- Match piano-roll dock: no top card inset so header aligns with Edit/View row. -->
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="ClipToBounds" Value="False" />
+  </Style>
+  <Style Selector="TextBlock.workspacePanelTitle">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Opacity" Value="0.55" />
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+  </Style>
+  <Style Selector="TextBlock.notePropsPanelTitle">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <!-- Close panel -->
+  <Style Selector="Button.workspacePanelClose">
+    <Setter Property="Width" Value="32"/>
+    <Setter Property="Height" Value="32"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.workspacePanelClose /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="Button.workspacePanelClose:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+          Button.workspacePanelClose:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource PianoRollSideHoverBackgroundBrush}"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="Button.workspacePanelClose Path.stroked">
+    <Setter Property="Stroke" Value="{DynamicResource MutedIconBrush}"/>
+    <Setter Property="StrokeThickness" Value="1.5"/>
+    <Setter Property="Stretch" Value="Uniform"/>
+    <Setter Property="Width" Value="10"/>
+    <Setter Property="Height" Value="10"/>
+    <Setter Property="Data" Value="M3,3 L11,11 M11,3 L3,11"/>
+  </Style>
+  <Style Selector="Button.workspacePanelClose:pointerover Path.stroked,
+          Button.workspacePanelClose:pressed Path.stroked">
+    <Setter Property="Stroke" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+  </Style>
+
+  <!-- Welcome (home) screen -->
+  <Style Selector="Border.welcomeCard">
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCardBrush}" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="12" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+  <Style Selector="Button.welcomeRecoveryButton">
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+  <Style Selector="Button.welcomeActionButton">
+    <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="Padding" Value="8" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="MinHeight" Value="56" />
+  </Style>
+  <Style Selector="Button.welcomeActionButton:pointerover">
+    <Setter Property="Background" Value="{DynamicResource PianoRollSideHoverBackgroundBrush}" />
+  </Style>
+  <Style Selector="Button.welcomeActionButton:pressed">
+    <Setter Property="Background" Value="{DynamicResource PianoRollSideHoverBackgroundBrush}" />
+  </Style>
+  <Style Selector="Button.welcomeActionButton Path.welcomeActionIcon">
+    <Setter Property="Fill" Value="{DynamicResource PianoRollSideIconOffBrush}" />
+  </Style>
+  <Style Selector="Button.welcomeActionButton:pointerover Path.welcomeActionIcon,
+          Button.welcomeActionButton:pressed Path.welcomeActionIcon">
+    <Setter Property="Fill" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+  </Style>
+  <Style Selector="TextBlock.welcomeActionTitle">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+  </Style>
+  <Style Selector="TextBlock.welcomeActionDescription">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Opacity" Value="0.55" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style Selector="ListBox.welcomeFileList">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="ListBox.welcomeFileList ListBoxItem">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="8,6" />
+    <Setter Property="Margin" Value="0,1" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="MinHeight" Value="44" />
+    <Setter Property="Height" Value="NaN" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ListBox.welcomeFileList ListBoxItem:pointerover">
+    <Setter Property="Background" Value="{DynamicResource PianoRollSideHoverBackgroundBrush}" />
+  </Style>
+  <Style Selector="ListBox.welcomeFileList ListBoxItem:selected">
+    <Setter Property="Background" Value="{DynamicResource PianoRollSideHoverBackgroundBrush}" />
+  </Style>
+  <Style Selector="TextBlock.welcomeFileName">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+  </Style>
+  <Style Selector="TextBlock.welcomeFilePath">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Opacity" Value="0.55" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- Main window top bar: 32px chrome, 8px padding top and bottom (48px total). -->
+  <Style Selector="Border.appTopBar">
+    <Setter Property="Padding" Value="8,8,8,8" />
+  </Style>
+  <Style Selector="Border.appTopBar > Grid">
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="Border.appTopBar Menu">
+    <Setter Property="Height" Value="32" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Border.appTopBar Menu > MenuItem">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="8,0,8,0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Border.appTopBar Menu > MenuItem:selected /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="{DynamicResource PianoRollSideHoverBackgroundBrush}" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style Selector="Border.appTopBar Menu > MenuItem:pressed /template/ Border#PART_LayoutRoot:pointerover">
+    <Setter Property="Background" Value="{DynamicResource PianoRollSideHoverBackgroundBrush}" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style Selector="Border.appTopBar Menu > MenuItem:disabled">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Opacity" Value="0.45" />
+  </Style>
+  <Style Selector="Border.appTopBar Menu > MenuItem:disabled /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Border.appTopBar Menu > MenuItem:disabled:pointerover /template/ Border#PART_LayoutRoot,
+                 Border.appTopBar Menu > MenuItem:disabled:selected /template/ Border#PART_LayoutRoot,
+                 Border.appTopBar Menu > MenuItem:disabled:pressed /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="TextBlock.appTopBarLabel">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontFamily" Value="{DynamicResource ui.fontfamily}" />
+    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.appTopBarChrome">
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="StackPanel.appTopBarTransportStrip">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.appTopBarValueStrip">
+    <Setter Property="Background" Value="{DynamicResource AppTopBarValueStripBrush}" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="ClipToBounds" Value="True" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.appTopBarValueStrip > Grid">
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="Border.appTopBarValueStrip Border.transportStripCell">
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Border.appTopBarValueStrip:not(.appTopBarTimerStrip) Border.transportStripCell:pointerover">
+    <Setter Property="Background" Value="{DynamicResource PianoRollToolbarButtonHoverBrush}" />
+  </Style>
+  <Style Selector="Border.appTopBarTimerStrip">
+    <Setter Property="Cursor" Value="Arrow" />
+  </Style>
+  <Style Selector="Border.appTopBarValueStrip > Border.transportStripCell:pointerover">
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <!-- BPM (left): rounded outer left; sharp at divider (top-right, bottom-right). -->
+  <Style Selector="Border.appTopBarValueStrip > Border.appTopBarBpmCell:pointerover">
+    <Setter Property="CornerRadius" Value="4,0,0,4" />
+  </Style>
+  <!-- Time signature (middle): sharp at both dividers. -->
+  <Style Selector="Border.appTopBarValueStrip > Border.appTopBarTimeSigCell:pointerover">
+    <Setter Property="CornerRadius" Value="0" />
+  </Style>
+  <!-- Key (right): sharp at divider; rounded outer right. -->
+  <Style Selector="Border.appTopBarValueStrip > Border.appTopBarKeyCell:pointerover">
+    <Setter Property="CornerRadius" Value="0,4,4,0" />
+  </Style>
+  <Style Selector="Border.appTopBarValueStrip Border.transportValueDivider">
+    <Setter Property="Width" Value="1" />
+    <Setter Property="Margin" Value="0,8" />
+    <Setter Property="Background" Value="{DynamicResource AppTopBarValueDividerBrush}" />
+    <Setter Property="Opacity" Value="0.55" />
+  </Style>
+  <!-- Main window transport: separate 32×32 chips (like piano-roll side toggles). -->
+  <Style Selector="Button.transportChip, ToggleButton.transportChip">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="MinWidth" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="FocusAdorner" Value="{x:Null}" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.transportChip /template/ ContentPresenter#PART_ContentPresenter,
+          ToggleButton.transportChip /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="MinHeight" Value="32" />
+  </Style>
+  <Style Selector="Button.transportChip /template/ Border#PART_BorderElement,
+          ToggleButton.transportChip /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+  </Style>
+  <Style Selector="ToggleButton.transportChip:checked /template/ Border#PART_BorderElement,
+          ToggleButton.transportChip:checked:pointerover /template/ Border#PART_BorderElement,
+          ToggleButton.transportChip:checked:pressed /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+  </Style>
+  <Style Selector="StackPanel.appTopBarTransportStrip Viewbox">
+    <Setter Property="Width" Value="18" />
+    <Setter Property="Height" Value="20" />
+    <Setter Property="MaxWidth" Value="18" />
+    <Setter Property="MaxHeight" Value="20" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.transportChip Path.filled,
+          ToggleButton.transportChip Path.filled">
+    <Setter Property="Fill" Value="{DynamicResource TransportChipIconOffBrush}" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Fill" Duration="0:0:0.15" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.transportChip:pointerover:not(.playing) Path.filled,
+          ToggleButton.transportChip:not(:checked):pointerover Path.filled">
+    <Setter Property="Fill" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+  </Style>
+  <Style Selector="Button.transportChip:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+          Button.transportChip:pressed /template/ ContentPresenter#PART_ContentPresenter,
+          ToggleButton.transportChip:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+          ToggleButton.transportChip:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AppTopBarTransportStripBrush}" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style Selector="ToggleButton.transportChip:checked /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+  </Style>
+  <Style Selector="Button.playPauseChip.playing Path.pauseIcon.filled,
+          Button.playPauseChip.playing:pointerover Path.pauseIcon.filled">
+    <Setter Property="Fill" Value="{DynamicResource AccentBrush2}" />
+  </Style>
+  <Style Selector="ToggleButton.metronomeChip:checked Path.filled,
+          ToggleButton.metronomeChip:checked:pointerover Path.filled">
+    <Setter Property="Fill" Value="{DynamicResource AccentBrush1}" />
+  </Style>
+  <Style Selector="Button.playPauseChip Path.pauseIcon">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Button.playPauseChip.playing Path.playIcon">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Button.playPauseChip.playing Path.pauseIcon">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+</Styles>
