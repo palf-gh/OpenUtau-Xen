@@ -10,7 +10,7 @@
     <SatelliteResourceLanguages>none</SatelliteResourceLanguages>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <AssemblyName>OpenUtau-Xen</AssemblyName>
     <RootNamespace>OpenUtau</RootNamespace>
     <Product>OpenUtau Xen</Product>
@@ -24,8 +24,8 @@
     <CFBundleName>OpenUtau Xen</CFBundleName>
     <CFBundleDisplayName>OpenUtau Xen</CFBundleDisplayName>
     <CFBundleIdentifier>org.openutauxen.app</CFBundleIdentifier>
-    <CFBundleVersion>0.1.0</CFBundleVersion>
-    <CFBundleShortVersionString>0.1.0</CFBundleShortVersionString>
+    <CFBundleVersion>0.2.0</CFBundleVersion>
+    <CFBundleShortVersionString>0.2.0</CFBundleShortVersionString>
     <CFBundlePackageType>APPL</CFBundlePackageType>
     <CFBundleSignature>????</CFBundleSignature>
     <CFBundleExecutable>OpenUtau-Xen</CFBundleExecutable>

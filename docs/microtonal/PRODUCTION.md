@@ -289,3 +289,15 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   Not verified: pointer dragging of the splitters, detaching and re-attaching with a
   real window manager, pitch follow during real playback, a real singer portrait,
   high DPI, macOS and Linux.
+
+## 2026-10-25 — Version 0.2.0
+
+- Version 0.2.0 adds the workspace layout from OpenUtau Lunai: card-based welcome
+  screen, docked piano roll with an expand-in-window mode, top bar with transport,
+  BPM, time signature and project tuning, piano-roll side toolbar, resizable
+  note-properties dock, portrait across the cards, render progress strip with a
+  stop chip, and pitch follow that works in every tuning.
+- The piano roll is docked by default for new preferences; existing preferences keep
+  their choice (**View > Detach piano roll** switches it).
+- Still open: the checks listed in the workspace entry above, VOICEVOX verification,
+  broad GUI and high-DPI review.
