@@ -50,14 +50,34 @@ namespace OpenUtau.Core.Microtonal {
 
     public enum PitchDisplayMode { Full, ScaleHighlight, Compact }
 
+    /// <summary>The MOS that builds a keyboard: generator in degrees, note count and zero-based mode.</summary>
+    public sealed class KeyboardMos {
+        public int Generator { get; set; }
+        public int Cardinality { get; set; }
+        public int Mode { get; set; }
+        public KeyboardMos Clone() => new KeyboardMos { Generator = Generator, Cardinality = Cardinality, Mode = Mode };
+    }
+
+    /// <summary>
+    /// The keyboard (white/black keys and their names) is set apart from the scale (tonic and notes).
+    /// Layout "mos" builds the keys from <see cref="Mos"/>, or from the tuning family when it is null;
+    /// "manual" takes every key from <see cref="Classes"/>.
+    /// </summary>
     public sealed class KeyboardLayout {
+        public const string MosLayout = "mos";
+        public const string ManualLayout = "manual";
         public PitchDisplayMode Mode { get; set; } = PitchDisplayMode.Full;
         public string PrimaryNotation { get; set; } = "degree";
         public string? SecondaryNotation { get; set; }
+        public string Layout { get; set; } = MosLayout;
+        public KeyboardMos? Mos { get; set; }
+        /// <summary>Scale tonic as a degree; the active scale's degrees count from it.</summary>
+        public int Tonic { get; set; }
         public string? ActiveScaleId { get; set; }
         public Dictionary<int, string> Classes { get; set; } = new Dictionary<int, string>();
         public KeyboardLayout Clone() => new KeyboardLayout {
             Mode = Mode, PrimaryNotation = PrimaryNotation, SecondaryNotation = SecondaryNotation,
+            Layout = Layout, Mos = Mos?.Clone(), Tonic = Tonic,
             ActiveScaleId = ActiveScaleId, Classes = new Dictionary<int, string>(Classes),
         };
     }
@@ -163,6 +183,11 @@ namespace OpenUtau.Core.Microtonal {
             InputMapping.Validate();
             if (Scales.Any(s => s.Degrees.Any(d => d < 0 || d >= DegreeCount) || s.Degrees.Distinct().Count() != s.Degrees.Count))
                 throw new FormatException("Scale degrees must be distinct and inside the period.");
+            if (Keyboard.Layout != KeyboardLayout.MosLayout && Keyboard.Layout != KeyboardLayout.ManualLayout)
+                throw new FormatException("The keyboard layout must be mos or manual.");
+            if (Keyboard.Mos != null && (Keyboard.Mos.Cardinality < 1 || Keyboard.Mos.Cardinality > DegreeCount))
+                throw new FormatException("The keyboard MOS needs between one note and the degree count.");
+            if (Keyboard.Tonic < 0 || Keyboard.Tonic >= DegreeCount) throw new FormatException("The scale tonic must be inside the period.");
             if (Scales.Select(s => s.Id).Distinct().Count() != Scales.Count || Notations.Select(n => n.Id).Distinct().Count() != Notations.Count)
                 throw new FormatException("Scale and notation identifiers must be unique.");
         }

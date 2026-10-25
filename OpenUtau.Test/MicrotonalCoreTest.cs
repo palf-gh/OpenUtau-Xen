@@ -81,7 +81,7 @@ namespace OpenUtau.Test {
             Assert.Equal(new[] { 0, 4, 7 }, copy.Scales.Single(s => s.Id == "triad").Degrees);
             Assert.Equal("mi", copy.Notations.Single(n => n.Id == "custom").Names[4]);
             Assert.Throws<FormatException>(() => TunxenFormat.Parse("{}"));
-            Assert.Throws<FormatException>(() => TunxenFormat.Parse(yaml.Replace("version: 1", "version: 99")));
+            Assert.Throws<FormatException>(() => TunxenFormat.Parse(yaml.Replace("version: 2", "version: 99")));
         }
         [Fact]
         public void PresetsAreValidAndIndependent() {

@@ -51,7 +51,7 @@ OpenUtau Xen の画面と配色の決まりです。画面構成は OpenUtau Lun
 ## 4. 文字と記号
 
 - 文字は本家と同じアプリケーションのフォントを使います。
-- 変化記号は Bravura Text の SMuFL 記号で描き、音名の文字とは分けて描画します。
+- 変化記号（SMuFL 記号と ♯ ♭ ♮）は、Bravura Text から作った Xen Accidentals で描き、音名の文字とは分けて描画します。
 
 ## 5. 変更するときの確認
 

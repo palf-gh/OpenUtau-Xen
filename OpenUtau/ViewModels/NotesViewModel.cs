@@ -58,6 +58,7 @@ namespace OpenUtau.App.ViewModels {
         public void EndPitchGesture() { pitchGesture = false; RefreshPitchRows(); }
         public void RefreshPitchRows() {
             if (pitchGesture) return;
+            UpdateKey();
             double centre = rowMapper == null ? 60 : rowMapper.MidiAtRow(rowMapper.Count - 1 - TrackOffset - ViewportTracks / 2);
             rowMapper = BuildRowMapper();
             TrackOffset = Math.Clamp(rowMapper.Count - 1 - rowMapper.RowAtMidi(centre) - ViewportTracks / 2, 0, VScrollBarMax);
@@ -208,12 +209,7 @@ namespace OpenUtau.App.ViewModels {
             });
 
             Keys = new List<MenuItemViewModel>();
-            SetKeyCommand = ReactiveCommand.Create<int>(key => {
-                DocManager.Inst.StartUndoGroup("command.project.key");
-                DocManager.Inst.ExecuteCmd(new KeyCommand(Project, key));
-                DocManager.Inst.EndUndoGroup();
-                UpdateKey();
-            });
+            SetKeyCommand = ReactiveCommand.Create<int>(SetTonic);
 
             viewportTicks = this.WhenAnyValue(x => x.Bounds, x => x.TickWidth)
                 .Select(v => v.Item1.Width / Math.Max(v.Item2, ViewConstants.TickWidthMin))
@@ -292,13 +288,7 @@ namespace OpenUtau.App.ViewModels {
                             Command = SetSnapUnitCommand,
                             CommandParameter = div,
                         }));
-                    Keys.Clear();
-                    Keys.AddRange(MusicMath.KeysInOctave
-                        .Select((key, index) => new MenuItemViewModel {
-                            Header = $"1={key.Item1}",
-                            Command = SetKeyCommand,
-                            CommandParameter = index,
-                        }));
+                    UpdateKey();
                 });
 
             ShowTips = Preferences.Default.ShowTips;
@@ -442,9 +432,40 @@ namespace OpenUtau.App.ViewModels {
             SnapDivText = $"(1/{div})";
         }
 
+        /// <summary>
+        /// The tonic button (upstream's "1=" key) names the scale tonic as a degree of the effective tuning; its menu
+        /// lists every degree of that tuning.
+        /// </summary>
         private void UpdateKey() {
-            Key = userKey;
-            KeyText = "1=" + MusicMath.KeysInOctave[userKey].Item1;
+            var tuning = EffectiveTuning;
+            int count = tuning.DegreeCount;
+            int tonic = (tuning.Keyboard.Tonic % count + count) % count;
+            string primary = PitchNotation.ResolvePrimary(tuning, Preferences.Default.XenPrimaryNotation);
+            string Name(int degree) => PitchNotation.Format(tuning, degree, primary, false);
+            Key = tonic;
+            KeyText = XenStrings.Get("field.tonic") + " " + Name(tonic);
+            Keys = Enumerable.Range(0, count).Select(degree => new MenuItemViewModel {
+                Header = Name(degree),
+                Command = SetKeyCommand,
+                CommandParameter = degree,
+            }).ToList();
+        }
+
+        /// <summary>Sets the tonic of the tuning in effect for this part, as one undoable display change.</summary>
+        void SetTonic(int degree) {
+            var tuning = EffectiveTuning;
+            var track = Part != null && Part.trackNo >= 0 && Part.trackNo < Project.tracks.Count
+                && Project.tracks[Part.trackNo].pitchSystem != null ? Project.tracks[Part.trackNo] : null;
+            var target = tuning.Clone();
+            target.Keyboard.Tonic = (degree % tuning.DegreeCount + tuning.DegreeCount) % tuning.DegreeCount;
+            DocManager.Inst.StartUndoGroup("command.project.key");
+            DocManager.Inst.ExecuteCmd(new SetTuningCommand(Project, track, target, displayOnly: true));
+            // Twelve-note octaves keep upstream's project key in step, so compatibility exports carry the key.
+            if (tuning.DegreeCount == 12 && Math.Abs(tuning.PeriodCents - 1200) < 1e-6) {
+                DocManager.Inst.ExecuteCmd(new KeyCommand(Project, target.Keyboard.Tonic));
+            }
+            DocManager.Inst.EndUndoGroup();
+            UpdateKey();
         }
 
         public void OnXZoomed(Point position, double delta) {

@@ -1,0 +1,15 @@
+{
+ "prefs.channel": "更新通道",
+ "prefs.channel.stable": "稳定版",
+ "prefs.channel.beta": "测试版",
+ "prefs.channel.alpha": "预览版",
+ "prefs.appearance.notehoverglow": "悬停时高亮音符",
+ "prefs.appearance.playbacknotehighlight": "播放时高亮音符",
+ "prefs.appearance.playbacknotebounce": "播放时音符跳动",
+ "prefs.diffsinger": "DiffSinger",
+ "prefs.playback.backend.mini": "MiniAudio",
+ "prefs.rendering.wavtool": "Wavtool",
+ "themeeditor.save": "保存",
+ "themeeditor.cancel": "取消",
+ "phoneme.show.error": "Alt + 单击查看完整错误信息"
+}

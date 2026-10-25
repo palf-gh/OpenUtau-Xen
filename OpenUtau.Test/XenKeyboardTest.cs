@@ -29,6 +29,17 @@ namespace OpenUtau.Test {
             var roles = Octave(31);
             Assert.Equal((7, 10, 14), Count(roles));
             Assert.Equal(new[] { W, B, K, K, B, W }, roles.Take(6));
+            // E (10) to F (13): E-sharp (12) lies above F-flat (11), so both stay in-between keys.
+            Assert.Equal(new[] { W, B, B, W }, roles.Skip(10).Take(4));
+        }
+
+        [Fact]
+        public void NineteenHasASharedBlackKeyBetweenEAndF() {
+            var roles = Octave(19);
+            var theory = KeyboardTheory.Octave(19);
+            int e = theory.Naturals[2], f = theory.Naturals[3];
+            Assert.Equal(new[] { W, K, W }, roles.Skip(e).Take(f - e + 1));
+            Assert.Equal((7, 12, 0), Count(roles));
         }
 
         [Fact]
@@ -93,9 +104,15 @@ namespace OpenUtau.Test {
         [Fact]
         public void InvalidTheoriesFallBackAndExplicitClassesWin() {
             Assert.False(KeyboardTheory.Octave(7).IsValid);
-            Assert.Null(KeyboardRegionizer.Roles(TuningPresets.EqualDivision(7)));
+            // Without a family keyboard, 7-EDO uses its default MOS: seven equal steps, all white and lettered.
+            var seven = TuningPresets.EqualDivision(7);
+            Assert.All(KeyboardRegionizer.Roles(seven)!, role => Assert.Equal(W, role));
+            Assert.Equal("C", PitchNotation.Format(seven, 0, PitchNotation.ResolvePrimary(seven, null), false));
+            Assert.Equal("B", PitchNotation.Format(seven, 6, PitchNotation.ResolvePrimary(seven, null), false));
             var tuning = TuningPresets.EqualDivision(31);
+            tuning.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(tuning);
             tuning.Keyboard.Classes[1] = "accidental";
+            tuning.Keyboard.Layout = KeyboardLayout.ManualLayout;
             Assert.Equal(K, PitchNotation.Role(tuning, 1));
             Assert.Equal(B, PitchNotation.Role(tuning, 4));
         }

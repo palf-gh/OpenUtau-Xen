@@ -16,6 +16,8 @@ namespace OpenUtau.Core.Microtonal {
 
     public static class TunxenFormat {
         public const string Extension = ".tunxen";
+        /// <summary>Version 2 adds the keyboard layout, keyboard MOS and scale tonic; version 1 is upgraded on reading.</summary>
+        public const int CurrentVersion = 2;
         static readonly ISerializer Serializer = new SerializerBuilder()
             .WithNamingConvention(UnderscoredNamingConvention.Instance)
             .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull).Build();
@@ -23,15 +25,16 @@ namespace OpenUtau.Core.Microtonal {
             .WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
         public static TuningDefinition Parse(string text) {
             var document = Deserializer.Deserialize<TunxenDocument>(text) ?? throw new FormatException("Empty tuning document.");
-            if (document.Format != "OpenUtauXenTuning" || document.Version != 1)
+            if (document.Format != "OpenUtauXenTuning" || document.Version < 1 || document.Version > CurrentVersion)
                 throw new FormatException("Unsupported OpenUtau Xen tuning format or version.");
             if (document.Tuning == null) throw new FormatException("The document has no tuning.");
+            if (document.Version == 1) KeyboardRegionizer.UpgradeFormat1(document.Tuning);
             document.Tuning.Validate();
             return document.Tuning;
         }
         public static string Serialize(TuningDefinition tuning) {
             tuning.Validate();
-            return Serializer.Serialize(new TunxenDocument { Format = "OpenUtauXenTuning", Version = 1, Tuning = tuning });
+            return Serializer.Serialize(new TunxenDocument { Format = "OpenUtauXenTuning", Version = CurrentVersion, Tuning = tuning });
         }
         public static TuningDefinition Load(string path) => Parse(File.ReadAllText(path));
         public static void Save(string path, TuningDefinition tuning) => File.WriteAllText(path, Serialize(tuning), new UTF8Encoding(false));

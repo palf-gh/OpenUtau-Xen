@@ -92,7 +92,9 @@ namespace OpenUtau.Test {
         [Fact]
         public void DegreeLabelsUseIndexWithinPeriod() {
             var tuning = TuningPresets.EqualDivision(13, PitchInterval.FromRatio("5/2"));
-            Assert.Equal("degree", PitchNotation.ResolvePrimary(tuning, PitchNotation.Auto));
+            // Without a family keyboard the default MOS names the notes; degree numbers remain the secondary label.
+            Assert.Equal(PitchNotation.Mos, PitchNotation.ResolvePrimary(tuning, PitchNotation.Auto));
+            Assert.Equal("degree", PitchNotation.ResolveSecondary(tuning, PitchNotation.Mos, PitchNotation.Auto));
             Assert.Null(PitchNotation.ResolveSecondary(tuning, "degree", PitchNotation.Auto));
             Assert.Equal("5·5", PitchNotation.Format(tuning, 18, "degree"));
             Assert.Equal("5", PitchNotation.Format(tuning, 18, "degree", false));

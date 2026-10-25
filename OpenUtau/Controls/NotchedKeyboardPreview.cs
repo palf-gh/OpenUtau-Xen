@@ -31,6 +31,8 @@ namespace OpenUtau.App.Controls {
         public int ItemCount => cells.Length;
         public int? SelectedDegree { get; private set; }
         public bool IsWhiteKeysOnly => whiteOnly;
+        /// <summary>Raised when a key is pressed with the pointer, after it is selected.</summary>
+        public event Action<int>? DegreePressed;
 
         public NotchedKeyboardPreview() : this(frequency => PlaybackManager.Inst.PlayTone(frequency),
             frequency => PlaybackManager.Inst.EndTone(frequency)) { }
@@ -48,24 +50,25 @@ namespace OpenUtau.App.Controls {
         public void SetTuning(TuningDefinition? value, IEnumerable<int>? scale = null, bool whiteKeysOnly = false) {
             StopAudition();
             var nextBaseline = value == null ? null : KeyboardRegionizer.Model(value);
-            bool sameGeometry = whiteOnly == whiteKeysOnly && value != null && tuning != null && baseline != null && ReferenceEquals(baseline, nextBaseline)
+            bool nextWhite = whiteKeysOnly || value != null && KeyboardRegionizer.IsUnavailableMos(value);
+            bool sameGeometry = whiteOnly == nextWhite && value != null && tuning != null && baseline != null && ReferenceEquals(baseline, nextBaseline)
                 && tuning.Keyboard.Classes.Count == value.Keyboard.Classes.Count
                 && tuning.Keyboard.Classes.All(pair => value.Keyboard.Classes.TryGetValue(pair.Key, out var kind) && kind == pair.Value);
             tuning = value?.Clone();
-            whiteOnly = whiteKeysOnly;
+            whiteOnly = nextWhite;
             baseline = nextBaseline;
             if (!sameGeometry) geometries.Clear();
             if (tuning == null) {
                 cells = Array.Empty<KeyboardPitchCell>(); KeyLayout = null; active.Clear(); SelectedDegree = null;
             } else {
                 if (!sameGeometry) {
-                    bool letters = KeyboardRegionizer.LetterScale(tuning) != null;
+                    bool letters = KeyboardRegionizer.LetterNominals(tuning) != null;
                     cells = Enumerable.Range(0, tuning.DegreeCount).Select(step => {
                         if (whiteOnly) return new KeyboardPitchCell(step, NotchedKeyKind.Natural, tuning.DegreeCount + step, step);
                         var cell = baseline?.Cells[step];
-                        var role = cell != null && (letters || !tuning.Keyboard.Classes.ContainsKey(step)) ? cell.Role : PitchNotation.Role(tuning, step);
-                        if (cell != null && cell.Role == role) return cell;
-                        // Explicit key classes retain precedence over inferred keyboard roles.
+                        if (cell != null) return cell;
+                        // Key-by-key keyboards and tunings without a MOS model take each key's role directly.
+                        var role = PitchNotation.Role(tuning, step);
                         var kind = role == KeyRole.White ? NotchedKeyKind.Natural
                             : role == KeyRole.Black ? NotchedKeyKind.Shared : NotchedKeyKind.Between;
                         return new KeyboardPitchCell(step, kind, tuning.DegreeCount + step, step);
@@ -118,6 +121,7 @@ namespace OpenUtau.App.Controls {
             auditionPointer = e.Pointer;
             e.Pointer.Capture(this);
             RunAudition(() => audition.BeginPointer(tuning, SelectedDegree));
+            if (SelectedDegree is int pressed) DegreePressed?.Invoke(pressed);
             e.Handled = true;
         }
 

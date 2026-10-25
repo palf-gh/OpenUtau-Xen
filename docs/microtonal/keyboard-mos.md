@@ -2,10 +2,8 @@
 
 Date: 2026-10-25. Source: the user's supplied
 `docs/general_mos_microtonal_keyboard_algorithm_latest.md` and the referenced
-keyboard-tool conversation. The user first chose a tuning-specific baseline MOS,
-independent of the selected performance scale. The amendment of 2026-10-25 (see
-"MOS-selected keyboards and letter names" below) lets the selected MOS decide the
-keyboard instead.
+keyboard-tool conversation. The keyboard MOS is independent of the selected scale;
+"Keyboard and scale" below describes how the keyboard MOS is chosen and stored.
 
 ## Purpose and theory
 
@@ -25,14 +23,18 @@ they do not implement separate region-expansion algorithms.
 
 Other periods and invalid family configurations retain the existing fallback
 roles. The general core API also accepts custom N/G/M/R combinations, including
-25 divisions and cardinalities other than seven or nine. This change adds no
-serialised baseline configuration or new custom-baseline settings screen.
+25 divisions and cardinalities other than seven or nine. A keyboard MOS chosen
+in the settings is stored with the tuning (see "Keyboard and scale").
 
 ## Keyboard heuristic
 
-Every nominal is a White/Natural anchor. In each large gap L, chroma `c = L - s`
-places the lower nominal's sharp at `x + c` and the upper nominal's flat at
-`x + s`. Coincident sharp/flat anchors are Shared Black anchors. Exact
+Every nominal is a White/Natural anchor. With chroma `c = L - s`, a gap G holds
+the lower nominal's sharp at `x + c` and the upper nominal's flat at `x + G - c`.
+This always applies to large gaps. Since 2026-10-25 (user review) it also
+applies to small gaps where the sharp is not above the flat (`2c <= s`): 19-EDO
+and porcupine 15-EDO get one shared black key in each small step, 26-EDO separate
+E-sharp and F-flat keys, while 31-EDO's crossed E-sharp/F-flat stay Between.
+Coincident sharp/flat anchors are Shared Black anchors. Exact
 White/Black conflicts are represented as Between/Conflict.
 
 Between adjacent anchors A and B, an interior integer offset d is assigned to
@@ -52,7 +54,7 @@ For the canonical 73-EDO first large gap, degrees 0–13 are:
 Unlike the earlier algorithm, 22-EDO keeps its central Black-cluster gap Between.
 53-EDO expands around its anchors using the thirds rule; its baseline counts
 are 17 White, 20 Black and 16 Between. 31-EDO retains 7 White, 10 Black and
-14 Between, and 13-EDT retains 9 White and 4 Black.
+14 Between, 19-EDO has 7 White and 12 Black, and 13-EDT retains 9 White and 4 Black.
 
 `KeyboardRegionizer` caches the tuning's baseline model. `PitchNotation.Role`
 continues to honour explicit key-class overrides. Choosing or generating a
@@ -125,48 +127,58 @@ Set `OPENUTAU_KEYBOARD_CAPTURES` to an output directory when running the filtere
 Build/test results are recorded in `PRODUCTION.md`. Native high-DPI interaction
 and physical-input review remain separate checks.
 
-## MOS-selected keyboards and letter names
+## Keyboard and scale
 
-Date: 2026-10-25. Following the user's review of the live settings page, the
-active generator scale now decides the keyboard. `KeyboardRegionizer.LetterScale`
-returns that scale unless the keyboard is manual, the scale has more than two
-step sizes counted in degrees, or it is a mode of the seven-note octave or
-nine-note tritave family (generator equal to the family generator or its
-inversion). Family modes keep the existing C-diatonic and C-Lambda baseline,
-names and traditional 12-EDO/13-EDT profiles. Any other MOS is passed to
-`MosKeyboard.FromNominals`: its degrees are the White anchors, and the same
-chroma, thirds and column rules apply. This works for any period and for
-unequal tunings, because the geometry counts degrees.
+Date: 2026-10-25 (supersedes the earlier same-day section in which the active
+generator scale decided the keyboard). Following the user's review, the keyboard
+and the scale are set separately: the keyboard decides white/black keys and
+note names; the scale (a tonic and its notes) only marks notes and drives the
+piano roll's scale rows.
 
-`PitchNotation` adds the generated `mos` profile. Nominals are lettered A–H, then
-J–Z (I is skipped, as in Bohlen–Pierce), then doubled letters. Other degrees use
-the existing nominal speller with the MOS chroma as sharp/flat and ups and downs
-for any remainder. Automatic notation prefers `mos` over stored family names,
-unless the user has authored custom names. Name input accepts the letters, and
-the piano-roll notation menus list the profile. Explicit key classes still
-override family baselines but not a letter-named MOS.
+`KeyboardLayout.Layout` is `mos` or `manual`. With `mos`, `KeyboardLayout.Mos`
+(generator in degrees, note count, zero-based mode) builds the keyboard. When it
+is null, an equal octave or tritave with a valid family keeps the C-diatonic or
+C-Lambda baseline, an unequal tuning keeps its name-based keys, and any other
+equal division uses a default MOS. Up to nine degrees every degree is a white
+key. From ten degrees the default is the MOS of five to nine notes with two step
+sizes that scores best on few in-between keys, seven notes, a large/small ratio
+near 7:4 and a generator near 3/2 or 4/3: porcupine 1L6s in 15-EDO (generator 2;
+with small-step accidentals, seven white and eight black keys), mavila 2L5s in
+16-EDO and 3L4s in 10-EDO. A
+family mode (the family generator or its inversion with seven or nine notes, or
+a fifth-generated seven-note scale in an unequal octave) keeps the traditional
+names and keys. Any other MOS is passed to `MosKeyboard.FromNominals`: its notes
+are the White anchors, lettered with the first n letters (A–H, J–Z, then doubled
+letters; I is skipped, as in Bohlen–Pierce) rotated so degree 0 is C, as on
+conventional keyboards: C D E F G A B for seven notes, C D E F G H J A B for nine,
+C D E A B for five (fewer than three notes start at A), with sharps and flats of its chroma and ups and downs for
+any remainder. A MOS that cannot be generated shows all keys white with degree
+numbers. `MosGenerator` counts step sizes in degrees, so the result depends only
+on the degree count, generator, note count and mode and is cached; a
+fifth-generated diatonic in just intonation or a well temperament is 5L2s.
 
-Manual keyboards: when every degree has an explicit key class, the keyboard is
-set key by key; no MOS or family baseline applies. The settings page exposes
-this as the "build the keyboard from a MOS scale" switch. Switching off copies
-the current key roles into key classes and the shown names into editable custom
-names; switching on clears the classes and drops unedited copied names.
+With `manual`, every key comes from `Keyboard.Classes` (missing classes are
+white); classes are ignored by a MOS keyboard. Switching to key by key copies
+the current roles into classes and the shown names into editable custom names;
+switching back to MOS drops unedited copied names.
 
-Unequal tunings (2026-10-25, user review): the just-intonation, Pythagorean,
-meantone and well-temperament presets start with MOS off. Their key classes come
-from their chromatic names (`KeyboardRegionizer.ClassesFromRoles`), so they show
-a seven-white, five-black piano keyboard; any twelve-note octave whose keys follow
-the piano pattern uses the traditional profile. Unequal tunings saved before
-this change are given the same classes when the settings open. `MosGenerator`
-now counts step sizes in degrees rather than cents, so a fifth-generated
-diatonic in just intonation or a well temperament is 5L2s. With MOS on, the
-default generator is the degree nearest 3/2 (`DefaultGenerator`); a
-fifth-generated seven-note scale in an unequal octave keeps the conventional
-C–B names and piano keys, while other MOS cardinalities take letters.
+The scale is `Keyboard.Tonic` (a degree) and `Keyboard.ActiveScaleId`. Scale
+degrees count from the tonic. `ScalePresets` resolves presets by identifier, so
+only user scales are stored: all degrees; major, minor and church modes,
+pentatonics, blues, whole tone and the Japanese miyako-bushi, ritsu, min'yō,
+Ryūkyū, yonanuki major and minor, yō, in, hirajōshi, kumoi and iwato scales for every fifth-generated octave tuning (mapped by fifth index and
+left out if notes collide or fall out of order); seven Arabic maqamat for
+24-degree octaves; Lambda for 13-degree tritaves; pathet scales for the pelog
+preset; makam Rast for the AEU preset. The piano roll's Highlight/Compact rows
+show exactly the scale (`DisplayDegrees`).
 
-Equal-division presets now add and select their family MOS (for example 12-EDO
-C major, 13-EDT C-Lambda); divisions without a valid family MOS, such as 25-EDO,
-keep all degrees. `KeyboardRegionizer.DisplayDegrees` gives the piano roll's
-Highlight/Compact rows: the scale degrees plus every White and Black key, so
-chromatic alterations remain visible and only in-between microsteps are left out.
-Scales without a generator (custom subsets, Rast) are shown as before.
+Equal-division presets start with the family keyboard and all degrees. Unequal
+presets start key by key with keys following their names. Rast is the standard
+24-EDO keyboard with the maqam Rast scale selected, and the preset menu shows it
+by identifier rather than as plain 24-EDO.
+
+Format: `.tunxen` and `.ustxen` are version 2 and store `layout`, `mos` and
+`tonic`. Version 1 is upgraded on reading: a class on every degree becomes key by
+key; otherwise the MOS layout is used, and partial classes that changed a key
+become key by key with that change kept. Tonic is 0, and stored scale degrees
+are read as counted from it.

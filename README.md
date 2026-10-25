@@ -91,9 +91,12 @@ release is not declared complete while these checks remain open.
 Upstream code remains under its original MIT licence. The workspace layout
 (welcome screen, docked piano roll, top bar and side toolbar) and pitch follow are
 reimplemented from [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai)
-(MIT, commit `01be298`). Bravura Text is included
-unmodified under SIL OFL 1.1, with the licence in `OpenUtau/Assets/Fonts/`.
-The font was retrieved from Steinberg's Bravura repository. Voicebanks, external
+(MIT, commit `01be298`). Accidentals use Xen Accidentals, a Modified Version of
+Bravura Text under SIL OFL 1.1, renamed because "Bravura" is a Reserved Font Name.
+It keeps only the accidental glyphs, rescaled to sit on the baseline, and its
+licence is in `OpenUtau/Assets/Fonts/`. `tools/build-xen-accidentals.py` builds it
+from the unmodified Bravura Text in `tools/fonts/`, retrieved from Steinberg's
+Bravura repository. Voicebanks, external
 resamplers and their licences remain separate from this repository and package.
 Xen's app data, installer identity and `.ustxen` association are distinct from
 upstream OpenUtau; automatic upstream updates are disabled for this derivative.
@@ -272,9 +275,12 @@ DiffSinger の自動ピッチとリテイクの組合せは未検証です。詳
 本家のコードは元の MIT ライセンスのままです。ワークスペースの画面（ウェルカム画面、
 組み込みのピアノロール、上部バー、縦ツールバー）とピッチ追従は、
 [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai)（MIT、コミット `01be298`）を
-参考に作り直したものです。Bravura Text は SIL OFL 1.1 に基づき
-無改変で同梱し、ライセンスを `OpenUtau/Assets/Fonts/` に置いています。このフォントは
-Steinberg の Bravura リポジトリから取得しました。音源、外部リサンプラーとそれらの
+参考に作り直したものです。変化記号には Xen Accidentals を使います。これは Bravura Text を
+SIL OFL 1.1 に基づいて改変したフォントで、「Bravura」が予約フォント名のため名前を変えています。
+変化記号の字形だけを残し、大きさと位置を直してベースラインに乗るようにしました。ライセンスは
+`OpenUtau/Assets/Fonts/` に置いています。`tools/build-xen-accidentals.py` が、`tools/fonts/` にある
+無改変の Bravura Text からこのフォントを作ります。Bravura Text は Steinberg の Bravura
+リポジトリから取得しました。音源、外部リサンプラーとそれらの
 ライセンスは、このリポジトリと配布物には含めません。Xen のアプリデータ、インストーラーの
 識別情報、`.ustxen` の関連付けは本家 OpenUtau と分けています。この派生版では本家への
 自動更新を無効にしています。

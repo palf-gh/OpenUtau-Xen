@@ -43,24 +43,26 @@ namespace OpenUtau.App.Views {
         readonly NumericUpDown intervalCardinality = Number(1, 65536, 7, 0);
         readonly TextBox ratioGenerator = new TextBox { Text = "3/2" };
         readonly TextBox customScaleName = new TextBox { Text = XenStrings.Get("scale.custom") };
-        readonly TextBox customScaleDegrees = new TextBox { Text = "0" };
         readonly TextBlock scaleResult = new TextBlock { TextWrapping = Avalonia.Media.TextWrapping.Wrap };
         readonly NotchedKeyboardPreview pitchPreview = new NotchedKeyboardPreview { Name = "TuningPitchPreview" };
-        readonly RadioButton mosScale = new RadioButton { Content = XenStrings.Get("tab.generator"), GroupName = "ScaleKind", Name = "ScaleKindMos" };
-        readonly RadioButton customScale = new RadioButton { Content = XenStrings.Get("scale.custom"), GroupName = "ScaleKind", Name = "ScaleKindCustom" };
+        readonly RadioButton mosKeyboard = new RadioButton { Content = XenStrings.Get("tab.generator"), GroupName = "KeyboardKind", Name = "KeyboardKindMos" };
+        readonly RadioButton manualKeyboard = new RadioButton { Content = XenStrings.Get("keyboard.manual"), GroupName = "KeyboardKind", Name = "KeyboardKindManual" };
         readonly StackPanel mosPanel = new StackPanel { Spacing = 10 };
-        readonly StackPanel customPanel = new StackPanel { Spacing = 10 };
         readonly WrapPanel manualKeys = new WrapPanel { Name = "ManualKeyClasses" };
+        readonly NumericUpDown keyboardCycle = Number(1, 65536, 9, 0);
+        readonly ComboBox tonic = new ComboBox {
+            Name = "ScaleTonic",
+            ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<string>((label, _) => new PitchText { Pitch = label }),
+        };
+        readonly CheckBox editScale = new CheckBox { Content = XenStrings.Get("action.editScale"), Name = "EditScaleKeys" };
+        List<ScaleDefinition> scaleChoices = new List<ScaleDefinition>();
         bool loading;
         bool structureValid = true;
-        bool mosAvailable = true;
-        bool mosEditing;
         bool customGenerator;
         bool customCardinality;
-        string? sessionScaleId;
+        string? editingScaleId;
         NotationProfile? seededNames;
         string? namesBeforeManual;
-        HashSet<string> originalScaleIds = new HashSet<string>();
         int selectedPage;
         Button applyDraft = null!;
         List<DegreeEntry> entries = new List<DegreeEntry>();
@@ -109,26 +111,18 @@ namespace OpenUtau.App.Views {
             tuningPage.Children.Add(Parameters(("field.period", period), ("field.divisions", divisions),
                 ("field.referenceDegree", referenceDegree), ("field.frequency", frequency)));
             tuningPage.Children.Add(Field(XenStrings.Get("field.explicitCount"), explicitCount));
-            // One scale card: a MOS decides the keyboard, or a custom scale whose keys are set one by one.
-            var scaleCard = new StackPanel { Spacing = 10 };
-            scaleCard.Children.Add(new TextBlock { Text = XenStrings.Get("field.scale"), FontSize = 16,
-                FontWeight = Avalonia.Media.FontWeight.SemiBold });
+            keyboardCycle.Name = "KeyboardCycle";
+            tuningPage.Children.Add(Field(XenStrings.Get("field.keyboardCycle"), keyboardCycle));
+            // The keyboard (white/black keys and names) and the scale (tonic and notes) are set separately.
+            var keyboardCard = new StackPanel { Spacing = 10 };
+            keyboardCard.Children.Add(CardHeading("field.keyboard"));
             var kinds = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16 };
-            kinds.Children.Add(mosScale);
-            kinds.Children.Add(customScale);
-            scaleCard.Children.Add(kinds);
+            kinds.Children.Add(mosKeyboard);
+            kinds.Children.Add(manualKeyboard);
+            keyboardCard.Children.Add(kinds);
             mosPanel.Children.Add(Parameters(("field.generatorDegree", generator), ("field.cardinality", cardinality), ("field.mode", mode)));
             mosPanel.Children.Add(scaleResult);
-            scaleCard.Children.Add(mosPanel);
-            customPanel.Children.Add(Field(XenStrings.Get("field.scale"), scales));
-            var addScale = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,Auto"), ColumnSpacing = 12 };
-            addScale.Children.Add(Labelled("field.scaleName", customScaleName));
-            var degreeList = Labelled("field.degrees", customScaleDegrees);
-            Grid.SetColumn(degreeList, 1); addScale.Children.Add(degreeList);
-            var add = Button(XenStrings.Get("action.addSubset"), AddDegreeSubset);
-            add.VerticalAlignment = VerticalAlignment.Bottom;
-            Grid.SetColumn(add, 2); addScale.Children.Add(add);
-            customPanel.Children.Add(addScale);
+            keyboardCard.Children.Add(mosPanel);
             manualKeys.Children.Add(new TextBlock { Text = XenStrings.Get("field.selectedKey"), VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 8, 6) });
             foreach (var (label, keyClass) in new[] { ("keyClass.white", "natural"), ("keyClass.black", "accidental"), ("keyClass.between", "between") }) {
@@ -136,9 +130,24 @@ namespace OpenUtau.App.Views {
                 button.Name = "KeyClass-" + keyClass;
                 manualKeys.Children.Add(button);
             }
-            customPanel.Children.Add(manualKeys);
-            scaleCard.Children.Add(customPanel);
-            scaleCard.Children.Add(KeyboardViewport(pitchPreview));
+            keyboardCard.Children.Add(manualKeys);
+            tuningPage.Children.Add(Card(keyboardCard));
+            tuningPage.Children.Add(KeyboardViewport(pitchPreview));
+            var scaleCard = new StackPanel { Spacing = 10 };
+            scaleCard.Children.Add(CardHeading("field.scale"));
+            var scaleChoice = new Grid { ColumnDefinitions = new ColumnDefinitions("*,2*"), ColumnSpacing = 12 };
+            scaleChoice.Children.Add(Labelled("field.tonic", tonic));
+            var scaleList = Labelled("field.scale", scales);
+            Grid.SetColumn(scaleList, 1); scaleChoice.Children.Add(scaleList);
+            scaleCard.Children.Add(scaleChoice);
+            var saveScale = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 12 };
+            editScale.VerticalAlignment = VerticalAlignment.Center;
+            saveScale.Children.Add(editScale);
+            Grid.SetColumn(customScaleName, 1); saveScale.Children.Add(customScaleName);
+            var save = Button(XenStrings.Get("action.saveScale"), SaveScale);
+            save.Name = "SaveScale";
+            Grid.SetColumn(save, 2); saveScale.Children.Add(save);
+            scaleCard.Children.Add(saveScale);
             tuningPage.Children.Add(Card(scaleCard));
 
             degrees.Columns.Add(new DataGridTextColumn { Header = XenStrings.Get("field.degree"), Binding = new Binding(nameof(DegreeEntry.Degree)), IsReadOnly = true });
@@ -210,8 +219,11 @@ namespace OpenUtau.App.Views {
             generator.ValueChanged += (_, _) => { if (!loading) { customGenerator = true; LiveMosChanged(); } };
             cardinality.ValueChanged += (_, _) => { if (!loading) { customCardinality = true; LiveMosChanged(); } };
             mode.ValueChanged += (_, _) => { if (!loading) LiveMosChanged(); };
-            mosScale.IsCheckedChanged += (_, _) => { if (!loading && mosScale.IsChecked == true) SetMosKeyboard(true); };
-            customScale.IsCheckedChanged += (_, _) => { if (!loading && customScale.IsChecked == true) SetMosKeyboard(false); };
+            mosKeyboard.IsCheckedChanged += (_, _) => { if (!loading && mosKeyboard.IsChecked == true) SetMosKeyboard(true); };
+            manualKeyboard.IsCheckedChanged += (_, _) => { if (!loading && manualKeyboard.IsChecked == true) SetMosKeyboard(false); };
+            keyboardCycle.ValueChanged += (_, _) => { if (!loading) ChangeKeyboardCycle(); };
+            tonic.SelectionChanged += (_, _) => { if (!loading) SelectTonic(); };
+            pitchPreview.DegreePressed += degree => { if (editScale.IsChecked == true) ToggleScaleDegree(degree); };
             divisions.ValueChanged += (_, _) => { if (!loading) LiveStructureChanged(); };
             explicitCount.ValueChanged += (_, _) => { if (!loading) LiveStructureChanged(); };
             period.PropertyChanged += (_, e) => { if (!loading && e.Property == TextBox.TextProperty) LiveStructureChanged(); };
@@ -242,72 +254,98 @@ namespace OpenUtau.App.Views {
                 period.Text = draft.Period.Ratio ?? draft.Period.Cents?.ToString("R", XenStrings.InputCulture);
                 referenceDegree.Value = draft.Reference.Degree;
                 frequency.Value = (decimal)draft.Reference.Frequency;
-                // Unequal tunings saved before the MOS switch start off, keeping the keys their names imply.
-                if (draft.Divisions == 0 && !Manual && KeyboardRegionizer.LetterScale(draft) == null
-                    && ActiveScale()?.GeneratorDegree == null) draft.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(draft);
-                originalScaleIds = new HashSet<string>(draft.Scales.Select(scale => scale.Id));
-                sessionScaleId = null;
                 seededNames = null;
-                RefreshScaleChoices();
+                editingScaleId = null;
                 LoadEntries();
                 yaml.Text = TunxenFormat.Serialize(draft);
                 if (explicitCount.Parent is Control row) row.IsVisible = draft.Divisions == 0;
-                var active = ActiveScale();
-                var theory = KeyboardTheory.For(draft);
-                int defaultCount = Math.Min(theory?.ReferenceDivision == 13 ? 9 : 7, draft.DegreeCount);
-                generator.Value = active?.GeneratorDegree ?? KeyboardRegionizer.DefaultGenerator(draft);
-                cardinality.Maximum = draft.DegreeCount;
-                cardinality.Value = active?.GeneratorDegree != null ? active.Degrees.Count : defaultCount;
-                mode.Maximum = cardinality.Value ?? 1;
-                mode.Value = (active?.Mode ?? 0) + 1;
-                mosEditing = active?.GeneratorDegree != null;
-                customGenerator = mosEditing && active!.GeneratorDegree != KeyboardRegionizer.DefaultGenerator(draft);
-                customCardinality = mosEditing && active!.Degrees.Count != defaultCount;
+                LoadMosFields();
                 structureValid = true;
                 RefreshPresetChoice();
+                RefreshKeyboardCycle();
             } finally { loading = false; }
-            RefreshMosMode();
-            RefreshLiveMos(false);
+            RefreshKeyboardMode();
+            RefreshScaleChoices();
+            RefreshMosStatus();
+            RefreshPitchPreview();
+            RefreshApplyAction();
+        }
+
+        int FamilyCount => Math.Min(KeyboardTheory.For(draft)?.ReferenceDivision == 13 ? 9 : 7, draft.DegreeCount);
+
+        /// <summary>Shows the keyboard MOS, or the default (family) MOS when the tuning stores none.</summary>
+        void LoadMosFields() {
+            var mos = draft.Keyboard.Mos;
+            var fallback = KeyboardRegionizer.DefaultMos(draft);
+            generator.Value = mos?.Generator ?? fallback.Generator;
+            cardinality.Maximum = draft.DegreeCount;
+            cardinality.Value = mos?.Cardinality ?? fallback.Cardinality;
+            mode.Maximum = cardinality.Value ?? 1;
+            mode.Value = (mos?.Mode ?? fallback.Mode) + 1;
+            customGenerator = mos != null && mos.Generator != fallback.Generator;
+            customCardinality = mos != null && mos.Cardinality != fallback.Cardinality;
         }
 
         bool Manual => KeyboardRegionizer.IsManual(draft);
 
-        void RefreshMosMode() {
+        void RefreshKeyboardMode() {
             bool wasLoading = loading;
             loading = true;
             try {
                 bool manual = Manual;
-                mosScale.IsChecked = !manual;
-                customScale.IsChecked = manual;
+                mosKeyboard.IsChecked = !manual;
+                manualKeyboard.IsChecked = manual;
                 mosPanel.IsVisible = !manual;
-                customPanel.IsVisible = manual;
+                manualKeys.IsVisible = manual;
             } finally { loading = wasLoading; }
         }
 
-        /// <summary>MOS on derives every key from the MOS; off starts from the current keys and edits them one by one.</summary>
-        void SetMosKeyboard(bool on) {
-            if (!structureValid) { RefreshMosMode(); return; }
-            if (on) {
-                draft.Keyboard.Classes.Clear();
-                RemoveSeededNames();
-            } else {
-                SeedManualNames();
-                var cells = pitchPreview.Cells;
-                draft.Keyboard.Classes = Enumerable.Range(0, draft.DegreeCount).ToDictionary(degree => degree,
-                    degree => degree >= cells.Count || pitchPreview.IsWhiteKeysOnly || cells[degree].Role == KeyRole.White ? "natural"
-                        : cells[degree].Role == KeyRole.Black ? "accidental" : "between");
-            }
-            SyncEntryClasses();
-            RefreshMosMode();
-            if (on) LiveMosChanged();
-            else RefreshLiveMos(false);
+        /// <summary>Non-octave equal steps group the keyboard in cycles; changing the cycle keeps the step size.</summary>
+        void RefreshKeyboardCycle() {
+            bool cycle = draft.Divisions > 0 && Math.Abs(draft.PeriodCents - 1200) > 1e-6
+                && Math.Abs(draft.PeriodCents - 1200 * Math.Log2(3)) > 1e-6;
+            if (keyboardCycle.Parent is Control row) row.IsVisible = cycle;
+            keyboardCycle.Value = draft.Divisions > 0 ? draft.Divisions : 1;
         }
 
-        /// <summary>Copies the names shown with MOS on into custom names, so switching off keeps them editable key by key.</summary>
+        void ChangeKeyboardCycle() {
+            if (draft.Divisions <= 0) return;
+            double step = draft.PeriodCents / draft.Divisions;
+            int steps = ReadInteger(keyboardCycle, draft.Divisions);
+            loading = true;
+            try {
+                divisions.Value = steps;
+                period.Text = (step * steps).ToString("R", XenStrings.InputCulture);
+            } finally { loading = false; }
+            LiveStructureChanged();
+        }
+
+        /// <summary>MOS builds every key from the MOS; key by key starts from the current keys and names.</summary>
+        void SetMosKeyboard(bool on) {
+            if (!structureValid) { RefreshKeyboardMode(); return; }
+            if (on) {
+                draft.Keyboard.Layout = KeyboardLayout.MosLayout;
+                draft.Keyboard.Classes.Clear();
+                RemoveSeededNames();
+                StoreMos();
+            } else {
+                SeedManualNames();
+                draft.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(draft);
+                draft.Keyboard.Layout = KeyboardLayout.ManualLayout;
+            }
+            SyncEntryClasses();
+            RefreshKeyboardMode();
+            RefreshMosStatus();
+            RefreshTonicChoices();
+            RefreshPitchPreview();
+            RefreshApplyAction();
+        }
+
+        /// <summary>Copies the names shown with MOS into custom names, so a key-by-key keyboard keeps them editable.</summary>
         void SeedManualNames() {
             seededNames = null;
             string primary = PitchNotation.ResolvePrimary(draft, null);
-            if (pitchPreview.IsWhiteKeysOnly || primary == "degree" || primary == "custom") return;
+            if (primary == "degree" || primary == "custom") return;
             var source = PitchNotation.FindProfile(draft, primary);
             if (source == null) return;
             var names = source.Clone();
@@ -321,7 +359,7 @@ namespace OpenUtau.App.Views {
             SyncEntryNames();
         }
 
-        /// <summary>Switching MOS back on drops seeded names the user has not edited.</summary>
+        /// <summary>Switching back to MOS drops copied names the user has not edited.</summary>
         void RemoveSeededNames() {
             if (seededNames == null) return;
             var current = draft.Notations.FirstOrDefault(profile => profile.Id == "custom");
@@ -358,47 +396,106 @@ namespace OpenUtau.App.Views {
             degrees.ItemsSource = entries;
         }
 
-        ScaleDefinition? ActiveScale() => draft.Scales.FirstOrDefault(scale => scale.Id == draft.Keyboard.ActiveScaleId);
-
         void RefreshPresetChoice() {
-            presets.SelectedItem = presets.ItemsSource!.Cast<TuningDefinition>().FirstOrDefault(preset => draft.Divisions > 0
-                ? preset.Divisions == draft.Divisions && Math.Abs(preset.PeriodCents - draft.PeriodCents) < 1e-8
-                : preset.Id == draft.Id);
+            var all = presets.ItemsSource!.Cast<TuningDefinition>().ToArray();
+            // A named preset (such as Rast) wins over the plain equal division it is built on.
+            presets.SelectedItem = all.FirstOrDefault(preset => preset.Id == draft.Id) ?? all.FirstOrDefault(preset => draft.Divisions > 0
+                && preset.Divisions == draft.Divisions && Math.Abs(preset.PeriodCents - draft.PeriodCents) < 1e-8);
+        }
+
+        // Presets with the same notes share an entry, labelled with all their names.
+        static string ScaleLabel(ScaleDefinition scale) => scale.Id == ScalePresets.All ? XenStrings.Get("scale.all")
+            : scale.Id.StartsWith(ScalePresets.Prefix, StringComparison.Ordinal)
+                ? string.Join(" / ", ScalePresets.Keys(scale.Id).Select(key => XenStrings.Get("scale." + key)))
+            : scale.Id == "rast" ? XenStrings.Get("preset.rast") : scale.Name;
+
+        string DegreeLabel(int degree) {
+            string label = PitchNotation.Format(draft, degree, PitchNotation.ResolvePrimary(draft, null), false);
+            return label == degree.ToString(CultureInfo.InvariantCulture) ? label : $"{label} ({degree})";
+        }
+
+        void RefreshTonicChoices() {
+            bool wasLoading = loading;
+            loading = true;
+            try {
+                tonic.ItemsSource = Enumerable.Range(0, draft.DegreeCount).Select(DegreeLabel).ToArray();
+                tonic.SelectedIndex = Math.Clamp(draft.Keyboard.Tonic, 0, draft.DegreeCount - 1);
+            } finally { loading = wasLoading; }
         }
 
         void RefreshScaleChoices() {
             bool wasLoading = loading;
             loading = true;
             try {
-                scales.ItemsSource = draft.Scales.Select(scale => scale.Id == "all" ? XenStrings.Get("scale.all")
-                    : scale.Id == "rast" ? XenStrings.Get("preset.rast") : scale.Name).ToArray();
-                scales.SelectedIndex = Math.Max(0, draft.Scales.FindIndex(scale => scale.Id == draft.Keyboard.ActiveScaleId));
+                scaleChoices = ScalePresets.For(draft).ToList();
+                scales.ItemsSource = scaleChoices.Select(ScaleLabel).ToArray();
+                string? active = ScalePresets.Find(draft, draft.Keyboard.ActiveScaleId)?.Id ?? draft.Keyboard.ActiveScaleId;
+                int index = scaleChoices.FindIndex(scale => scale.Id == active);
+                scales.SelectedIndex = Math.Max(0, index);
             } finally { loading = wasLoading; }
+            RefreshTonicChoices();
         }
 
         void SelectScale() {
-            if (scales.SelectedIndex < 0 || scales.SelectedIndex >= draft.Scales.Count) return;
-            var selected = draft.Scales[scales.SelectedIndex];
-            draft.Keyboard.ActiveScaleId = selected.Id;
-            mosEditing = selected.GeneratorDegree.HasValue;
-            if (mosEditing) {
-                loading = true;
-                try {
-                    generator.Value = selected.GeneratorDegree;
-                    cardinality.Value = selected.Degrees.Count;
-                    mode.Maximum = cardinality.Value ?? 1;
-                    mode.Value = selected.Mode + 1;
-                    var theory = KeyboardTheory.For(draft);
-                    customGenerator = selected.GeneratorDegree != KeyboardRegionizer.DefaultGenerator(draft);
-                    customCardinality = selected.Degrees.Count != Math.Min(theory?.ReferenceDivision == 13 ? 9 : 7, draft.DegreeCount);
-                } finally { loading = false; }
-                RefreshLiveMos(false);
-            } else {
-                mosAvailable = true;
-                scaleResult.Text = "";
-                RefreshPitchPreview();
-                RefreshApplyAction();
+            if (scales.SelectedIndex < 0 || scales.SelectedIndex >= scaleChoices.Count) return;
+            draft.Keyboard.ActiveScaleId = scaleChoices[scales.SelectedIndex].Id;
+            editingScaleId = null;
+            RefreshPitchPreview();
+            RefreshApplyAction();
+        }
+
+        void SelectTonic() {
+            if (tonic.SelectedIndex < 0) return;
+            draft.Keyboard.Tonic = tonic.SelectedIndex;
+            RefreshPitchPreview();
+            RefreshApplyAction();
+        }
+
+        /// <summary>
+        /// Clicking a key while editing adds it to or removes it from the scale. A preset is first copied into a
+        /// user scale, so presets themselves never change.
+        /// </summary>
+        void ToggleScaleDegree(int degree) {
+            int n = draft.DegreeCount;
+            var active = ScalePresets.Find(draft, draft.Keyboard.ActiveScaleId);
+            var scale = editingScaleId == null ? null : draft.Scales.FirstOrDefault(s => s.Id == editingScaleId);
+            if (scale == null) {
+                scale = new ScaleDefinition {
+                    Id = "custom-" + Guid.NewGuid().ToString("N"),
+                    Name = string.IsNullOrWhiteSpace(customScaleName.Text) ? XenStrings.Get("scale.custom") : customScaleName.Text.Trim(),
+                    Degrees = (active?.Degrees ?? Enumerable.Range(0, n)).ToList(),
+                };
+                draft.Scales.Add(scale);
+                editingScaleId = scale.Id;
+                draft.Keyboard.ActiveScaleId = scale.Id;
             }
+            int relative = ((degree - draft.Keyboard.Tonic) % n + n) % n;
+            if (!scale.Degrees.Remove(relative)) scale.Degrees.Add(relative);
+            scale.Degrees.Sort();
+            RefreshScaleChoices();
+            RefreshPitchPreview();
+            RefreshApplyAction();
+        }
+
+        /// <summary>Saves the current scale under the typed name as a user scale.</summary>
+        void SaveScale() {
+            var active = ScalePresets.Find(draft, draft.Keyboard.ActiveScaleId);
+            string label = string.IsNullOrWhiteSpace(customScaleName.Text) ? XenStrings.Get("scale.custom") : customScaleName.Text.Trim();
+            var editing = editingScaleId == null ? null : draft.Scales.FirstOrDefault(s => s.Id == editingScaleId);
+            if (editing != null) {
+                editing.Name = label;
+            } else {
+                var copy = new ScaleDefinition {
+                    Id = "custom-" + Guid.NewGuid().ToString("N"), Name = label,
+                    Degrees = (active?.Degrees ?? Enumerable.Range(0, draft.DegreeCount)).ToList(),
+                };
+                draft.Scales.Add(copy);
+                draft.Keyboard.ActiveScaleId = copy.Id;
+            }
+            editingScaleId = null;
+            RefreshScaleChoices();
+            RefreshPitchPreview();
+            RefreshApplyAction();
         }
 
         void LiveStructureChanged() {
@@ -410,11 +507,12 @@ namespace OpenUtau.App.Views {
                 if (draft.Divisions > 0) explicitCount.Value = draft.DegreeCount;
                 if (explicitCount.Parent is Control row) row.IsVisible = draft.Divisions == 0;
                 referenceDegree.Value = draft.Reference.Degree;
-                var theory = KeyboardTheory.For(draft);
-                if (!customGenerator) generator.Value = KeyboardRegionizer.DefaultGenerator(draft);
+                var fallback = KeyboardRegionizer.DefaultMos(draft);
+                if (!customGenerator) generator.Value = fallback.Generator;
                 cardinality.Maximum = draft.DegreeCount;
-                if (!customCardinality) cardinality.Value = Math.Min(theory?.ReferenceDivision == 13 ? 9 : 7, draft.DegreeCount);
+                if (!customCardinality) cardinality.Value = fallback.Cardinality;
                 mode.Maximum = cardinality.Value ?? 1;
+                RefreshKeyboardCycle();
                 structureValid = true;
                 status.Text = "";
             } catch (Exception error) {
@@ -423,9 +521,15 @@ namespace OpenUtau.App.Views {
                 status.Text = XenStrings.Get("error.invalid");
                 ToolTip.SetTip(status, error.Message);
             } finally { loading = false; }
-            RefreshMosMode();
-            if (structureValid) LiveMosChanged();
-            else RefreshApplyAction();
+            RefreshKeyboardMode();
+            if (structureValid) {
+                if (!Manual && (customGenerator || customCardinality)) StoreMos();
+                editingScaleId = null;
+                RefreshScaleChoices();
+                RefreshMosStatus();
+                RefreshPitchPreview();
+            }
+            RefreshApplyAction();
         }
 
         void LiveReferenceChanged() => Guard(() => {
@@ -436,70 +540,48 @@ namespace OpenUtau.App.Views {
             RefreshApplyAction();
         });
 
+        /// <summary>MOS parameter edits change only the keyboard; the scale stays as chosen.</summary>
         void LiveMosChanged() {
-            mosEditing = true;
-            RefreshLiveMos(true);
-        }
-
-        void RemoveSessionScale() {
-            if (sessionScaleId != null && !originalScaleIds.Contains(sessionScaleId)) draft.Scales.RemoveAll(scale => scale.Id == sessionScaleId);
-            sessionScaleId = null;
-        }
-
-        void UseAllDegrees() {
-            var all = draft.Scales.FirstOrDefault(scale => scale.Id == "all");
-            if (all == null) {
-                all = new ScaleDefinition { Id = "all", Name = XenStrings.Get("scale.all") };
-                draft.Scales.Insert(0, all);
-            }
-            all.Degrees = Enumerable.Range(0, draft.DegreeCount).ToList();
-            draft.Keyboard.ActiveScaleId = all.Id;
-        }
-
-        void RefreshLiveMos(bool activate) {
-            if (loading || !structureValid) return;
-            if (Manual) {
-                mosAvailable = true;
-                scaleResult.Text = "";
-                RefreshPitchPreview();
-                RefreshApplyAction();
-                return;
-            }
-            loading = true;
-            try {
-                mode.Maximum = cardinality.Value ?? 1;
-                var result = MosGenerator.Generate(draft, ReadInteger(generator, 0), ReadInteger(cardinality, 7), ReadInteger(mode, 1) - 1);
-                if (!result.IsMos && !result.IsEqualStep) throw new ArgumentException("The generator cardinality is not a MOS.");
-                mosAvailable = true;
-                scaleResult.Text = activate || mosEditing ? result.Pattern.Length <= 80 ? result.Pattern : result.Pattern[..80] + "…" : "";
-                ToolTip.SetTip(scaleResult, null);
-                if (activate) {
-                    RemoveSessionScale();
-                    var existing = draft.Scales.FirstOrDefault(scale => scale.Id == result.Scale.Id);
-                    if (existing != null) result.Scale.Name = existing.Name;
-                    draft.Scales.RemoveAll(scale => scale.Id == result.Scale.Id);
-                    draft.Scales.Add(result.Scale);
-                    sessionScaleId = result.Scale.Id;
-                    draft.Keyboard.ActiveScaleId = result.Scale.Id;
-                    RefreshScaleChoices();
-                }
-            } catch (Exception) {
-                mosAvailable = false;
-                scaleResult.Text = XenStrings.Get("status.mosUnavailable");
-                ToolTip.SetTip(scaleResult, null);
-                if (activate || mosEditing) {
-                    RemoveSessionScale();
-                    UseAllDegrees();
-                    RefreshScaleChoices();
-                }
-            } finally { loading = false; }
+            if (loading || !structureValid || Manual) return;
+            mode.Maximum = cardinality.Value ?? 1;
+            StoreMos();
+            RefreshMosStatus();
+            RefreshTonicChoices();
             RefreshPitchPreview();
             RefreshApplyAction();
         }
 
+        void StoreMos() {
+            try {
+                draft.Keyboard.Mos = new KeyboardMos {
+                    Generator = ReadInteger(generator, 0), Cardinality = ReadInteger(cardinality, FamilyCount), Mode = ReadInteger(mode, 1) - 1,
+                };
+            } catch (Exception) {
+                draft.Keyboard.Mos = new KeyboardMos { Generator = 0, Cardinality = FamilyCount };
+            }
+        }
+
+        void RefreshMosStatus() {
+            if (!structureValid || Manual) { scaleResult.Text = ""; return; }
+            var mos = draft.Keyboard.Mos ?? new KeyboardMos {
+                Generator = ReadInteger(generator, 0), Cardinality = ReadInteger(cardinality, FamilyCount), Mode = ReadInteger(mode, 1) - 1,
+            };
+            var degrees = KeyboardRegionizer.MosDegrees(draft, mos);
+            if (degrees == null) {
+                scaleResult.Text = XenStrings.Get("status.mosUnavailable");
+                return;
+            }
+            int n = draft.DegreeCount;
+            var steps = degrees.Select((d, i) => (i + 1 < degrees.Length ? degrees[i + 1] : n) - d).ToArray();
+            int small = steps.Min(), large = steps.Max();
+            string pattern = string.Concat(steps.Select(step => large == small ? "=" : step == large ? "L" : "s"));
+            string counts = large == small ? "" : $"{steps.Count(step => step == large)}L{steps.Count(step => step == small)}s · ";
+            scaleResult.Text = counts + (pattern.Length <= 80 ? pattern : pattern[..80] + "…");
+        }
+
         void RefreshPitchPreview() {
             if (!structureValid) return;
-            pitchPreview.SetTuning(draft, ActiveScale()?.Degrees, whiteKeysOnly: !mosAvailable && !Manual);
+            pitchPreview.SetTuning(draft, ScalePresets.ActiveDegrees(draft), whiteKeysOnly: KeyboardRegionizer.IsUnavailableMos(draft));
         }
 
         bool MatchesAppliedTuning() {
@@ -526,6 +608,10 @@ namespace OpenUtau.App.Views {
             page.Children.Add(new TextBlock { Text = XenStrings.Get(heading), FontSize = 20, FontWeight = Avalonia.Media.FontWeight.SemiBold });
             return page;
         }
+
+        static TextBlock CardHeading(string key) => new TextBlock {
+            Text = XenStrings.Get(key), FontSize = 16, FontWeight = Avalonia.Media.FontWeight.SemiBold,
+        };
 
         static Border Card(Control child) {
             var card = new Border { Child = child, Padding = new Thickness(12), CornerRadius = new CornerRadius(6) };
@@ -591,8 +677,6 @@ namespace OpenUtau.App.Views {
         }
         void ReadFields() {
             ReadStructure();
-            draft.Keyboard.ActiveScaleId = scales.SelectedIndex >= 0 && scales.SelectedIndex < draft.Scales.Count
-                ? draft.Scales[scales.SelectedIndex].Id : null;
             if (draft.Divisions == 0) draft.Degrees = entries.Select(e => ParseInterval(e.Interval)).ToList();
             var custom = new NotationProfile { Id = "custom", Name = XenStrings.Get("notation.custom") };
             var previous = draft.Notations.FirstOrDefault(n => n.Id == "custom");
@@ -607,6 +691,8 @@ namespace OpenUtau.App.Views {
                 }
                 var aliases = entry.Aliases.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 if (aliases.Length > 0) custom.Aliases[entry.Degree] = aliases.ToList();
+                // Key classes only apply to a key-by-key keyboard.
+                if (!Manual) continue;
                 if (string.IsNullOrWhiteSpace(entry.KeyClass)) draft.Keyboard.Classes.Remove(entry.Degree);
                 else draft.Keyboard.Classes[entry.Degree] = entry.KeyClass.Trim();
             }
@@ -619,22 +705,6 @@ namespace OpenUtau.App.Views {
             ReadFields();
             draft = MosGenerator.CreateTuning(draft.Period, ParseInterval(ratioGenerator.Text ?? "3/2"), ReadInteger(intervalCardinality, 7));
             LoadFields();
-        });
-        void AddDegreeSubset() => Guard(() => {
-            ReadFields();
-            var selected = (customScaleDegrees.Text ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                .Select(value => int.Parse(value, CultureInfo.InvariantCulture))
-                .Select(value => (value % draft.DegreeCount + draft.DegreeCount) % draft.DegreeCount).Distinct().OrderBy(value => value).ToList();
-            if (selected.Count == 0) throw new FormatException(XenStrings.Get("error.degreeRequired"));
-            var scale = new ScaleDefinition {
-                Id = "custom-" + Guid.NewGuid().ToString("N"),
-                Name = string.IsNullOrWhiteSpace(customScaleName.Text) ? XenStrings.Get("scale.custom") : customScaleName.Text.Trim(),
-                Degrees = selected,
-            };
-            draft.Scales.Add(scale);
-            draft.Keyboard.ActiveScaleId = scale.Id;
-            LoadFields();
-            scaleResult.Text = string.Join(", ", selected);
         });
         void Preview() => Guard(() => { ReadFields(); status.Text = DescribeChanges(draft); });
         string DescribeChanges(TuningDefinition target) {

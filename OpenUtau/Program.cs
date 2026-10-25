@@ -53,6 +53,26 @@ namespace OpenUtau.App {
 
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp() {
+            var builder = AppBuilder.Configure<App>()
+                .UsePlatformDetect()
+                .LogToTrace()
+                .UseReactiveUI(_ => { })
+                .With(FontOptions());
+            
+            if (OS.IsLinux() && Core.Util.Preferences.Default.UseWayland) {
+                builder.UseWayland();
+            }
+            
+            return builder.With(new X11PlatformOptions {
+                EnableIme = true
+            });
+        }
+
+        /// <summary>
+        /// Platform font options plus Xen Accidentals for SMuFL accidentals (private-use characters), so pitch names
+        /// in menus, lists and labels show their accidentals in any control.
+        /// </summary>
+        public static FontManagerOptions FontOptions() {
             FontManagerOptions fontOptions = new();
             if (OS.IsLinux()) {
                 using Process process = Process.Start(new ProcessStartInfo("fc-match")
@@ -77,19 +97,14 @@ namespace OpenUtau.App {
                 ];
             }
 
-            var builder = AppBuilder.Configure<App>()
-                .UsePlatformDetect()
-                .LogToTrace()
-                .UseReactiveUI(_ => { })
-                .With(fontOptions);
-            
-            if (OS.IsLinux() && Core.Util.Preferences.Default.UseWayland) {
-                builder.UseWayland();
-            }
-            
-            return builder.With(new X11PlatformOptions {
-                EnableIme = true
-            });
+            fontOptions.FontFallbacks = [
+                .. fontOptions.FontFallbacks ?? [],
+                new FontFallback {
+                    FontFamily = new FontFamily(XenStrings.AssetRoot + "Assets/Fonts#Xen Accidentals"),
+                    UnicodeRange = new UnicodeRange(0xE000, 0xF8FF),
+                },
+            ];
+            return fontOptions;
         }
 
         public static void Run(string[] args)

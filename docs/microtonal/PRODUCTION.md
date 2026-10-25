@@ -502,3 +502,226 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
 - Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
   `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
   (18:01:08 local time). Not launched interactively.
+
+## 2026-10-25 — Separate keyboard and scale, tonic, more presets
+
+- Purpose: the user asked to add the listed tuning presets (with their own note
+  names where a tradition has them), to give non-octave tunings a usable keyboard,
+  to keep Rast as a preset without it turning into plain 24-EDO, and to separate
+  the keyboard (MOS or key by key) from the scale (tonic and notes) so presets such
+  as 12-EDO pentatonic exist and upstream's "1=C" key is unified with the tonic.
+- Implementation: `KeyboardLayout` gains `layout`, `mos` and `tonic`;
+  `.tunxen`/`.ustxen` move to version 2 with a version-1 upgrade.
+  `ScalePresets` provides scales per tuning. The dialog has Keyboard and Scale
+  cards, scale editing by key clicks, a keyboard cycle for non-octave equal steps
+  and an Id-first preset choice. The piano roll's "1=" menu sets the tonic, and
+  the degree display labels scale rows (in the left slot on single-line rows).
+  Projects saved with upstream's key (version-1 `.ustxen` and plain `.ustx`)
+  carry `key` into the tonic of twelve-note octave tunings. New presets: 5, 7, 10, 15, 16, 26, 34 and
+  46-EDO, third/two-sevenths-comma meantone, Ptolemy, harmonic series 8–16, just
+  Bohlen–Pierce, 22 śruti, Partch 43, Turkish AEU (perde names), slendro and pelog
+  (Javanese names), Carlos Alpha/Beta/Gamma and 88-cent steps, with sources.
+  Strings in all 20 languages; details in `keyboard-mos.md` and `tuning-ui.md`.
+- Superseded: the active generator scale no longer decides the keyboard; presets
+  no longer select a family scale; Rast is no longer a manual keyboard; piano-roll
+  scale rows no longer add white and black keys.
+- Verification: build passes; 484 tests pass (one opt-in voice test skipped),
+  including keyboard/scale independence, scale presets, format round trip and
+  version-1 upgrade for both formats, the upstream key as tonic, the new presets and dialog checks of the
+  keyboard cycle, key-by-key editing and key-click scale editing. Skia captures of
+  Rast and AEU were inspected. The Japanese strings were checked with yomiyasu.
+- Open: the piano-roll "1=" menu and degree labels were not checked in a running
+  app; perde names are long for narrow black keys; gamelan and śruti presets are
+  documented approximations/conventions.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (19:14:04 local time). Not launched interactively.
+
+## 2026-10-25 — Default MOS per equal division, tonic button, accidental font
+
+- Purpose: the user found that 15-EDO could not build a MOS, asked whether
+  16-EDO's MOS was right and that equal divisions get an appropriate MOS, that
+  just Bohlen–Pierce show black keys, that the tonic list show its accidentals,
+  that "1=" become a tonic setting and that the twelve-tone degree display go.
+- Implementation: `KeyboardRegionizer.DefaultMos` searches a MOS for equal
+  divisions without a family (15-EDO porcupine 1L6s, 16-EDO mavila 2L5s, 10-EDO
+  3L4s; up to nine degrees all keys are white) and the dialog shows it. Unequal
+  presets derive their keys after their names are added (just Bohlen–Pierce now
+  has nine white and four black keys). Bravura Text is an application font
+  fallback for SMuFL characters. The piano-roll button reads "Tonic C" and lists
+  note names; the View menu's degree display is hidden and its row labels removed.
+- Verification: build passes; 489 tests pass (one opt-in voice test skipped),
+  including default MOS for 15/16/10-EDO, small divisions and just Bohlen–Pierce
+  black keys. A Skia capture shows C half-sharp, C sharp and D flat in a text
+  label and a closed list.
+- Open: the tonic button and its menu were not checked in a running app.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (19:41:29 local time). Not launched interactively.
+
+## 2026-10-25 — Readable accidentals and a full tonic menu
+
+- Purpose: the user found SMuFL accidentals too small and asked that the piano
+  roll's tonic menu list every degree of the tuning.
+- Implementation: measured in BravuraText.otf, U+E262 is 0.56 em tall against
+  0.91 em for U+266F, so `PitchLabelLayout` draws SMuFL runs at 1.4 times the
+  letter size. The new `PitchText` control draws pitch names on the letters'
+  baseline with the letters' height; the tonic list, tonic button and tonic menu
+  use it. The tonic menu lists every degree. A modified Bravura was not made,
+  since its OFL reserves the font name.
+- Verification: build passes; 489 tests pass (one opt-in voice test skipped).
+  Skia captures show the enlarged accidentals in a text line, a closed list and
+  the 31- and 53-EDO keyboards.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (20:00:39 local time). Not launched interactively.
+
+## 2026-10-25 — Xen Accidentals font and C-based letters
+
+- Purpose: the user asked for a renamed derived font whose accidentals sit on the
+  baseline at a proper size, for ♯ and ♭ to use it too, and for MOS keyboards to
+  start at C.
+- Implementation: `tools/build-xen-accidentals.py` builds
+  `OpenUtau/Assets/Fonts/XenAccidentals.otf` (about 91 KB) from Bravura Text,
+  now kept unmodified in `tools/fonts/` and no longer shipped: SMuFL accidental
+  glyphs U+E260–U+E4FF only, scaled 1.4, flat bowl on the baseline, 60-unit side
+  bearings, ascent 900 / descent −250, U+266D–U+266F mapped to the SMuFL glyphs,
+  names "Xen Accidentals" / `XenAccidentals-Regular`. The OFL with a modification
+  notice is `XenAccidentals-OFL.txt`; README and DESIGN.md are updated (Japanese
+  checked with yomiyasu). `PitchLabelLayout`, `PitchText` and the font fallback use
+  it, and ♯ ♭ ♮ are drawn in it. Letter-named MOS use the first n letters rotated
+  so degree 0 is C (C D E F G A B; nine notes C D E F G H J A B).
+- Verification: build passes; 489 tests pass (one opt-in voice test skipped).
+  Skia captures show C, C half-sharp, C sharp and D flat on the baseline in text,
+  a closed list and the 31- and 53-EDO keyboards.
+- Trial build: the trial in `work/OpenUtau-Xen-win-x64/` was running, so the new
+  build was published to `work/OpenUtau-Xen-staged-win-x64/` instead; its
+  `OpenUtau-Xen.exe` and ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (20:10:23 local time). The running trial folder was left unchanged; replacing
+  it is pending until that session is closed. Not launched interactively.
+- Trial replacement: after the user closed the trial, `work/OpenUtau-Xen-win-x64/`
+  was refreshed; its `OpenUtau-Xen.exe` and ReadyToRun `OpenUtau-Xen.dll` match
+  the new output and the staged build (20:10:23). Not launched interactively.
+
+## 2026-10-25 — Accidentals centred on the letters
+
+- Purpose: the user found the accidentals small and the sharp and half-sharp
+  lower than the letters, and asked for each symbol to be centred on the letter
+  height at a size where none looks cramped (not mechanical baseline alignment).
+- Implementation: `tools/build-xen-accidentals.py` scales each glyph towards a
+  common height of 780 units (limited to 1.3–1.8 times Bravura Text) and centres
+  it on 350 units, the middle of a typical capital. Sharp, flat, natural and the
+  Stein–Zimmermann accidentals now span −40 to 740 units.
+- Verification: build passes; 489 tests pass (one opt-in voice test skipped).
+  Skia captures show C, C half-sharp, C sharp, D flat and the 24-EDO names at one
+  height in text, a closed list and the 53-EDO keyboard.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (20:21:06 local time). Not launched interactively.
+
+## 2026-10-25 — 15-EDO default keyboard
+
+- Purpose: the user noted that porcupine (generator 2) leaves 15-EDO with few
+  black keys and suggested generator 11 (4 from the other side).
+- Implementation: the default-MOS search also scores the share of in-between keys
+  (each large step holds a sharp and a flat, one key when they coincide). 15-EDO
+  now uses 4L3s (generator 4): seven white and eight black keys, no in-between
+  keys. 16-EDO (mavila 2L5s) and 10-EDO (3L4s) are unchanged.
+- Verification: build passes; 489 tests pass (one opt-in voice test skipped),
+  including 15-EDO 4L3s without in-between keys.
+- Trial build: the trial was running, so the build was published to
+  `work/OpenUtau-Xen-staged-win-x64/`; its `OpenUtau-Xen.exe` and ReadyToRun
+  `OpenUtau-Xen.dll` match the new output (20:28:50). The trial folder still holds
+  the 20:21 build (only the running app's `prefs.json` changed); replacement is
+  pending. Not launched interactively.
+
+## 2026-10-25 — Accidentals in small steps
+
+- Purpose: the user pointed out that porcupine (generator 2) in 15-EDO should be
+  able to make every other key black, and asked to adjust keyboard generation
+  rather than the default generator.
+- Implementation: `MosKeyboard` places the lower nominal's sharp and the upper
+  nominal's flat in every step wider than the chroma, not only in large steps.
+  This adds E-sharp/F-flat and B-sharp/C-flat black keys in 19-, 26- and 31-EDO
+  (as on Fokker-style keyboards); 12, 17, 22, 24, 41, 53, 72-EDO and 13-EDT are
+  unchanged. The default-MOS search counts black keys the same way, so 15-EDO
+  returns to porcupine 1L6s, now with seven white and eight black keys.
+- Verification: build passes; 490 tests pass (one opt-in voice test skipped),
+  including the 31-EDO counts (7/14/10), 19-EDO E–F and 15-EDO without in-between
+  keys. A Skia capture of 31-EDO shows the new E–F and B–C black keys.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (20:37:19 local time), superseding the pending staged build. Not launched
+  interactively.
+- Correction (user review): 31-EDO's E–F and B–C should stay in-between keys.
+  Small steps now hold accidentals only when the sharp is not above the flat
+  (`2c <= s`, `MosKeyboard.HasAccidentals`): 19-EDO and porcupine 15-EDO keep one
+  shared black key per small step, 26-EDO gets separate E-sharp/F-flat keys, and
+  31-EDO returns to 7 White, 10 Black and 14 Between. 490 tests pass; a Skia
+  capture confirms the 31-EDO keyboard.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (22:16:14 local time). Not launched interactively.
+
+## 2026-10-25 — Japanese scale presets
+
+- Purpose: the user asked for Japanese scales ("日本和声") and chose the common
+  set of Japanese-style scales.
+- Implementation: `ScalePresets` adds yonanuki major (C D E G A), yonanuki minor
+  (C D E♭ G A♭), yō (C D F G A), in (C D♭ F G A♭), hirajōshi (C D E♭ G A♭), kumoi
+  (C D E♭ G A) and iwato (C D♭ F G♭ B♭), spelled by fifths so they also map to
+  other fifth-generated tunings. Yonanuki major shares notes with major
+  pentatonic, yō with ritsu, in with miyako-bushi, and hirajōshi with yonanuki
+  minor; each is still listed under its own name. Names are localised in all 20
+  languages (Japanese checked with yomiyasu).
+- Verification: build passes; 497 tests pass (one opt-in voice test skipped),
+  including the seven scales in 12-EDO and their presence in 31-EDO.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (22:23:22 local time). Not launched interactively.
+
+## 2026-10-25 — Merged scale entries, window titles, remaining localisation
+
+- Purpose: the user asked that presets with the same notes be listed once with
+  their names side by side, that the tuning window title be just "Tuning
+  settings" like other windows, and that remaining English items be localised.
+- Implementation: `ScalePresets.For` merges presets with identical degrees into
+  one entry whose identifier joins their keys (for example
+  `preset.major-pentatonic+yonanuki-major`); `Find` still resolves any single key,
+  so earlier choices keep working. The dialog labels merged entries with all
+  localised names. The tuning and MIDI input titles drop "— OpenUtau Xen".
+  Generated equal-division names ("12-EDO", "13-ED (3/2)"), Werckmeister III,
+  Kirnberger III, Vallotti, Young II, 13-EDT Bohlen–Pierce and the Ups and Downs,
+  Stein–Zimmermann–Gould and Bohlen–Pierce notation names are localised in all
+  20 languages; names the user typed are kept. Japanese checked with yomiyasu.
+- Verification: build passes; 498 tests pass (one opt-in voice test skipped),
+  including merged 12-/24-EDO entries, resolving a single key and the Japanese
+  preset names.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (22:41:28 local time). Not launched interactively.
+
+## 2026-10-25 — Translate untranslated upstream strings in every language
+
+- Purpose: the user noticed English left in the interface outside the tuning
+  features, such as the parts ported from OpenUtau Lunai, and asked for all of
+  it to be translated in all 20 languages.
+- Implementation: the English items come from upstream Crowdin dictionaries that
+  lack keys or keep English text. Without editing those files, the new
+  `Strings/XenUpstream.<culture>.axaml` overlays (19 languages, 13 to 718 keys
+  each) are merged after the upstream and Xen dictionaries by
+  `XenStrings.SetLanguage`. `tools/xen-upstream-strings.py` lists untranslated
+  keys and builds the overlays from `tools/xen-upstream-strings/<culture>.json`,
+  keeping only keys upstream still leaves untranslated. Details in
+  `localisation.md`. The Japanese strings were checked with yomiyasu.
+- Verification: build passes; 498 tests pass (one opt-in voice test skipped).
+  The strings test checks that every overlay key exists upstream with the same
+  placeholders and line count, keeps any leading or trailing space the English
+  has, and that Japanese and Korean resolve overlay strings at run time (with the
+  Korean tool tip's line breaks and the singer-default prefix's trailing space).
+  After the build, `missing` reports no untranslated key in any language.
+- Open: translations other than Japanese were not reviewed by native speakers;
+  the translated menus were not checked in a running app.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (23:23:09 local time) and contain all 19 overlays. Not launched interactively.

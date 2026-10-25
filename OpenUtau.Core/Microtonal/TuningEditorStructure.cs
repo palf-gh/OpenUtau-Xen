@@ -49,6 +49,7 @@ namespace OpenUtau.Core.Microtonal {
                 rebuilt.Keyboard.SecondaryNotation = null;
                 rebuilt.Keyboard.ActiveScaleId = "all";
                 rebuilt.Keyboard.Classes = Enumerable.Range(0, count).ToDictionary(degree => degree, _ => "natural");
+                rebuilt.Keyboard.Layout = KeyboardLayout.ManualLayout;
             }
             rebuilt.Validate();
             return rebuilt;

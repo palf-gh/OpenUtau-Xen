@@ -38,10 +38,37 @@ namespace OpenUtau.Test {
         }
 
         [Fact]
+        public void NativeVersion1TuningsUpgradeTheirKeyboard() {
+            var (project, _, _) = Create();
+            project.pitchSystem.Keyboard.Classes = Enumerable.Range(0, project.pitchSystem.DegreeCount).ToDictionary(d => d, _ => "natural");
+            string text = XenProjectFormat.Serialize(project);
+            Assert.Contains("version: 2", text);
+            var read = XenProjectFormat.Parse(text.Replace("version: 2", "version: 1").Replace("layout: manual", "layout: mos"));
+            Assert.Equal(KeyboardLayout.ManualLayout, read.pitchSystem.Keyboard.Layout);
+        }
+
+        [Fact]
+        public void TheUpstreamKeyBecomesTheTonicOfTwelveNoteTunings() {
+            var (project, _, _) = Create();
+            project.pitchSystem = TuningPresets.EqualDivision(12);
+            project.key = 2;
+            string v1 = XenProjectFormat.Serialize(project).Replace("version: 2", "version: 1");
+            Assert.Equal(2, XenProjectFormat.Parse(v1).pitchSystem.Keyboard.Tonic);
+            string path = Path.Combine(Path.GetTempPath(), "xen-key-" + Guid.NewGuid().ToString("N") + ".ustx");
+            try {
+                XenProjectFormat.ExportUstx(path, project);
+                Assert.Equal(2, Ustx.Load(path).pitchSystem.Keyboard.Tonic);
+            } finally { File.Delete(path); }
+            var thirtyOne = TuningPresets.EqualDivision(31);
+            KeyboardRegionizer.ApplyUpstreamKey(thirtyOne, 2);
+            Assert.Equal(0, thirtyOne.Keyboard.Tonic);
+        }
+
+        [Fact]
         public void NativeRejectsUnknownVersionsAndIdentifiers() {
             var (project, _, _) = Create();
             string text = XenProjectFormat.Serialize(project);
-            Assert.Throws<FileFormatException>(() => XenProjectFormat.Parse(text.Replace("version: 1", "version: 999")));
+            Assert.Throws<FileFormatException>(() => XenProjectFormat.Parse(text.Replace("version: 2", "version: 999")));
             Assert.Throws<FileFormatException>(() => XenProjectFormat.Parse(text.Replace(XenProjectFormat.Identifier, "other-project")));
         }
 

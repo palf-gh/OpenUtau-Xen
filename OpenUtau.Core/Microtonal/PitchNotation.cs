@@ -52,6 +52,8 @@ namespace OpenUtau.Core.Microtonal {
         public static string ResolvePrimary(TuningDefinition tuning, string? preference) {
             if (!string.IsNullOrEmpty(preference) && preference != Auto && IsAvailable(tuning, preference)) return preference;
             string stored = tuning.Keyboard.PrimaryNotation;
+            // An unavailable MOS has no nominals to name.
+            if (KeyboardRegionizer.IsUnavailableMos(tuning)) return "degree";
             // A letter-named MOS keyboard replaces family names unless the user authored their own.
             if (stored != "custom" && IsAvailable(tuning, Mos)) return Mos;
             if (stored != "degree" && IsAvailable(tuning, stored)) return stored;
@@ -73,14 +75,10 @@ namespace OpenUtau.Core.Microtonal {
         public static KeyRole Role(TuningDefinition tuning, int degree) {
             int count = tuning.DegreeCount;
             int index = (degree % count + count) % count;
-            // A letter-named MOS owns the whole keyboard; otherwise explicit classes override the family baseline.
-            if (KeyboardRegionizer.LetterScale(tuning) == null && tuning.Keyboard.Classes.TryGetValue(index, out string? keyClass)) {
-                return keyClass switch {
-                    "accidental" => KeyRole.Black,
-                    "secondary" or "between" => KeyRole.Between,
-                    _ => KeyRole.White,
-                };
+            if (KeyboardRegionizer.IsManual(tuning)) {
+                return tuning.Keyboard.Classes.TryGetValue(index, out string? keyClass) ? ClassRole(keyClass) : KeyRole.White;
             }
+            if (KeyboardRegionizer.IsUnavailableMos(tuning)) return KeyRole.White;
             var roles = KeyboardRegionizer.Roles(tuning);
             if (roles != null) return roles[index];
             foreach (string id in new[] { "szg", "bp", "ups-downs", "custom" }) {
@@ -92,6 +90,11 @@ namespace OpenUtau.Core.Microtonal {
             return count == 12 && Math.Abs(tuning.PeriodCents - 1200) < 1e-8 && index is 1 or 3 or 6 or 8 or 10
                 ? KeyRole.Black : KeyRole.White;
         }
+        public static KeyRole ClassRole(string keyClass) => keyClass switch {
+            "accidental" => KeyRole.Black,
+            "secondary" or "between" => KeyRole.Between,
+            _ => KeyRole.White,
+        };
         static readonly string[] AccidentalMarks = { "♯", "♭", "↑", "↓", "#", "𝄪", "𝄫" };
 
         /// <summary>
@@ -131,17 +134,16 @@ namespace OpenUtau.Core.Microtonal {
         }
 
         /// <summary>
-        /// Letters A, B, C … (skipping I) on the active generator scale's nominals, sharps and flats of its
+        /// Letters C, D, E … (skipping I, see KeyboardRegionizer.LetterName) on the keyboard MOS's nominals, sharps and flats of its
         /// chroma (large minus small step), and ups and downs for any remainder.
         /// </summary>
         static NotationProfile? MosLetters(TuningDefinition tuning) {
-            var scale = KeyboardRegionizer.LetterScale(tuning);
-            var model = scale == null ? null : KeyboardRegionizer.Model(tuning);
+            var model = KeyboardRegionizer.LetterNominals(tuning) == null ? null : KeyboardRegionizer.Model(tuning);
             if (model == null) return null;
             string key = model.Divisions + ":" + string.Join(",", model.Nominals);
             if (mosLetters.Count > 64) mosLetters.Clear();
             return mosLetters.GetOrAdd(key, _ => Nominal(Mos, "MOS letters", model.Divisions, model.Nominals,
-                model.Nominals.Select((_, i) => KeyboardRegionizer.LetterName(i)).ToArray(), model.Large - model.Small));
+                model.Nominals.Select((_, i) => KeyboardRegionizer.LetterName(i, model.Nominals.Count)).ToArray(), model.Large - model.Small));
         }
 
         /// <summary>Twelve named keys for C-centred twelve-note presets, in degree order.</summary>

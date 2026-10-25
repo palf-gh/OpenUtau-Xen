@@ -9,7 +9,8 @@ namespace OpenUtau.Core.Format {
     /// <summary>Native Xen envelope. Upstream USTX versioning remains independent.</summary>
     public static class XenProjectFormat {
         public const string Identifier = "openutau-xen-project";
-        public const int CurrentVersion = 1;
+        /// <summary>Version 2 stores tunings with keyboard layout, keyboard MOS and scale tonic; version 1 is upgraded.</summary>
+        public const int CurrentVersion = 2;
         public const string Extension = ".ustxen";
         public sealed class Document {
             public string? Format { get; set; }
@@ -29,10 +30,16 @@ namespace OpenUtau.Core.Format {
 
         public static UProject Parse(string text, string filePath = "") {
             var document = Yaml.DefaultDeserializer.Deserialize<Document>(text);
-            if (document == null || document.Format != Identifier || document.Version != CurrentVersion || document.Project == null) {
+            if (document == null || document.Format != Identifier || document.Version < 1 || document.Version > CurrentVersion || document.Project == null) {
                 throw new FileFormatException("Unsupported OpenUtau Xen project format or version.");
             }
             var project = document.Project;
+            if (document.Version == 1) {
+                if (project.pitchSystem != null) KeyboardRegionizer.UpgradeFormat1(project.pitchSystem);
+                foreach (var track in project.tracks) if (track.pitchSystem != null) KeyboardRegionizer.UpgradeFormat1(track.pitchSystem);
+                KeyboardRegionizer.ApplyUpstreamKey(project.pitchSystem, project.key);
+                foreach (var track in project.tracks) KeyboardRegionizer.ApplyUpstreamKey(track.pitchSystem, project.key);
+            }
             project.GetTuning().Validate();
             foreach (var track in project.tracks) track.pitchSystem?.Validate();
             return Ustx.InitialiseProject(project, filePath);

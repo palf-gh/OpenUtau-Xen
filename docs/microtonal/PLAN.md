@@ -45,9 +45,13 @@ Compatibility export must report lost metadata and rounding.
 
 ## Presets
 
-12, 17, 19, 22, 24, 31, 41, 53 and 72 EDO; Pythagorean; representative 5- and
-7-limit just scales; quarter/sixth-comma meantone; Werckmeister III, Kirnberger III,
-Vallotti and Young II; 13-EDT Bohlen–Pierce; sourced regional examples.
+5, 7, 10, 12, 15, 16, 17, 19, 22, 24, 26, 31, 34, 41, 46, 53 and 72 EDO; Pythagorean;
+representative 5- and 7-limit just scales; quarter/third/sixth/two-sevenths-comma
+meantone; Werckmeister III, Kirnberger III, Vallotti and Young II; 13-EDT and just
+Bohlen–Pierce; Ptolemy's intense diatonic; harmonic series 8–16; 22 śruti;
+Partch 43; Carlos Alpha/Beta/Gamma and 88-cent steps; sourced regional examples
+(Rast, Turkish AEU with perde names, slendro and pelog approximations with
+Javanese tone names).
 Every preset records provenance, intervals, reference and approximation policy.
 53-EDO uses C4=degree 0 and A4=degree 40; C-sharp and D-flat differ.
 
@@ -115,16 +119,13 @@ Amendment (2026-10-24, user review of the first trial build):
   colour blocks are omitted. Keyboard presses audition exact resolved pitch and
   stop on release, lost capture/focus, detachment or reconfiguration. Project
   mutation remains an explicit, undoable apply operation.
-- Amendment (2026-10-25, user review of the live page): the MOS selected in the
-  tuning settings now decides the keyboard, superseding "performance-scale
-  selection only changes scale markers". The seven-note octave and nine-note
-  tritave family MOS keep C-diatonic and C-Lambda names and keys; any other MOS
-  makes its notes the white keys, named A, B, C … (I is skipped), with sharps and
-  flats of its chroma. Without a MOS the preview shows white keys with degree
-  numbers. A "build the keyboard from a MOS scale" switch, available for every
-  tuning, turns this off; the keyboard is then set key by key. Equal-division
-  presets start with their family MOS selected, and the piano roll's scale rows
-  keep every white and black key, so semitones are not hidden.
-  The tuning page's scale card switches between MOS and Custom scale; the scale
-  menu belongs to Custom scale. Rast starts as a custom scale with its seven
-  notes as white keys.
+- Amendment (2026-10-25, user reviews of the live page; replaces the fixed
+  per-tuning baseline and the "selected subset" of the bullet above): the keyboard
+  and the scale are set separately. The keyboard is built from a MOS (family modes keep
+  C-diatonic and C-Lambda names; any other MOS makes its notes white keys named
+  A, B, C … without I; an unavailable MOS shows white keys with degree numbers)
+  or set key by key. The scale is a tonic plus notes, chosen from presets the
+  tuning can express or saved user scales, and it only marks notes and drives
+  the piano roll's scale rows. The piano roll's "1=" button sets the tonic.
+  Unequal presets start key by key; Rast is 24-EDO with the maqam Rast scale.
+  `.tunxen` and `.ustxen` move to version 2 with an upgrade from version 1.

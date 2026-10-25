@@ -153,6 +153,8 @@ namespace OpenUtau.Core.Format {
             }
             string text = File.ReadAllText(filePath, Encoding.UTF8);
             UProject project = Yaml.DefaultDeserializer.Deserialize<UProject>(text);
+            // Upstream projects keep their "1=" key as the tonic of the default twelve-note tuning.
+            Microtonal.KeyboardRegionizer.ApplyUpstreamKey(project.pitchSystem, project.key);
             return InitialiseProject(project, filePath);
         }
 

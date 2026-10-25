@@ -5,11 +5,13 @@ using System.Linq;
 namespace OpenUtau.Core.Microtonal {
     /// <summary>Definitions are generated afresh so a project cannot mutate the shared library.</summary>
     public static class TuningPresets {
+        public const string PelogId = "pelog-9edo-2l5s";
+        public const string AeuId = "turkish-aeu-24";
         public static TuningDefinition Default => EqualDivision(12);
         public static IReadOnlyList<TuningDefinition> All {
             get {
                 var all = new List<TuningDefinition>();
-                foreach (int divisions in new[] { 12, 17, 19, 22, 24, 31, 41, 53, 72 }) all.Add(EqualDivision(divisions));
+                foreach (int divisions in new[] { 5, 7, 10, 12, 15, 16, 17, 19, 22, 24, 26, 31, 34, 41, 46, 53, 72 }) all.Add(EqualDivision(divisions));
                 all.Add(FromRatios("ji-5-limit", "5-limit just intonation", new[] { "1/1", "16/15", "9/8", "6/5", "5/4", "4/3", "45/32", "3/2", "8/5", "5/3", "9/5", "15/8" },
                     "A C-centred chromatic 5-limit example; ratios are one selected spelling, not a unique JI chromatic scale."));
                 all.Add(FromRatios("ji-7-limit", "7-limit just intonation", new[] { "1/1", "16/15", "9/8", "7/6", "5/4", "4/3", "7/5", "3/2", "8/5", "5/3", "7/4", "15/8" },
@@ -48,17 +50,13 @@ namespace OpenUtau.Core.Microtonal {
 
                 all.Add(bp);
                 // A named modern approximation, not a claim that regional performance practice is fixed or equal-tempered.
+                // Rast is a scale of 24-EDO: the standard 24-EDO keyboard with the Rast scale selected.
                 var rast = EqualDivision(24); rast.Id = "rast-24edo-approximation"; rast.Name = "Rast (24-EDO approximation)";
                 rast.Description = "Modern quarter-tone approximation of Rast: C D E-half-flat F G A B-half-flat. Actual intonation varies by tradition and performance.";
                 rast.Source = "Analytical 24-EDO approximation of the Rast interval pattern; not a measured historical tuning.";
-                var rastDegrees = new List<int> { 0, 4, 7, 10, 14, 18, 21 };
-                rast.Scales = new List<ScaleDefinition> { new ScaleDefinition { Id = "rast", Name = "Rast approximation", Degrees = rastDegrees } };
-                rast.Keyboard.ActiveScaleId = "rast";
-                // Rast is not a MOS, so it starts with MOS off: its seven notes are the white keys, the remaining
-                // twelve-tone (even) degrees black and the other quarter tones in-between keys.
-                rast.Keyboard.Classes = Enumerable.Range(0, 24).ToDictionary(degree => degree,
-                    degree => rastDegrees.Contains(degree) ? "natural" : degree % 2 == 0 ? "accidental" : "between");
+                rast.Keyboard.ActiveScaleId = ScalePresets.Prefix + "maqam-rast";
                 all.Add(rast);
+                AddExtendedPresets(all);
                 return all;
             }
         }
@@ -103,37 +101,14 @@ namespace OpenUtau.Core.Microtonal {
                 tuning.Notations.Add(PitchNotation.FiftyThreeSzg());
                 tuning.Keyboard.PrimaryNotation = "szg";
                 tuning.Keyboard.SecondaryNotation = "degree";
-                foreach (int degree in new[] { 0, 9, 18, 22, 31, 40, 49 }) tuning.Keyboard.Classes[degree] = "natural";
-            } else if (octave && (divisions == 12 || divisions == 24)) {
-                int multiplier = divisions / 12;
-                foreach (int degree in new[] { 0, 2, 4, 5, 7, 9, 11 }) tuning.Keyboard.Classes[degree * multiplier] = "natural";
             }
-            AddFamilyMos(tuning);
             tuning.Validate();
             return tuning;
         }
 
-        /// <summary>
-        /// Selects the family MOS (C-diatonic for the octave, C-Lambda for the tritave) so a new equal division
-        /// starts with its keyboard scale applied; other divisions keep all degrees.
-        /// </summary>
-        static void AddFamilyMos(TuningDefinition tuning) {
-            var theory = KeyboardTheory.For(tuning);
-            if (theory == null || !theory.IsValid) return;
-            int count = theory.Naturals.Count;
-            for (int mode = 0; mode < count; mode++) {
-                MosResult result;
-                try { result = MosGenerator.Generate(tuning, theory.Generator, count, mode); }
-                catch (ArgumentException) { return; }
-                if (!result.Scale.Degrees.SequenceEqual(theory.Naturals)) continue;
-                tuning.Scales.Add(result.Scale);
-                tuning.Keyboard.ActiveScaleId = result.Scale.Id;
-                return;
-            }
-        }
-        public static TuningDefinition FromRatios(string id, string name, IEnumerable<string> ratios, string description) {
+        public static TuningDefinition FromRatios(string id, string name, IEnumerable<string> ratios, string description, string period = "2/1") {
             var tuning = new TuningDefinition {
-                Id = id, Name = name, Divisions = 0, Degrees = ratios.Select(PitchInterval.FromRatio).ToList(),
+                Id = id, Name = name, Divisions = 0, Degrees = ratios.Select(PitchInterval.FromRatio).ToList(), Period = PitchInterval.FromRatio(period),
                 Description = description, Source = "Exact rational intervals listed in this preset.",
             };
             tuning.Reference.Degree = tuning.Degrees.Count == 12 ? 9 : 0;
@@ -141,8 +116,7 @@ namespace OpenUtau.Core.Microtonal {
             // Spelling follows each ratio's 5-limit function (16/15 is D-flat, 45/32 is F-sharp); septimal
             // intervals take the nearest chromatic name without marking their comma.
             if (tuning.Degrees.Count == 12) AddChromaticNames(tuning, "Ratio-based chromatic names", JustNames);
-            // Unequal presets start with MOS off: their keys follow the chromatic names.
-            tuning.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(tuning);
+            ManualKeys(tuning);
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, tuning.DegreeCount).ToList() });
             tuning.Validate();
             return tuning;
@@ -159,7 +133,7 @@ namespace OpenUtau.Core.Microtonal {
             };
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, 12).ToList() });
             AddChromaticNames(tuning, "Fifth-chain names (E-flat to G-sharp)", FifthChainNames);
-            tuning.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(tuning);
+            ManualKeys(tuning);
             tuning.Validate();
             return tuning;
         }
@@ -181,10 +155,145 @@ namespace OpenUtau.Core.Microtonal {
             };
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, 12).ToList() });
             AddChromaticNames(tuning, "Conventional chromatic names", FifthChainNames);
-            tuning.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(tuning);
+            ManualKeys(tuning);
             tuning.Validate();
             return tuning;
         }
+        /// <summary>Unequal presets use a key-by-key keyboard whose keys follow their names.</summary>
+        static void ManualKeys(TuningDefinition tuning) {
+            // Derive the keys from the current names, not from classes set before the names were added.
+            tuning.Keyboard.Layout = KeyboardLayout.MosLayout;
+            tuning.Keyboard.Classes.Clear();
+            tuning.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(tuning);
+            tuning.Keyboard.Layout = KeyboardLayout.ManualLayout;
+        }
+
+        static void AddOwnNames(TuningDefinition tuning, string name, IReadOnlyList<string> names) {
+            var profile = new NotationProfile { Id = "custom", Name = name };
+            for (int i = 0; i < names.Count; i++) profile.Names[i] = names[i];
+            tuning.Notations.Add(profile);
+            tuning.Keyboard.PrimaryNotation = "custom";
+            tuning.Keyboard.SecondaryNotation = "degree";
+        }
+
+        static TuningDefinition FromCents(string id, string name, IReadOnlyList<double> cents, double period, string description, string source) {
+            var tuning = new TuningDefinition {
+                Id = id, Name = name, Divisions = 0, Degrees = cents.Select(PitchInterval.FromCents).ToList(),
+                Period = PitchInterval.FromCents(period), Description = description, Source = source,
+            };
+            tuning.InputMapping.FormalOctave = tuning.DegreeCount;
+            tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, tuning.DegreeCount).ToList() });
+            return tuning;
+        }
+
+        /// <summary>
+        /// A non-octave equal step, grouped on the keyboard in cycles of <paramref name="steps"/> (about 3/2);
+        /// the cycle is only a grouping, so the pitches are those of the step itself.
+        /// </summary>
+        static TuningDefinition EqualStep(string id, string name, double step, int steps, string source) {
+            var tuning = EqualDivision(steps, PitchInterval.FromCents(step * steps));
+            tuning.Id = id; tuning.Name = name;
+            tuning.Description = $"Equal steps of {step.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)} cents without an octave; the keyboard repeats every {steps} steps.";
+            tuning.Source = source;
+            tuning.Validate();
+            return tuning;
+        }
+
+        static void AddExtendedPresets(List<TuningDefinition> all) {
+            double syntonicComma = 1200 * Math.Log2(81.0 / 80);
+            double pureFifth = 1200 * Math.Log2(1.5);
+            all.Add(FifthChain("meantone-third-comma", "Third-comma meantone", pureFifth - syntonicComma / 3));
+            all.Add(FifthChain("meantone-two-sevenths-comma", "Two-sevenths-comma meantone", pureFifth - syntonicComma * 2 / 7));
+
+            var ptolemy = FromRatios("ptolemy-intense-diatonic", "Ptolemy's intense diatonic", new[] { "1/1", "9/8", "5/4", "4/3", "3/2", "5/3", "15/8" },
+                "Ptolemy's intense (syntonic) diatonic: a seven-note 5-limit major scale.");
+            ptolemy.Reference.Degree = 5;
+            AddOwnNames(ptolemy, "Diatonic names", new[] { "C", "D", "E", "F", "G", "A", "B" });
+            ManualKeys(ptolemy);
+            all.Add(ptolemy);
+
+            var harmonic = FromRatios("harmonic-series-8-16", "Harmonic series (8–16)",
+                Enumerable.Range(8, 8).Select(h => $"{h}/8"), "Harmonics 8 to 15 of a fundamental, repeating at the octave (harmonic 16).");
+            AddOwnNames(harmonic, "Harmonic numbers", Enumerable.Range(8, 8).Select(h => "H" + h).ToArray());
+            ManualKeys(harmonic);
+            all.Add(harmonic);
+
+            var bpJust = FromRatios("bohlen-pierce-just", "Bohlen–Pierce just intonation",
+                new[] { "1/1", "27/25", "25/21", "9/7", "7/5", "75/49", "5/3", "9/5", "49/25", "15/7", "7/3", "63/25", "25/9" },
+                "Thirteen just intervals of the Bohlen–Pierce scale within the tritave 3/1.", "3/1");
+            bpJust.Reference.Degree = 0;
+            bpJust.Source = "Bohlen–Pierce rational scale; ratios as listed at https://en.xen.wiki/w/Bohlen%E2%80%93Pierce_scale";
+            if (PitchNotation.BohlenPierce(13) is NotationProfile lambdaNames) {
+                bpJust.Notations.Add(lambdaNames);
+                bpJust.Keyboard.PrimaryNotation = "bp";
+                bpJust.Keyboard.SecondaryNotation = "degree";
+            }
+            ManualKeys(bpJust);
+            all.Add(bpJust);
+
+            var shruti = FromRatios("shruti-22", "22 śruti (5-limit)",
+                new[] { "1/1", "256/243", "16/15", "10/9", "9/8", "32/27", "6/5", "5/4", "81/64", "4/3", "27/20", "45/32",
+                    "729/512", "3/2", "128/81", "8/5", "5/3", "27/16", "16/9", "9/5", "15/8", "243/128" },
+                "Twenty-two śruti as 5-limit ratios; steps are 256/243, 81/80 and 25/24 in the classical pattern.");
+            shruti.Source = "5-limit śruti ratios matching the poorna/pramana/nyuna step pattern in https://en.wikipedia.org/wiki/Shruti_(music); names group four śruti per swara (a common teaching convention).";
+            AddOwnNames(shruti, "Swara and śruti", new[] { "Sa", "Re1", "Re2", "Re3", "Re4", "Ga1", "Ga2", "Ga3", "Ga4",
+                "Ma1", "Ma2", "Ma3", "Ma4", "Pa", "Dha1", "Dha2", "Dha3", "Dha4", "Ni1", "Ni2", "Ni3", "Ni4" });
+            shruti.Keyboard.Classes = Enumerable.Range(0, 22).ToDictionary(d => d, d => d is 0 or 4 or 7 or 9 or 13 or 16 or 20 ? "natural" : "accidental");
+            shruti.Keyboard.Layout = KeyboardLayout.ManualLayout;
+            all.Add(shruti);
+
+            var partchRatios = new[] { "1/1", "81/80", "33/32", "21/20", "16/15", "12/11", "11/10", "10/9", "9/8", "8/7", "7/6",
+                "32/27", "6/5", "11/9", "5/4", "14/11", "9/7", "21/16", "4/3", "27/20", "11/8", "7/5", "10/7", "16/11", "40/27",
+                "3/2", "32/21", "14/9", "11/7", "8/5", "18/11", "5/3", "27/16", "12/7", "7/4", "16/9", "9/5", "20/11", "11/6",
+                "15/8", "40/21", "64/33", "160/81" };
+            var partch = FromRatios("partch-43", "Partch 43-tone scale", partchRatios,
+                "Harry Partch's 43-tone just scale: the 11-limit tonality diamond filled in with further ratios, symmetric about the octave.");
+            partch.Source = "Ratios as listed at https://en.wikipedia.org/wiki/Harry_Partch%27s_43-tone_scale";
+            AddOwnNames(partch, "Ratios", partchRatios);
+            ManualKeys(partch);
+            all.Add(partch);
+
+            // AEU: 24 of the 53 Holdrian commas, named from Rast; Dügâh (A) is the 440 Hz reference.
+            int[] commas = { 0, 4, 5, 8, 9, 13, 14, 17, 18, 21, 22, 26, 27, 30, 31, 35, 36, 39, 40, 44, 45, 48, 49, 52 };
+            string[] perde = { "Rast", "Nim Zirgüle", "Zirgüle", "Dik Zirgüle", "Dügâh", "Kürdî", "Dik Kürdî", "Segâh", "Bûselik",
+                "Dik Bûselik", "Çârgâh", "Nim Hicâz", "Hicâz", "Dik Hicâz", "Nevâ", "Nim Hisâr", "Hisâr", "Dik Hisâr", "Hüseynî",
+                "Acem", "Dik Acem", "Eviç", "Mâhûr", "Dik Mâhûr" };
+            var aeu = FromCents(AeuId, "Turkish AEU (24 of 53 commas)", commas.Select(c => c * 1200.0 / 53).ToArray(), 1200,
+                "Arel–Ezgi–Uzdilek pitches: 24 of the 53 Holdrian commas in the octave, from Rast. Dügâh (A) at 440 Hz is this preset's convention, not part of the system.",
+                "Comma positions and perde names from https://en.wikipedia.org/wiki/Turkish_makam (53 equal commas).");
+            aeu.Reference = new TuningReference { Degree = 4, Frequency = 440 };
+            AddOwnNames(aeu, "Perde names", perde);
+            // Western staff naturals G A B C D E F are white keys: Rast, Dügâh, Bûselik, Çârgâh, Nevâ, Hüseynî, Acem.
+            aeu.Keyboard.Classes = Enumerable.Range(0, 24).ToDictionary(d => d, d => d is 0 or 4 or 8 or 10 or 14 or 18 or 19 ? "natural" : "accidental");
+            aeu.Keyboard.Layout = KeyboardLayout.ManualLayout;
+            aeu.Validate();
+            all.Add(aeu);
+
+            var slendro = EqualDivision(5);
+            slendro.Id = "slendro-5edo"; slendro.Name = "Slendro (5-EDO approximation)";
+            slendro.Description = "Javanese slendro approximated by five equal steps; real gamelan tunings vary from set to set.";
+            slendro.Source = "Five roughly equal pitches per https://en.wikipedia.org/wiki/Slendro; tone names ji ro lu ma nem (1 2 3 5 6).";
+            slendro.Notations.Clear();
+            AddOwnNames(slendro, "Javanese tone names", new[] { "ji", "ro", "lu", "ma", "nem" });
+            ManualKeys(slendro);
+            all.Add(slendro);
+
+            int[] pelogSteps = { 0, 1, 2, 4, 5, 6, 7 };
+            var pelog = FromCents(PelogId, "Pelog (9-EDO approximation)", pelogSteps.Select(k => k * 1200.0 / 9).ToArray(), 1200,
+                "Javanese pelog approximated by seven notes of 9-EDO (its 2L5s scale); real gamelan tunings vary from set to set.",
+                "9-EDO 2L5s per https://en.xen.wiki/w/Pelog; the mode (large steps after lu and pi) is inferred from the pelog interval pattern, not quoted. Tone names per https://en.wikipedia.org/wiki/Pelog.");
+            pelog.Reference.Degree = 0;
+            AddOwnNames(pelog, "Javanese tone names", new[] { "ji", "ro", "lu", "pat", "ma", "nem", "pi" });
+            ManualKeys(pelog);
+            all.Add(pelog);
+
+            const string carlos = "Wendy Carlos's non-octave scale. https://en.wikipedia.org/wiki/Alpha_scale rounds the steps to 78, 63.8 and 35.1 cents; the preset uses the commonly derived 77.965, 63.833 and 35.099 cents.";
+            all.Add(EqualStep("carlos-alpha", "Carlos Alpha", 77.965, 9, carlos));
+            all.Add(EqualStep("carlos-beta", "Carlos Beta", 63.833, 11, carlos));
+            all.Add(EqualStep("carlos-gamma", "Carlos Gamma", 35.099, 20, carlos));
+            all.Add(EqualStep("equal-88-cent", "88-cent equal steps", 88, 8, "Equal steps of 88 cents without an octave (Gary Morrison)."));
+        }
+
         static readonly string[] FifthChainNames = { "C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "G♯", "A", "B♭", "B" };
         static readonly string[] JustNames = { "C", "D♭", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B" };
         static void AddChromaticNames(TuningDefinition tuning, string name, IReadOnlyList<string> names) {

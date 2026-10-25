@@ -54,6 +54,15 @@ namespace OpenUtau.Core.Microtonal {
             return orbit.Select(p => Mod((long)p - origin)).OrderBy(p => p).ToArray();
         }
 
+        /// <summary>
+        /// Whether a step holds the lower nominal's sharp and the upper nominal's flat as black keys: always in a
+        /// large step; in a small step only when the sharp is not above the flat (twice the chroma at most the step),
+        /// so 19-EDO E-sharp/F-flat and porcupine 15-EDO share one black key, while 31-EDO's crossed E-sharp and
+        /// F-flat stay in-between keys.
+        /// </summary>
+        public static bool HasAccidentals(int step, int large, int chroma) =>
+            chroma > 0 && (step == large ? chroma < step : 2 * chroma <= step);
+
         public static MosKeyboard Generate(int divisions, int generator, int cardinality, int rotation = 0) =>
             FromNominals(divisions, NominalSteps(divisions, generator, cardinality, rotation), generator,
                 (rotation % cardinality + cardinality) % cardinality);
@@ -80,9 +89,9 @@ namespace OpenUtau.Core.Microtonal {
             for (int i = 0; i < nominal.Length; i++) Add(nominal[i], NotchedKeyKind.Natural, i);
             if (chroma > 0) {
                 for (int i = 0; i < nominal.Length; i++) {
-                    if (gaps[i] != large) continue;
+                    if (!HasAccidentals(gaps[i], large, chroma)) continue;
                     Add(nominal[i] + chroma, NotchedKeyKind.Sharp, i);
-                    Add(nominal[i] + small, NotchedKeyKind.Flat, i);
+                    Add(nominal[i] + gaps[i] - chroma, NotchedKeyKind.Flat, i);
                 }
             }
             var cells = Enumerable.Range(0, divisions).Select(step => new KeyboardPitchCell(step, NotchedKeyKind.Between)).ToArray();

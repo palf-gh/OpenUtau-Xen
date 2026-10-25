@@ -10,7 +10,7 @@ Nearest-degree conversion compares physical cents distances, including across ne
 
 ## Formats
 
-`.tunxen` is a versioned YAML document with `format: OpenUtauXenTuning`, `version: 1` and a complete `tuning` definition. Unsupported format versions are rejected. Exact ratios, keyboard mapping holes and aliases round-trip.
+`.tunxen` is a versioned YAML document with `format: OpenUtauXenTuning`, `version: 2` and a complete `tuning` definition, including the keyboard layout, keyboard MOS and scale tonic. Version 1 is upgraded on reading (see `keyboard-mos.md`); other versions are rejected. Exact ratios, keyboard mapping holes and aliases round-trip.
 
 Scala `.scl` import/export retains rational intervals and the final period. `.kbm` supports unmapped and repeated degrees, negative mapping cycles, formal periods distinct from the degree count and independent reference frequency. A formal octave of zero resolves to the imported tuning's degree count when applied. Native input mapping is exported as a finite 128-key Scala map so non-octave tunings retain their exact MIDI input mapping.
 

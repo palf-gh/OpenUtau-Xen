@@ -21,7 +21,7 @@
 - Drawing, hit-testing, selection, pitch curves, final-pitch overlays, keyboard preview, note creation/movement and focus/scroll use the common mapping. A mapper snapshot remains fixed during note-edit gestures and multi-note row moves.
 - Up/Down move displayed rows; Ctrl+Up/Down move one tuning period; Alt+Up/Down move one raw tuning degree.
 - Copy/paste between differing tunings preserves source pitch through the nearest target degree and residual cents. Plain paste retains physical pitch while omitting expressive data.
-- Keyboard labels use the application font for names and Bravura Text only for SMuFL PUA runs. Secondary labels appear beside the primary label on short rows and below it on tall rows.
+- Keyboard labels use the application font for names and Xen Accidentals (derived from Bravura Text) for accidental runs: SMuFL characters and ♯ ♭ ♮. Secondary labels appear beside the primary label on short rows and below it on tall rows.
 - Pitch-curve segments and spline control values interpolate in physical pitch before conversion to display rows. Vibrato-control offsets remain a fixed number of display rows while depth remains a physical interval.
 - The Piano-roll Edit menu exposes the MIDI-input dialog implemented by the MIDI subsystem.
 
