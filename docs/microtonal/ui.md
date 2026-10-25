@@ -154,3 +154,23 @@ pitch), which Xen does not take.
 - Verification: rendered headlessly in the dark theme with a synthetic 300×600
   portrait, as no installed voicebank with a portrait was available. Not checked with
   a real portrait and its opacity mask.
+
+### Pitch follow
+
+- Purpose: Lunai's pitch follow, which scrolls the piano roll vertically along the
+  melody during playback, working in every Xen tuning.
+- Implementation: `PlaybackPitchFollowPath` plans the scroll path from the part's
+  notes with Lunai's eased transitions and two-pass smoothing. Xen groups notes by
+  resolved pitch (`UNote.ResolvedTone`) with a threshold in cents
+  (`PlaybackPitchFollowThresholdCents`, default 200) instead of integer semitones,
+  and converts pitch to a track offset through `PitchRowMapper.RowAtMidi`, so
+  non-12 tunings and compact row layouts land on the right rows. The step runs on
+  each play-position update and only sets the vertical offset; the playhead and
+  playback timing are unchanged. A manual vertical scroll during playback stops the
+  follow until the next play. The side toolbar has the toggle and **View > Show
+  pitch-follow path** draws the planned path.
+- Strings: `xen.pianoroll.pitchfollow`, `xen.pianoroll.pitchfollowpath` in every
+  language.
+- Verification: `XenPitchFollowTest` covers the 12-EDO offset, 31-EDO zone grouping
+  in cents, and path targets in 31-EDO and Bohlen–Pierce.
+- Open: not watched during real playback.

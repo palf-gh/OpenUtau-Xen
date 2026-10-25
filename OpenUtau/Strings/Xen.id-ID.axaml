@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">Merekam</system:String>
   <system:String x:Key="xen.progress.stoprender">Hentikan render</system:String>
   <system:String x:Key="xen.pianoroll.expand">Perluas piano roll di jendela</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">Ikuti nada saat pemutaran</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">Tampilkan jalur pengikut nada</system:String>
 </ResourceDictionary>
 

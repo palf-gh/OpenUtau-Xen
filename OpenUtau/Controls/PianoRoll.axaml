@@ -111,6 +111,13 @@
               <Path Classes="stroked" Data="M 12 10 V 13.62"/>
             </Grid>
           </ToggleButton>
+          <ToggleButton Classes="sideToolbarToggle pitchFollowToggle" IsChecked="{Binding NotesViewModel.PitchFollow}"
+                        ToolTip.Tip="{DynamicResource xen.pianoroll.pitchfollow}">
+            <Grid Width="18" Height="18">
+              <Path Classes="stroked" Data="M 2 13 L 5 13 L 7 8 L 11 8 L 13 4 L 16 4"/>
+              <Path Classes="stroked" Data="M 14 11 L 16 13 L 14 15 M 16 13 L 10 13"/>
+            </Grid>
+          </ToggleButton>
           <ToggleButton Classes="sideToolbarToggle phonemizerTagsToggle" IsChecked="{Binding ShowPhonemizerTags}"
                         ToolTip.Tip="{DynamicResource pianoroll.toggle.phonemizer}">
             <Grid Width="18" Height="18">
@@ -325,6 +332,15 @@
           </ContextMenu>
         </c:NotesCanvas.ContextMenu>
       </c:NotesCanvas>
+      <c:PitchFollowPathCanvas Grid.Row="3" Grid.Column="1"
+                               IsVisible="{Binding NotesViewModel.PitchFollow}"
+                               ShowPath="{Binding NotesViewModel.ShowPitchFollowPath}"
+                               NotesViewModel="{Binding NotesViewModel}"
+                               TickWidth="{Binding NotesViewModel.TickWidth}"
+                               TickOffset="{Binding NotesViewModel.TickOffset}"
+                               TrackHeight="{Binding NotesViewModel.TrackHeight}"
+                               TrackOffset="{Binding NotesViewModel.TrackOffset}"
+                               ViewportTracks="{Binding NotesViewModel.ViewportTracks}"/>
       <Canvas Grid.Row="3" Grid.Column="1" IsHitTestVisible="False" ClipToBounds="True">
         <Rectangle Name="PlayPosHighlight"
                    Width="{Binding NotesViewModel.PlayPosHighlightWidth, Mode=OneWay}"
@@ -440,6 +456,11 @@
                         IsVisible="{Binding HideMenuItemVisible}">
                 <MenuItem.Icon>
                   <CheckBox IsChecked="{Binding PianoRollFullscreen}" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="{DynamicResource xen.pianoroll.pitchfollowpath}" Click="OnMenuShowPitchFollowPath">
+                <MenuItem.Icon>
+                  <CheckBox IsChecked="{Binding NotesViewModel.ShowPitchFollowPath}" />
                 </MenuItem.Icon>
               </MenuItem>
               <MenuItem Header="{DynamicResource prefs.appearance.trackcolor}" Click="OnMenuUseTrackColor">

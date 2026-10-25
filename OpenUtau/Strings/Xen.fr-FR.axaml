@@ -103,4 +103,6 @@
   <system:String x:Key="xen.midi.recording">Enregistrement en cours</system:String>
   <system:String x:Key="xen.progress.stoprender">Arrêter le rendu</system:String>
   <system:String x:Key="xen.pianoroll.expand">Agrandir le piano roll dans la fenêtre</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">Suivre la hauteur pendant la lecture</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">Afficher le tracé de suivi de hauteur</system:String>
 </ResourceDictionary>

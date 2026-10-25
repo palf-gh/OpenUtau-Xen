@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">Đang ghi âm</system:String>
   <system:String x:Key="xen.progress.stoprender">Dừng kết xuất</system:String>
   <system:String x:Key="xen.pianoroll.expand">Mở rộng piano roll trong cửa sổ</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">Theo cao độ khi phát</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">Hiện đường theo cao độ</system:String>
 </ResourceDictionary>
 

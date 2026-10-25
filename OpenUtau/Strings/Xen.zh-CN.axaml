@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">正在录音</system:String>
   <system:String x:Key="xen.progress.stoprender">停止渲染</system:String>
   <system:String x:Key="xen.pianoroll.expand">在窗口内展开钢琴窗</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">播放时跟随音高</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">显示音高跟随路径</system:String>
 </ResourceDictionary>
 

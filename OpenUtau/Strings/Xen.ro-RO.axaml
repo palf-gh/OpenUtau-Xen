@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">Înregistrare în curs</system:String>
   <system:String x:Key="xen.progress.stoprender">Oprește randarea</system:String>
   <system:String x:Key="xen.pianoroll.expand">Extinde piano roll-ul în fereastră</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">Urmărește înălțimea în timpul redării</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">Afișează traseul de urmărire a înălțimii</system:String>
 </ResourceDictionary>
 

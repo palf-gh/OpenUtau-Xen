@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">Opname bezig</system:String>
   <system:String x:Key="xen.progress.stoprender">Renderen stoppen</system:String>
   <system:String x:Key="xen.pianoroll.expand">Pianorol in venster vergroten</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">Toonhoogte volgen tijdens afspelen</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">Pad van toonhoogtevolgen tonen</system:String>
 </ResourceDictionary>
 

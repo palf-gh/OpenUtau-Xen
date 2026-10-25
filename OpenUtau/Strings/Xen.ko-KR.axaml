@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">녹음 중</system:String>
   <system:String x:Key="xen.progress.stoprender">렌더링 중지</system:String>
   <system:String x:Key="xen.pianoroll.expand">피아노 롤을 창 안에서 확장</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">재생 중 음높이 따라가기</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">음높이 따라가기 경로 표시</system:String>
 </ResourceDictionary>
 

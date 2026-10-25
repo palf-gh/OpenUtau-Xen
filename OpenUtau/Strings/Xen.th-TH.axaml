@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">กำลังบันทึก</system:String>
   <system:String x:Key="xen.progress.stoprender">หยุดเรนเดอร์</system:String>
   <system:String x:Key="xen.pianoroll.expand">ขยายเปียโนโรลในหน้าต่าง</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">ติดตามระดับเสียงขณะเล่น</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">แสดงเส้นทางการติดตามระดับเสียง</system:String>
 </ResourceDictionary>
 

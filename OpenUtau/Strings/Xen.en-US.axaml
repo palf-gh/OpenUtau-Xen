@@ -103,4 +103,6 @@
   <system:String x:Key="xen.midi.recording">Recording</system:String>
   <system:String x:Key="xen.progress.stoprender">Stop rendering</system:String>
   <system:String x:Key="xen.pianoroll.expand">Expand piano roll in window</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">Follow pitch during playback</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">Show pitch-follow path</system:String>
 </ResourceDictionary>

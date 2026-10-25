@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">Tallennetaan</system:String>
   <system:String x:Key="xen.progress.stoprender">Pysäytä renderöinti</system:String>
   <system:String x:Key="xen.pianoroll.expand">Laajenna pianorulla ikkunaan</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">Seuraa sävelkorkeutta toiston aikana</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">Näytä sävelkorkeuden seurantapolku</system:String>
 </ResourceDictionary>
 

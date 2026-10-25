@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">Kaydediliyor</system:String>
   <system:String x:Key="xen.progress.stoprender">İşlemeyi durdur</system:String>
   <system:String x:Key="xen.pianoroll.expand">Piyano rulosunu pencerede genişlet</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">Çalarken perdeyi izle</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">Perde izleme yolunu göster</system:String>
 </ResourceDictionary>
 

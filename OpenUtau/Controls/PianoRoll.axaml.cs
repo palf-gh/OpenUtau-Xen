@@ -440,6 +440,10 @@ namespace OpenUtau.App.Controls {
             SearchNote();
         }
 
+        void OnMenuShowPitchFollowPath(object sender, RoutedEventArgs args) {
+            ViewModel.NotesViewModel.ShowPitchFollowPath = !ViewModel.NotesViewModel.ShowPitchFollowPath;
+        }
+
         void OnMenuExpandPianoRoll(object sender, RoutedEventArgs args) {
             MainWindow?.TogglePianoRollFullscreen();
         }

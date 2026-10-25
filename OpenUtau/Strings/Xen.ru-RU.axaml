@@ -103,5 +103,7 @@
   <system:String x:Key="xen.midi.recording">Идёт запись</system:String>
   <system:String x:Key="xen.progress.stoprender">Остановить рендеринг</system:String>
   <system:String x:Key="xen.pianoroll.expand">Развернуть пианоролл в окне</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollow">Следовать за высотой при воспроизведении</system:String>
+  <system:String x:Key="xen.pianoroll.pitchfollowpath">Показать путь следования за высотой</system:String>
 </ResourceDictionary>
 

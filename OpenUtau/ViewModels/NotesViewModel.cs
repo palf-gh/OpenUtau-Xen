@@ -61,6 +61,7 @@ namespace OpenUtau.App.ViewModels {
             double centre = rowMapper == null ? 60 : rowMapper.MidiAtRow(rowMapper.Count - 1 - TrackOffset - ViewportTracks / 2);
             rowMapper = BuildRowMapper();
             TrackOffset = Math.Clamp(rowMapper.Count - 1 - rowMapper.RowAtMidi(centre) - ViewportTracks / 2, 0, VScrollBarMax);
+            RebuildPitchFollowPath();
             this.RaisePropertyChanged(nameof(RowMapper));
             this.RaisePropertyChanged(nameof(EffectiveTuning));
             Notify();
@@ -137,6 +138,17 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public partial bool ShowWaveform { get; set; }
         [Reactive] public partial bool ShowPhoneme { get; set; }
         [Reactive] public partial bool ShowNoteParams { get; set; }
+        [Reactive] public partial bool PitchFollow { get; set; }
+        [Reactive] public partial bool ShowPitchFollowPath { get; set; }
+
+        // Pitch follow (from OpenUtau Lunai): during playback the view scrolls vertically along
+        // a path planned from the part's notes; a manual vertical scroll stops it until the next play.
+        readonly PlaybackPitchFollowPath pitchFollowPath = new PlaybackPitchFollowPath();
+        readonly List<PitchFollowPathSamplePoint> pitchFollowPathSamples = new List<PitchFollowPathSamplePoint>();
+        public IReadOnlyList<PitchFollowPathSamplePoint> PitchFollowPathSamples => pitchFollowPathSamples;
+        bool inPitchFollowStep;
+        bool pitchFollowUserOverride;
+        bool pitchFollowWasPlaying;
         [Reactive] public partial bool ShowExpressions { get; set; }
         [Reactive] public partial bool IsSnapOn { get; set; }
         [Reactive] public partial string SnapDivText { get; set; }
@@ -345,6 +357,23 @@ namespace OpenUtau.App.ViewModels {
             .Subscribe(showNoteParams => {
                 Preferences.Default.ShowNoteParams = showNoteParams;
                 Preferences.Save();
+            });
+            PitchFollow = Preferences.Default.PlaybackPitchFollowEnabled;
+            ShowPitchFollowPath = Preferences.Default.PlaybackPitchFollowShowPath;
+            this.WhenAnyValue(x => x.PitchFollow, x => x.ShowPitchFollowPath)
+            .Subscribe(_ => {
+                Preferences.Default.PlaybackPitchFollowEnabled = PitchFollow;
+                Preferences.Default.PlaybackPitchFollowShowPath = ShowPitchFollowPath;
+                Preferences.Save();
+                RebuildPitchFollowPath();
+            });
+            this.WhenAnyValue(x => x.ViewportTracks)
+            .Subscribe(_ => RebuildPitchFollowPath());
+            this.WhenAnyValue(x => x.TrackOffset)
+            .Subscribe(_ => {
+                if (!inPitchFollowStep && pitchFollowWasPlaying) {
+                    pitchFollowUserOverride = true;
+                }
             });
             ShowPlaybackNoteHighlight = Preferences.Default.ShowPlaybackNoteHighlight;
             ShowPlaybackNoteBounce = Preferences.Default.ShowPlaybackNoteBounce;
@@ -643,6 +672,43 @@ namespace OpenUtau.App.ViewModels {
                 ? project.tracks[part.trackNo].TrackColor
                 : "Blue";
             ThemeManager.ChangePianorollColor(name);
+        }
+
+        void RebuildPitchFollowPath() {
+            if (!PitchFollow || Part == null) {
+                pitchFollowPath.Build(null, null, 0, 0, 0, 0, Project.resolution);
+                pitchFollowPathSamples.Clear();
+            } else {
+                pitchFollowPath.Build(Part, RowMapper, ViewportTracks, VScrollBarMax,
+                    Preferences.Default.PlaybackPitchFollowThresholdCents,
+                    PitchFollowScrollMath.DefaultVerticalPosition, Project.resolution);
+                pitchFollowPath.SampleSmoothedPoints(PitchFollowScrollMath.DefaultFrameSmoothing,
+                    Project.resolution, pitchFollowPathSamples);
+            }
+            MessageBus.Current.SendMessage(new PitchFollowPathPreviewChangedEvent());
+        }
+
+        /// <summary>Planned track offset at a part-local tick, for the path preview.</summary>
+        public double EvaluatePitchFollowPath(double localTick) =>
+            pitchFollowPath.EvaluateSmoothedAtTick(pitchFollowPathSamples, localTick);
+
+        // Runs on each play-position update; the playhead and playback timing are unchanged.
+        void PitchFollowStep(int playPosTick) {
+            bool playing = PlaybackManager.Inst.PlayingMaster;
+            if (playing && !pitchFollowWasPlaying) {
+                pitchFollowUserOverride = false;
+            }
+            pitchFollowWasPlaying = playing;
+            if (!playing || !PitchFollow || Part == null || pitchFollowUserOverride || !pitchFollowPath.IsBuilt) {
+                return;
+            }
+            double target = EvaluatePitchFollowPath(playPosTick - Part.position);
+            inPitchFollowStep = true;
+            try {
+                TrackOffset = Math.Clamp(target, 0, VScrollBarMax);
+            } finally {
+                inPitchFollowStep = false;
+            }
         }
 
         private void UnloadPart() {
@@ -1222,6 +1288,7 @@ namespace OpenUtau.App.ViewModels {
                     if (!setPlayPosTick.pause || Preferences.Default.LockStartTime == 1) {
                         MaybeAutoScroll(PlayPosX);
                     }
+                    PitchFollowStep(setPlayPosTick.playPosTick);
                 } else if (cmd is SetRangeSelectionNotification) {
                     UpdateHighlight();
                 } else if (cmd is FocusNoteNotification focusNote) {
