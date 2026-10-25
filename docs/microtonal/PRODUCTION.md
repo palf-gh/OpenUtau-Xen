@@ -774,29 +774,35 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   arm64 dmg, and Linux x64/arm64 tarballs and AppImages. None of these packages
   was launched.
 
-## 2026-10-26 — Lone Alt no longer leaves the lyric box
+## 2026-10-26 — Lone Alt no longer leaves text fields
 
 - Purpose: IME switchers that toggle the IME on a lone Alt, such as
-  alt-ime-ahk, opened the main menu while a lyric was being edited after a
-  double-click, so the box lost focus and the next keys went to the menu.
+  alt-ime-ahk, opened the main menu while text was being typed (a lyric after a
+  double-click, a track name, a dialog field), so the field lost focus and the
+  next keys went to the menu.
 - Cause: alt-ime-ahk masks the lone Alt with an unassigned virtual key (such as
   `vk07`) so that Windows does not activate the menu. Avalonia 12.1 drops a key
   event whose key, physical key and symbol are all empty, so its access key
   handler never sees the masking key and opens the main menu on Alt-up.
-- Implementation: `LyricBox` registers a tunnelling `KeyDown` class handler on
-  `TopLevel`. Class handlers run before the window's access key handler; when
-  the focus is inside a `LyricBox`, the handler marks Left/Right Alt as handled,
-  so the menu neither opens nor shows its access keys. Alt+letter shortcuts and
-  Alt with the mouse in the piano roll are unchanged, and a lone Alt still opens
-  the menu when the focus is elsewhere.
+- Implementation: `App.Initialize` registers a tunnelling `KeyDown` class
+  handler on `TopLevel`. Class handlers run before the window's access key
+  handler; when a `TextBox` (including those inside number fields and combo
+  boxes) or anything in the lyric box has the focus, the handler marks Left/Right
+  Alt as handled, so the menu neither opens nor shows its access keys.
+  Alt+letter shortcuts and Alt with the mouse in the piano roll are unchanged,
+  and a lone Alt still opens the menu when the focus is elsewhere.
 - Tests: the test app now initialises ReactiveUI as the application does, and
-  `StringsTest` checks that a lone Alt keeps the lyric box focused with the menu
-  closed but opens the menu from a button. With the handler removed, the check
-  fails.
-- Open: other text fields (track names, dialogs) still open the menu on a lone
-  Alt. Not checked interactively with alt-ime-ahk itself.
+  `StringsTest` checks that a lone Alt keeps the lyric box and a plain text box
+  focused with the menu closed, but opens the menu from a button. With the
+  handler removed, the check fails.
+- Open: a lone Alt can no longer open the menu from a text field; press Esc or
+  click elsewhere first. Not checked interactively with alt-ime-ahk itself.
 - Verification: serial build and 498 tests pass (one opt-in voice test skipped).
-- Trial build: no trial was running; `work/OpenUtau-Xen-win-x64/` was updated in
-  place (07:24 local time). `OpenUtau-Xen.exe` matches the apphost and
-  `OpenUtau-Xen.dll` matches the ReadyToRun output, which contains the new
-  handler. Not launched interactively.
+- Trial build: the trial was running, so the build went to
+  `work/OpenUtau-Xen-staged-win-x64/` (`OpenUtau-Xen.exe` matches the apphost
+  and `OpenUtau-Xen.dll` matches the ReadyToRun output, which contains the new
+  handler; 07:42 local time). An earlier attempt to publish into the running
+  trial failed on locked files and only rewrote an identical runtime
+  configuration, so `work/OpenUtau-Xen-win-x64/` still holds the 07:24 build,
+  which covers only the lyric box. Replacing it is pending. Not launched
+  interactively.

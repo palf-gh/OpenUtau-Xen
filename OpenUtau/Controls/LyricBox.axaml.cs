@@ -1,10 +1,8 @@
 ﻿using System;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
@@ -15,21 +13,6 @@ namespace OpenUtau.App.Controls {
         private TextBox box;
         private ListBox listBox;
         private DispatcherTimer? focusTimer;
-
-        static LyricBox() {
-            // IME switchers such as alt-ime-ahk toggle the IME on a lone Alt and mask it with an
-            // unassigned virtual key, which Avalonia drops, so Alt-up would open the main menu and
-            // take focus from the box. Class handlers run before the window's access key handler.
-            InputElement.KeyDownEvent.AddClassHandler<TopLevel>(TopLevel_PreviewKeyDown, RoutingStrategies.Tunnel);
-        }
-
-        private static void TopLevel_PreviewKeyDown(TopLevel topLevel, KeyEventArgs e) {
-            if (e.Key is Key.LeftAlt or Key.RightAlt &&
-                topLevel.FocusManager?.GetFocusedElement() is Visual focused &&
-                focused.FindAncestorOfType<LyricBox>() != null) {
-                e.Handled = true;
-            }
-        }
 
         public LyricBox() {
             InitializeComponent();

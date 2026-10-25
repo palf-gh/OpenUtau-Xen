@@ -113,16 +113,17 @@ namespace OpenUtau.App {
             }
             VerifyTuningPages(dialog);
             dialog.Close();
-            VerifyLyricBoxAlt();
+            VerifyLoneAlt();
         }
 
         // A lone Alt, as left by IME switchers such as alt-ime-ahk whose masking key Avalonia drops,
-        // must not open the main menu while a lyric is edited, but still does elsewhere.
-        static void VerifyLyricBoxAlt() {
+        // must not open the main menu while text is edited, but still does elsewhere.
+        static void VerifyLoneAlt() {
             var menu = new Menu { ItemsSource = new[] { new MenuItem { Header = "_File" } } };
             var lyricBox = new OpenUtau.App.Controls.LyricBox();
+            var textBox = new TextBox();
             var button = new Button { Content = "Other" };
-            var window = new Window { Content = new StackPanel { Children = { menu, lyricBox, button } } };
+            var window = new Window { Content = new StackPanel { Children = { menu, lyricBox, textBox, button } } };
             void TapAlt() {
                 window.KeyPress(Avalonia.Input.Key.LeftAlt, Avalonia.Input.RawInputModifiers.Alt, Avalonia.Input.PhysicalKey.AltLeft, null);
                 window.KeyRelease(Avalonia.Input.Key.LeftAlt, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.AltLeft, null);
@@ -137,6 +138,10 @@ namespace OpenUtau.App {
                 TapAlt();
                 Assert.False(menu.IsOpen);
                 Assert.True(box.IsFocused);
+                Assert.True(textBox.Focus());
+                TapAlt();
+                Assert.False(menu.IsOpen);
+                Assert.True(textBox.IsFocused);
                 Assert.True(button.Focus());
                 TapAlt();
                 Assert.True(menu.IsOpen);

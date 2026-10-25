@@ -6,8 +6,12 @@ using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
+using OpenUtau.App.Controls;
 using OpenUtau.App.Views;
 using OpenUtau.Colors;
 using Serilog;
@@ -19,7 +23,21 @@ namespace OpenUtau.App {
             AvaloniaXamlLoader.Load(this);
             InitializeCulture();
             InitializeTheme();
+            InitializeAltKey();
             Log.Information("Initialized application.");
+        }
+
+        static void InitializeAltKey() {
+            // IME switchers such as alt-ime-ahk toggle the IME on a lone Alt and mask it with an
+            // unassigned virtual key, which Avalonia drops, so Alt-up would open the main menu and
+            // take focus from the text field. Class handlers run before the window's access key handler.
+            InputElement.KeyDownEvent.AddClassHandler<TopLevel>((topLevel, e) => {
+                if (e.Key is Key.LeftAlt or Key.RightAlt &&
+                    topLevel.FocusManager?.GetFocusedElement() is Visual focused &&
+                    (focused is TextBox || focused.FindAncestorOfType<LyricBox>() != null)) {
+                    e.Handled = true;
+                }
+            }, RoutingStrategies.Tunnel);
         }
 
         public override void OnFrameworkInitializationCompleted() {
