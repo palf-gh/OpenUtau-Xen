@@ -141,3 +141,16 @@ pitch), which Xen does not take.
   every layout.
 - Verification: rendered headlessly with the piano roll docked; build and the full
   test suite pass.
+
+### Portrait across the cards
+
+- Purpose: Lunai's singer portrait that runs from the top of the notes area to the
+  bottom of the expression area.
+- Implementation: the portrait is scaled to that height and drawn in two clipped
+  layers, one per card, with a shared size and position, so it reads as one image
+  across the gap. With expressions hidden it fills the notes area. Lunai's
+  re-rasterisation at display resolution (`EnsurePortraitForDisplayHeight`) is not
+  ported; Avalonia scales the loaded bitmap.
+- Verification: rendered headlessly in the dark theme with a synthetic 300×600
+  portrait, as no installed voicebank with a portrait was available. Not checked with
+  a real portrait and its opacity mask.

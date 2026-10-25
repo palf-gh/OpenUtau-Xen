@@ -65,11 +65,23 @@ namespace OpenUtau.App.Controls {
             UpdatePortraitPosition();
         }
 
+        // The portrait runs from the top of the notes area to the bottom of the expression
+        // area when it is shown (from OpenUtau Lunai). Both layers share one size and
+        // position, so the image reads as one across the gap between the cards.
         private void UpdatePortraitPosition() {
-            if (PortraitImage.DesiredSize.Width == 0 || PortraitCanvas.Bounds.Width == 0) return;
-            // Position at top-right of row 3, with 100px margin from right
-            Canvas.SetTop(PortraitImage, 0);
-            Canvas.SetLeft(PortraitImage, PortraitCanvas.Bounds.Width - PortraitImage.DesiredSize.Width - 100);
+            if (PortraitImage.Source is not { } source || source.Size.Height <= 0 || PortraitCanvas.Bounds.Width == 0) return;
+            var notes = PortraitCanvas.Bounds;
+            bool exp = PortraitCanvasExp.IsVisible && PortraitCanvasExp.Bounds.Height > 0;
+            double bottom = exp ? PortraitCanvasExp.Bounds.Bottom : notes.Bottom;
+            double height = Math.Max(0, bottom - notes.Top);
+            double width = height * source.Size.Width / source.Size.Height;
+            double left = notes.Width - width - 100;
+            foreach (var (image, top) in new[] { (PortraitImage, 0.0), (PortraitImageExp, notes.Top - PortraitCanvasExp.Bounds.Top) }) {
+                if (image.Width != width) image.Width = width;
+                if (image.Height != height) image.Height = height;
+                if (Canvas.GetLeft(image) != left) Canvas.SetLeft(image, left);
+                if (Canvas.GetTop(image) != top) Canvas.SetTop(image, top);
+            }
         }
 
         public void InitializePianoRollWindowAsync() {
