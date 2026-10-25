@@ -8,9 +8,12 @@ namespace OpenUtau.Core.Microtonal {
     public static class PitchNotation {
         public const string Auto = "auto";
         public const string None = "none";
+        /// <summary>Generated letter names for the nominals of the active generator scale.</summary>
+        public const string Mos = "mos";
         // Automatic labels prefer user-authored names, then verified accidentals, then Ups and Downs.
         static readonly string[] AutoOrder = { "custom", "szg", "bp", "ups-downs" };
         static readonly ConcurrentDictionary<int, IReadOnlyList<NotationProfile>> builtIn = new ConcurrentDictionary<int, IReadOnlyList<NotationProfile>>();
+        static readonly ConcurrentDictionary<string, NotationProfile> mosLetters = new ConcurrentDictionary<string, NotationProfile>();
 
         public static string Format(TuningDefinition tuning, int degree, string? notationId = null, bool includePeriod = true) {
             int count = tuning.DegreeCount;
@@ -34,6 +37,7 @@ namespace OpenUtau.Core.Microtonal {
         public static NotationProfile? FindProfile(TuningDefinition tuning, string id) {
             var own = tuning.Notations.FirstOrDefault(p => p.Id == id && p.Names.Count > 0);
             if (own != null) return own;
+            if (id == Mos) return MosLetters(tuning);
             if (tuning.Divisions <= 0 || tuning.Divisions > 256) return null;
             var theory = KeyboardTheory.For(tuning);
             if (theory == null) return null;
@@ -48,6 +52,8 @@ namespace OpenUtau.Core.Microtonal {
         public static string ResolvePrimary(TuningDefinition tuning, string? preference) {
             if (!string.IsNullOrEmpty(preference) && preference != Auto && IsAvailable(tuning, preference)) return preference;
             string stored = tuning.Keyboard.PrimaryNotation;
+            // A letter-named MOS keyboard replaces family names unless the user authored their own.
+            if (stored != "custom" && IsAvailable(tuning, Mos)) return Mos;
             if (stored != "degree" && IsAvailable(tuning, stored)) return stored;
             return AutoOrder.FirstOrDefault(id => IsAvailable(tuning, id)) ?? "degree";
         }
@@ -67,7 +73,8 @@ namespace OpenUtau.Core.Microtonal {
         public static KeyRole Role(TuningDefinition tuning, int degree) {
             int count = tuning.DegreeCount;
             int index = (degree % count + count) % count;
-            if (tuning.Keyboard.Classes.TryGetValue(index, out string? keyClass)) {
+            // A letter-named MOS owns the whole keyboard; otherwise explicit classes override the family baseline.
+            if (KeyboardRegionizer.LetterScale(tuning) == null && tuning.Keyboard.Classes.TryGetValue(index, out string? keyClass)) {
                 return keyClass switch {
                     "accidental" => KeyRole.Black,
                     "secondary" or "between" => KeyRole.Between,
@@ -121,6 +128,20 @@ namespace OpenUtau.Core.Microtonal {
                 if (aliases.Count > 0) profile.Aliases[d] = aliases;
             }
             return profile;
+        }
+
+        /// <summary>
+        /// Letters A, B, C … (skipping I) on the active generator scale's nominals, sharps and flats of its
+        /// chroma (large minus small step), and ups and downs for any remainder.
+        /// </summary>
+        static NotationProfile? MosLetters(TuningDefinition tuning) {
+            var scale = KeyboardRegionizer.LetterScale(tuning);
+            var model = scale == null ? null : KeyboardRegionizer.Model(tuning);
+            if (model == null) return null;
+            string key = model.Divisions + ":" + string.Join(",", model.Nominals);
+            if (mosLetters.Count > 64) mosLetters.Clear();
+            return mosLetters.GetOrAdd(key, _ => Nominal(Mos, "MOS letters", model.Divisions, model.Nominals,
+                model.Nominals.Select((_, i) => KeyboardRegionizer.LetterName(i)).ToArray(), model.Large - model.Small));
         }
 
         /// <summary>Twelve named keys for C-centred twelve-note presets, in degree order.</summary>

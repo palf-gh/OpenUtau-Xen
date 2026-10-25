@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definizione</system:String>
   <system:String x:Key="xen.notation.degree">Numeri dei gradi</system:String>
+  <system:String x:Key="xen.notation.mos">Lettere MOS (A, B, C…)</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,4 +107,11 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">Segui l'altezza durante la riproduzione</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Mostra il percorso di inseguimento dell'altezza</system:String>
   <system:String x:Key="xen.tab.conversion">Converti note</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">Impossibile generare una scala MOS.</system:String>
+  <system:String x:Key="xen.field.selectedKey">Tasto selezionato</system:String>
+  <system:String x:Key="xen.keyClass.white">Tasto bianco</system:String>
+  <system:String x:Key="xen.keyClass.black">Tasto nero</system:String>
+  <system:String x:Key="xen.keyClass.between">Tasto intermedio</system:String>
+  <system:String x:Key="xen.menu.pitchRows">Righe del piano roll</system:String>
+  <system:String x:Key="xen.tab.names">Nomi e tipi di tasto</system:String>
 </ResourceDictionary>

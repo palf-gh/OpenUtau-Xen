@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definisi</system:String>
   <system:String x:Key="xen.notation.degree">Nomor derajat nada</system:String>
+  <system:String x:Key="xen.notation.mos">Huruf MOS (A, B, C…)</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,5 +107,12 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">Ikuti nada saat pemutaran</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Tampilkan jalur pengikut nada</system:String>
   <system:String x:Key="xen.tab.conversion">Konversi not</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">Skala MOS tidak dapat dibuat.</system:String>
+  <system:String x:Key="xen.field.selectedKey">Tuts terpilih</system:String>
+  <system:String x:Key="xen.keyClass.white">Tuts putih</system:String>
+  <system:String x:Key="xen.keyClass.black">Tuts hitam</system:String>
+  <system:String x:Key="xen.keyClass.between">Tuts antara</system:String>
+  <system:String x:Key="xen.menu.pitchRows">Baris piano roll</system:String>
+  <system:String x:Key="xen.tab.names">Nama dan jenis tuts</system:String>
 </ResourceDictionary>
 

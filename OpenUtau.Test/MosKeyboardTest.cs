@@ -89,17 +89,21 @@ namespace OpenUtau.Test {
         }
 
         [Fact]
-        public void ActiveScaleChangesDoNotChangeTheBaselineKeyboardOrOverrideCustomClasses() {
+        public void ALetterMosOwnsTheKeyboardAndFamilyScalesKeepTheBaselineAndCustomClasses() {
             var tuning = TuningPresets.EqualDivision(73);
             var baseline = KeyboardRegionizer.Model(tuning);
             var result = MosGenerator.Generate(tuning, 17, 9);
             tuning.Scales.Add(result.Scale);
             tuning.Keyboard.ActiveScaleId = result.Scale.Id;
-            Assert.Same(baseline, KeyboardRegionizer.Model(tuning));
-            Assert.Equal(baseline!.Cells.Select(cell => cell.Role), KeyboardRegionizer.Roles(tuning));
+            var letters = KeyboardRegionizer.Model(tuning);
+            Assert.NotSame(baseline, letters);
+            Assert.Equal(result.Scale.Degrees, letters!.Nominals);
             tuning.Keyboard.Classes[6] = "accidental";
+            Assert.Equal(letters.Cells[6].Role, PitchNotation.Role(tuning, 6));
+            tuning.Keyboard.ActiveScaleId = "all";
+            Assert.Same(baseline, KeyboardRegionizer.Model(tuning));
             Assert.Equal(KeyRole.Black, PitchNotation.Role(tuning, 6));
-            Assert.Equal(KeyRole.Between, baseline.Cells[6].Role);
+            Assert.Equal(KeyRole.Between, baseline!.Cells[6].Role);
         }
     }
 }

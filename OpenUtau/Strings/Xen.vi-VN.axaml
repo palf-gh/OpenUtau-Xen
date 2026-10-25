@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Định nghĩa</system:String>
   <system:String x:Key="xen.notation.degree">Số bậc âm</system:String>
+  <system:String x:Key="xen.notation.mos">Chữ cái MOS (A, B, C…)</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,5 +107,12 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">Theo cao độ khi phát</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Hiện đường theo cao độ</system:String>
   <system:String x:Key="xen.tab.conversion">Chuyển đổi nốt</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">Không thể tạo thang âm MOS.</system:String>
+  <system:String x:Key="xen.field.selectedKey">Phím đã chọn</system:String>
+  <system:String x:Key="xen.keyClass.white">Phím trắng</system:String>
+  <system:String x:Key="xen.keyClass.black">Phím đen</system:String>
+  <system:String x:Key="xen.keyClass.between">Phím trung gian</system:String>
+  <system:String x:Key="xen.menu.pitchRows">Hàng piano roll</system:String>
+  <system:String x:Key="xen.tab.names">Tên nốt và loại phím</system:String>
 </ResourceDictionary>
 

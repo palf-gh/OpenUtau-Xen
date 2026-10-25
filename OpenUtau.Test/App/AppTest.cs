@@ -1,4 +1,4 @@
-﻿using Xunit;
+using Xunit;
 using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Styling;
@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.VisualTree;
+using Avalonia.LogicalTree;
 using OpenUtau.App;
 
 [assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]
@@ -66,7 +67,7 @@ namespace OpenUtau.App {
             var dialog = new OpenUtau.App.Views.TuningDialog(projectDefault: true);
             dialog.Show();
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-            Assert.InRange(dialog.Height, 320, 620);
+            Assert.InRange(dialog.Height, 320, 760);
             var numbers = dialog.GetVisualDescendants().OfType<NumericUpDown>().ToArray();
             Assert.NotEmpty(numbers);
             foreach (var number in numbers.Where(n => n.IsEffectivelyVisible)) {
@@ -79,84 +80,182 @@ namespace OpenUtau.App {
         static void VerifyTuningPages(OpenUtau.App.Views.TuningDialog dialog) {
             void Layout() => Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             var navigation = dialog.GetVisualDescendants().OfType<ListBox>().Single(c => c.Name == "TuningNavigation");
-            Assert.Equal(5, navigation.ItemCount);
+            Assert.Equal(4, navigation.ItemCount);
+            Assert.DoesNotContain(dialog.GetVisualDescendants().OfType<Grid>(), c => c.Name == "TuningDegreeMap" || c.Name == "ScaleDegreeMap");
+            Assert.DoesNotContain(dialog.GetVisualDescendants().OfType<Button>(), c => Equals(c.Content, XenStrings.Get("action.generateSubset")));
             var presets = dialog.GetVisualDescendants().OfType<ComboBox>().Single(c => c.Name == "TuningPresets");
+            var keyboard = dialog.GetVisualDescendants().OfType<OpenUtau.App.Controls.NotchedKeyboardPreview>().Single();
+            var generator = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosGenerator");
+            var cardinality = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosCardinality");
+            var mode = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosMode");
+            var resultText = dialog.GetVisualDescendants().OfType<TextBlock>().Single(c => c.Name == "MosResult");
+            string projectBefore = OpenUtau.Core.Microtonal.TunxenFormat.Serialize(OpenUtau.Core.DocManager.Inst.Project.pitchSystem);
+            OpenUtau.Core.Microtonal.TuningDefinition Draft() {
+                navigation.SelectedIndex = 3; Layout();
+                dialog.GetVisualDescendants().OfType<Button>().Single(c => Equals(c.Content, XenStrings.Get("action.refreshDefinition")))
+                    .RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                var yaml = dialog.GetVisualDescendants().OfType<TextBox>().Single(c => c.Classes.Contains("definition-editor"));
+                var draft = OpenUtau.Core.Microtonal.TunxenFormat.Parse(yaml.Text!);
+                navigation.SelectedIndex = 0; Layout();
+                return draft;
+            }
             foreach (int division in new[] { 12, 31, 13 }) {
                 var tuning = presets.ItemsSource!.Cast<OpenUtau.Core.Microtonal.TuningDefinition>().Single(t => t.Divisions == division
                     && Math.Abs(t.Period.ToCents() - (division == 13 ? 1200 * Math.Log2(3) : 1200)) < 0.001);
-                presets.SelectedItem = tuning;
-                Layout();
-                var map = dialog.GetVisualDescendants().OfType<Grid>().Single(c => c.Name == "TuningDegreeMap");
-                Assert.Equal(division, map.Children.Count);
-                navigation.SelectedIndex = 1;
-                Layout();
-                var candidate = dialog.GetVisualDescendants().OfType<OpenUtau.App.Controls.NotchedKeyboardPreview>()
-                    .Single(c => c.Name == "GeneratorPitchPreview");
-                Assert.Equal(division, candidate.ItemCount);
-                Assert.Equal(division == 12 || division == 13, candidate.KeyLayout!.IsTraditionalKeyboard);
-                var baselineKinds = candidate.Cells.Select(cell => cell.Kind).ToArray();
-                var baselineGeometry = candidate.KeyLayout;
-                var cardinality = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosCardinality");
-                cardinality.Value = division == 31 ? 7 : 9;
-                Layout();
-                decimal? originalCardinality = cardinality.Value;
-                cardinality.Value = originalCardinality + 1;
-                Layout();
-                Assert.Equal(baselineKinds, candidate.Cells.Select(cell => cell.Kind));
-                Assert.Same(baselineGeometry, candidate.KeyLayout);
-                cardinality.Value = originalCardinality;
-                Layout();
-                var notch = candidate.KeyLayout!.Keys.SelectMany(key => key.Rectangles.Select(rect => (key, rect)))
-                    .First(pair => pair.rect.X < candidate.KeyLayout.Columns[pair.key.Column].X
-                        || pair.rect.Right > candidate.KeyLayout.Columns[pair.key.Column].X + candidate.KeyLayout.Columns[pair.key.Column].Width);
-                var sourceColumn = candidate.KeyLayout.Columns[notch.key.Column];
-                double x = notch.rect.X < sourceColumn.X ? (notch.rect.X + sourceColumn.X) / 2
-                    : (sourceColumn.X + sourceColumn.Width + notch.rect.Right) / 2;
-                double scaleX = candidate.Bounds.Width / candidate.KeyLayout.Width;
-                Assert.Equal(notch.key.Degree, candidate.SelectDegreeAt(new Point(x * scaleX,
-                    (notch.rect.Y + notch.rect.Bottom) / 2 * candidate.Bounds.Height)));
-                var peer = Avalonia.Automation.Peers.ControlAutomationPeer.CreatePeerForElement(candidate);
-                Assert.NotNull(peer);
-                Assert.Equal(Avalonia.Automation.AutomationProperties.GetName(candidate), peer.GetName());
-                Assert.Contains(XenStrings.Get("field.degree") + " " + notch.key.Degree, peer.GetName());
-                var generator = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosGenerator");
-                decimal? previousGenerator = generator.Value;
-                generator.Value = 0;
-                Layout();
-                Assert.Equal(0, candidate.ItemCount);
-                generator.Value = previousGenerator;
-                Layout();
-                Assert.Equal(division, candidate.ItemCount);
-                var applyCandidate = dialog.GetVisualDescendants().OfType<Button>().Single(c => c.Name == "ApplyTuningDraft");
-                Assert.Equal(XenStrings.Get(division == 12 ? "action.applyDisplay" : "action.applyTuning"), applyCandidate.Content);
-                var generate = dialog.GetVisualDescendants().OfType<Button>().Single(c => Equals(c.Content, XenStrings.Get("action.generateSubset")));
-                generate.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-                Layout();
-                map = dialog.GetVisualDescendants().OfType<Grid>().Single(c => c.Name == "ScaleDegreeMap");
-                Assert.Equal((int)cardinality.Value!, map.Children.OfType<Border>().Count(b => b.BorderThickness.Left == 2));
-                navigation.SelectedIndex = 0;
-                Layout();
+                presets.SelectedItem = tuning; Layout();
+                Assert.Equal(division, keyboard.ItemCount);
+                Assert.Equal(division == 12 || division == 13, keyboard.KeyLayout!.IsTraditionalKeyboard);
+                var baselineKinds = keyboard.Cells.Select(cell => cell.Kind).ToArray();
+                var geometry = keyboard.KeyLayout;
+                int nextCount = division == 31 ? 5 : division == 13 ? 10 : 8;
+                cardinality.Value = nextCount; Layout();
+                Assert.False(keyboard.IsWhiteKeysOnly);
+                // A non-family MOS takes over the white keys and letter names.
+                Assert.NotSame(geometry, keyboard.KeyLayout);
+                Assert.False(keyboard.KeyLayout!.IsTraditionalKeyboard);
+                var updated = Draft();
+                var active = updated.Scales.Single(scale => scale.Id == updated.Keyboard.ActiveScaleId);
+                Assert.Equal(nextCount, active.Degrees.Count);
+                Assert.Equal(active.Degrees, keyboard.Cells.Where(cell => cell.Role == OpenUtau.Core.Microtonal.KeyRole.White).Select(cell => cell.Step));
+                Assert.Equal("A", OpenUtau.Core.Microtonal.PitchNotation.Format(updated, 0, OpenUtau.Core.Microtonal.PitchNotation.Mos, false));
+                mode.Value = 2; Layout();
+                updated = Draft();
+                var expected = OpenUtau.Core.Microtonal.MosGenerator.Generate(tuning, (int)generator.Value!, nextCount, 1);
+                Assert.Equal(expected.Scale.Degrees, updated.Scales.Single(scale => scale.Id == updated.Keyboard.ActiveScaleId).Degrees);
+                Assert.Equal(expected.Scale.Degrees, keyboard.Cells.Where(cell => cell.Role == OpenUtau.Core.Microtonal.KeyRole.White).Select(cell => cell.Step));
+                mode.Value = 1; cardinality.Value = division == 13 ? 9 : 7; Layout();
+                Assert.Equal(geometry.IsTraditionalKeyboard, keyboard.KeyLayout!.IsTraditionalKeyboard);
+                Assert.Equal(baselineKinds, keyboard.Cells.Select(cell => cell.Kind));
+                cardinality.Value = nextCount; Layout();
+                decimal? oldGenerator = generator.Value;
+                generator.Value = 0; Layout();
+                Assert.Equal(XenStrings.Get("status.mosUnavailable"), resultText.Text);
+                Assert.True(keyboard.IsWhiteKeysOnly);
+                Assert.Equal(division, keyboard.ItemCount);
+                Assert.All(keyboard.Cells, cell => Assert.Equal(OpenUtau.Core.Microtonal.KeyRole.White, cell.Role));
+                Assert.Equal(division, keyboard.KeyLayout!.Columns.Count);
+                Assert.Equal("all", Draft().Keyboard.ActiveScaleId);
+                generator.Value = oldGenerator; Layout();
+                Assert.False(keyboard.IsWhiteKeysOnly);
+                Assert.Equal(nextCount, keyboard.Cells.Count(cell => cell.Role == OpenUtau.Core.Microtonal.KeyRole.White));
             }
             presets.SelectedItem = presets.ItemsSource!.Cast<OpenUtau.Core.Microtonal.TuningDefinition>()
-                .Single(t => t.Divisions == 12 && Math.Abs(t.Period.ToCents() - 1200) < 0.001);
+                .Single(t => t.Divisions == 12 && Math.Abs(t.PeriodCents - 1200) < 0.001);
             Layout();
+            var divisions = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "TuningDivisions");
+            var period = dialog.GetVisualDescendants().OfType<TextBox>().Single(c => c.Name == "TuningPeriod");
+            var frequency = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "TuningReferenceFrequency");
+            divisions.Value = 25; Layout();
+            Assert.Equal(25, keyboard.ItemCount);
+            Assert.True(keyboard.IsWhiteKeysOnly);
+            generator.Value = 7; Layout();
+            Assert.False(keyboard.IsWhiteKeysOnly);
+            var validDraft = Draft();
+            Assert.Equal(7, validDraft.Scales.Single(scale => scale.Id == validDraft.Keyboard.ActiveScaleId).Degrees.Count);
+            frequency.Value = 432; Layout();
+            Assert.Equal(432, Draft().Reference.Frequency);
+            period.Text = "3/"; Layout();
+            Assert.Equal(0, keyboard.ItemCount);
+            Assert.False(dialog.GetVisualDescendants().OfType<Button>().Single(c => c.Name == "ApplyTuningDraft").IsEnabled);
+            period.Text = "3/1"; Layout();
+            Assert.Equal(25, keyboard.ItemCount);
+            Assert.Equal("3/1", Draft().Period.Ratio);
+            VerifyMosToggle(dialog, presets, keyboard, Layout, Draft);
+            Assert.Equal(projectBefore, OpenUtau.Core.Microtonal.TunxenFormat.Serialize(OpenUtau.Core.DocManager.Inst.Project.pitchSystem));
             foreach (double width in new[] { 960.0, 650.0 }) {
-                dialog.Width = width;
-                dialog.Height = width == 650 ? 440 : 620;
-                for (int page = 0; page < 5; page++) {
-                    navigation.SelectedIndex = page;
-                    Layout();
+                dialog.Width = width; dialog.Height = width == 650 ? 440 : 760;
+                for (int page = 0; page < 4; page++) {
+                    navigation.SelectedIndex = page; Layout();
                     var viewport = dialog.GetVisualDescendants().OfType<ScrollViewer>()
                         .First(c => c.Content is StackPanel panel && panel.Children.FirstOrDefault() is TextBlock { FontSize: 20 });
                     Assert.True(viewport.Bounds.Width > 200);
-                    Assert.True(viewport.Extent.Width <= viewport.Viewport.Width + 1,
-                        $"Page {page} at {width}: {viewport.Extent.Width} / {viewport.Viewport.Width}");
-                    var apply = dialog.GetVisualDescendants().OfType<Button>().Single(c => c.Name == "ApplyTuningDraft");
-                    Assert.Equal(XenStrings.Get(page == 1 || page == 2 ? "action.applyDisplay" : "action.applyTuning"), apply.Content);
+                    Assert.True(viewport.Extent.Width <= viewport.Viewport.Width + 1);
                 }
             }
             VerifyTraditionalProfiles();
+            VerifyAudibleKeyboard();
             CaptureNotchedKeyboards();
+        }
+
+        static void VerifyMosToggle(OpenUtau.App.Views.TuningDialog dialog, ComboBox presets, OpenUtau.App.Controls.NotchedKeyboardPreview keyboard,
+            Action layout, Func<OpenUtau.Core.Microtonal.TuningDefinition> draft) {
+            presets.SelectedItem = presets.ItemsSource!.Cast<OpenUtau.Core.Microtonal.TuningDefinition>()
+                .Single(t => t.Divisions == 12 && Math.Abs(t.PeriodCents - 1200) < 0.001);
+            layout();
+            var mosKind = dialog.GetVisualDescendants().OfType<RadioButton>().Single(c => c.Name == "ScaleKindMos");
+            var customKind = dialog.GetLogicalDescendants().OfType<RadioButton>().Single(c => c.Name == "ScaleKindCustom");
+            var scaleChoice = dialog.GetLogicalDescendants().OfType<ComboBox>().Single(c => c.Name == "TuningScale");
+            var manualKeys = dialog.GetLogicalDescendants().OfType<WrapPanel>().Single(c => c.Name == "ManualKeyClasses");
+            var generator = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosGenerator");
+            var cardinality = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosCardinality");
+            cardinality.Value = 5; layout();
+            var pentatonic = keyboard.Cells.Select(cell => cell.Role).ToArray();
+            Assert.True(mosKind.IsChecked);
+            Assert.False(manualKeys.IsEffectivelyVisible);
+            Assert.False(scaleChoice.IsEffectivelyVisible);
+            customKind.IsChecked = true; layout();
+            Assert.True(manualKeys.IsEffectivelyVisible);
+            Assert.True(scaleChoice.IsEffectivelyVisible);
+            Assert.False(generator.IsEffectivelyVisible);
+            // Switching MOS off keeps the current keys as the starting point for key-by-key edits.
+            Assert.Equal(pentatonic, keyboard.Cells.Select(cell => cell.Role));
+            var off = draft();
+            Assert.True(OpenUtau.Core.Microtonal.KeyboardRegionizer.IsManual(off));
+            Assert.Equal(12, off.Keyboard.Classes.Count);
+            // The letter names shown with MOS on stay as editable custom names.
+            Assert.Equal("A", OpenUtau.Core.Microtonal.PitchNotation.Format(off, 0, OpenUtau.Core.Microtonal.PitchNotation.ResolvePrimary(off, null), false));
+            int black = Array.FindIndex(pentatonic, role => role == OpenUtau.Core.Microtonal.KeyRole.Black);
+            keyboard.SelectDegreeAt(new Point(1, 1));
+            int selected = keyboard.SelectedDegree!.Value;
+            dialog.GetLogicalDescendants().OfType<Button>().Single(c => c.Name == "KeyClass-accidental")
+                .RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            layout();
+            Assert.Equal(OpenUtau.Core.Microtonal.KeyRole.Black, keyboard.Cells[selected].Role);
+            Assert.Equal("accidental", draft().Keyboard.Classes[selected]);
+            Assert.True(black >= 0);
+            mosKind.IsChecked = true; layout();
+            Assert.False(manualKeys.IsEffectivelyVisible);
+            var on = draft();
+            Assert.Empty(on.Keyboard.Classes);
+            Assert.DoesNotContain(on.Notations, profile => profile.Id == "custom");
+            Assert.Equal(OpenUtau.Core.Microtonal.PitchNotation.Mos, OpenUtau.Core.Microtonal.PitchNotation.ResolvePrimary(on, null));
+            Assert.Equal(pentatonic, keyboard.Cells.Select(cell => cell.Role));
+        }
+
+        static void VerifyAudibleKeyboard() {
+            var events = new System.Collections.Generic.List<(bool Start, double Frequency)>();
+            var keyboard = new OpenUtau.App.Controls.NotchedKeyboardPreview(
+                frequency => events.Add((true, frequency)), frequency => events.Add((false, frequency)));
+            var tuning = OpenUtau.Core.Microtonal.TuningPresets.EqualDivision(53);
+            keyboard.SetTuning(tuning);
+            var window = new Window { Width = 500, Height = 240, Content = new ScrollViewer {
+                Content = keyboard, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+            } };
+            try {
+                window.Show(); Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Point PointFor(int degree) {
+                    var rectangle = keyboard.KeyLayout!.Keys[degree].Rectangles.OrderByDescending(r => r.Width * r.Height).First();
+                    var point = new Point((rectangle.X + rectangle.Right) / 2 * keyboard.Bounds.Width / keyboard.KeyLayout.Width,
+                        (rectangle.Y + rectangle.Bottom) / 2 * keyboard.Bounds.Height);
+                    return keyboard.TranslatePoint(point, window)!.Value;
+                }
+                double Frequency(int degree) => OpenUtau.Core.Microtonal.PitchResolver.ResolveFrequency(tuning,
+                    new OpenUtau.Core.Microtonal.PitchAddress { Degree = degree });
+                window.MouseDown(PointFor(0), Avalonia.Input.MouseButton.Left);
+                window.MouseMove(PointFor(1), Avalonia.Input.RawInputModifiers.LeftMouseButton);
+                window.MouseUp(PointFor(1), Avalonia.Input.MouseButton.Left);
+                Assert.Equal(new[] { (true, Frequency(0)), (false, Frequency(0)), (true, Frequency(1)), (false, Frequency(1)) }, events);
+                window.MouseDown(PointFor(0), Avalonia.Input.MouseButton.Left);
+                keyboard.SetTuning(tuning);
+                window.MouseUp(PointFor(0), Avalonia.Input.MouseButton.Left);
+                Assert.Equal(6, events.Count);
+                Assert.Equal((false, Frequency(0)), events[5]);
+                window.MouseDown(PointFor(0), Avalonia.Input.MouseButton.Left);
+            } finally { window.Close(); }
+            Assert.Equal(8, events.Count);
+            Assert.Equal((false, OpenUtau.Core.Microtonal.PitchResolver.ResolveFrequency(tuning,
+                new OpenUtau.Core.Microtonal.PitchAddress { Degree = 0 })), events[7]);
         }
 
         static void VerifyTraditionalProfiles() {
@@ -182,6 +281,7 @@ namespace OpenUtau.App {
                 foreach (string theme in new[] { "Light", "Dark" }) {
                     OpenUtau.Core.Util.Preferences.Default.ThemeName = theme;
                     App.SetTheme();
+                    CaptureUnifiedTuning(directory, theme);
                     foreach (var (n, period) in new[] { (12, "2/1"), (31, "2/1"), (53, "2/1"), (73, "2/1"), (13, "3/1") }) {
                         var keyboard = new OpenUtau.App.Controls.NotchedKeyboardPreview();
                         keyboard.SetTuning(OpenUtau.Core.Microtonal.TuningPresets.EqualDivision(n,
@@ -210,6 +310,37 @@ namespace OpenUtau.App {
                 OpenUtau.Core.Util.Preferences.Default.ThemeName = previousTheme;
                 App.SetTheme();
             }
+        }
+
+        static void CaptureUnifiedTuning(string directory, string theme) {
+            App.SetLanguage("ja-JP");
+            var dialog = new OpenUtau.App.Views.TuningDialog(projectDefault: true);
+            try {
+                dialog.Show(); Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                var presets = dialog.GetVisualDescendants().OfType<ComboBox>().Single(c => c.Name == "TuningPresets");
+                var items = presets.ItemsSource!.Cast<OpenUtau.Core.Microtonal.TuningDefinition>().ToArray();
+                presets.SelectedItem = items.Single(t => t.Divisions == 31 && Math.Abs(t.PeriodCents - 1200) < 0.001);
+                dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosMode").Value = 2;
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                using (var frame = dialog.CaptureRenderedFrame()) frame?.Save(System.IO.Path.Combine(directory, $"unified-tuning-ja-{theme}.png"));
+                presets.SelectedItem = items.Single(t => t.Divisions == 12 && Math.Abs(t.PeriodCents - 1200) < 0.001);
+                dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "TuningDivisions").Value = 25;
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                using (var frame = dialog.CaptureRenderedFrame()) frame?.Save(System.IO.Path.Combine(directory, $"unified-no-mos-ja-{theme}.png"));
+                presets.SelectedItem = items.Single(t => t.Divisions == 31 && Math.Abs(t.PeriodCents - 1200) < 0.001);
+                dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == "MosCardinality").Value = 5;
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                using (var frame = dialog.CaptureRenderedFrame()) frame?.Save(System.IO.Path.Combine(directory, $"unified-letters-ja-{theme}.png"));
+                dialog.GetVisualDescendants().OfType<RadioButton>().Single(c => c.Name == "ScaleKindCustom").IsChecked = true;
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                using (var frame = dialog.CaptureRenderedFrame()) frame?.Save(System.IO.Path.Combine(directory, $"unified-manual-ja-{theme}.png"));
+                presets.SelectedItem = items.Single(t => t.Id == "ji-5-limit");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                using (var frame = dialog.CaptureRenderedFrame()) frame?.Save(System.IO.Path.Combine(directory, $"unified-ji-off-ja-{theme}.png"));
+                dialog.GetVisualDescendants().OfType<RadioButton>().Single(c => c.Name == "ScaleKindMos").IsChecked = true;
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                using (var frame = dialog.CaptureRenderedFrame()) frame?.Save(System.IO.Path.Combine(directory, $"unified-ji-on-ja-{theme}.png"));
+            } finally { dialog.Close(); App.SetLanguage("en-US"); }
         }
     }
 }

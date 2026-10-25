@@ -23,8 +23,9 @@ namespace OpenUtau.Core.Microtonal {
             mode = (mode % cardinality + cardinality) % cardinality;
             int origin = pitches[mode];
             var degrees = pitches.Select(p => Mod(p - origin)).OrderBy(d => d).ToList();
-            // Interval widths are measured in the tuning, rather than assumed equal degree widths.
-            var widths = degrees.Select((d, i) => tuning.GetCents(i + 1 < degrees.Count ? degrees[i + 1] : period) - tuning.GetCents(d)).ToArray();
+            // Step sizes are counted in the tuning's degrees, as on the keyboard, so a fifth-generated diatonic
+            // in twelve-note just intonation or a well temperament is still 5L2s although its cents vary.
+            var widths = degrees.Select((d, i) => (double)((i + 1 < degrees.Count ? degrees[i + 1] : period) - d)).ToArray();
             var sizes = new List<double>();
             foreach (double width in widths) if (!sizes.Any(s => Math.Abs(s - width) <= 1e-6)) sizes.Add(width);
             sizes.Sort();

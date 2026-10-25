@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">정의</system:String>
   <system:String x:Key="xen.notation.degree">음도 번호</system:String>
+  <system:String x:Key="xen.notation.mos">MOS 문자 이름 (A, B, C…)</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,5 +107,12 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">재생 중 음높이 따라가기</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">음높이 따라가기 경로 표시</system:String>
   <system:String x:Key="xen.tab.conversion">노트 변환</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">MOS 음계를 생성할 수 없습니다.</system:String>
+  <system:String x:Key="xen.field.selectedKey">선택한 건반</system:String>
+  <system:String x:Key="xen.keyClass.white">흰 건반</system:String>
+  <system:String x:Key="xen.keyClass.black">검은 건반</system:String>
+  <system:String x:Key="xen.keyClass.between">중간 건반</system:String>
+  <system:String x:Key="xen.menu.pitchRows">피아노 롤 행</system:String>
+  <system:String x:Key="xen.tab.names">음 이름과 건반 종류</system:String>
 </ResourceDictionary>
 

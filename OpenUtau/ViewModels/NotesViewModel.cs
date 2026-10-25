@@ -48,11 +48,11 @@ namespace OpenUtau.App.ViewModels {
         public PitchRowMapper RowMapper => rowMapper ??= BuildRowMapper();
         PitchRowMapper BuildRowMapper() {
             var tuning = EffectiveTuning;
-            var scale = tuning.Scales.FirstOrDefault(s => s.Id == tuning.Keyboard.ActiveScaleId);
+            var scale = KeyboardRegionizer.DisplayDegrees(tuning);
             var supplementary = Part?.notes.Select(n => n.pitchAddress?.Degree
                 ?? PitchResolver.NearestAddress(tuning, n.tone).Degree).ToArray();
             var mode = (PitchDisplayMode)Math.Clamp(Preferences.Default.XenPitchRows, 0, 2);
-            return new PitchRowMapper(tuning, mode, scale?.Degrees, supplementary);
+            return new PitchRowMapper(tuning, mode, scale, supplementary);
         }
         public void BeginPitchGesture() { _ = RowMapper; pitchGesture = true; }
         public void EndPitchGesture() { pitchGesture = false; RefreshPitchRows(); }

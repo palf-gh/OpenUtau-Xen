@@ -54,11 +54,18 @@ namespace OpenUtau.Core.Microtonal {
             return orbit.Select(p => Mod((long)p - origin)).OrderBy(p => p).ToArray();
         }
 
-        public static MosKeyboard Generate(int divisions, int generator, int cardinality, int rotation = 0) {
-            var nominal = NominalSteps(divisions, generator, cardinality, rotation);
+        public static MosKeyboard Generate(int divisions, int generator, int cardinality, int rotation = 0) =>
+            FromNominals(divisions, NominalSteps(divisions, generator, cardinality, rotation), generator,
+                (rotation % cardinality + cardinality) % cardinality);
+
+        /// <summary>The keyboard for nominal degrees already chosen elsewhere, such as a generated scale starting at 0.</summary>
+        public static MosKeyboard FromNominals(int divisions, IReadOnlyList<int> nominals, int generator = 0, int rotation = 0) {
+            if (divisions < 1 || divisions > 65536) throw new ArgumentOutOfRangeException(nameof(divisions));
+            var nominal = nominals.Select(p => (p % divisions + divisions) % divisions).Distinct().OrderBy(p => p).ToArray();
+            if (nominal.Length == 0) throw new ArgumentException("At least one nominal is required.", nameof(nominals));
             var gaps = nominal.Select((p, i) => (i + 1 < nominal.Length ? nominal[i + 1] : divisions) - p).ToArray();
             var sizes = gaps.Distinct().OrderBy(gap => gap).ToArray();
-            if (sizes.Length > 2) throw new ArgumentException("The generator cardinality has more than two gap sizes.", nameof(cardinality));
+            if (sizes.Length > 2) throw new ArgumentException("The nominals have more than two gap sizes.", nameof(nominals));
             int small = sizes[0], large = sizes[sizes.Length - 1], chroma = large - small;
             var anchors = new SortedDictionary<int, KeyboardPitchCell>();
             int Mod(int value) => (value % divisions + divisions) % divisions;
@@ -96,7 +103,7 @@ namespace OpenUtau.Core.Microtonal {
                     cells[step] = new KeyboardPitchCell(step, owner.Kind, owner.Owner, owner.Step);
                 }
             }
-            return new MosKeyboard(divisions, generator, (rotation % cardinality + cardinality) % cardinality, nominal, gaps, cells);
+            return new MosKeyboard(divisions, generator, rotation, nominal, gaps, cells);
         }
     }
 }

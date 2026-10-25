@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definition</system:String>
   <system:String x:Key="xen.notation.degree">Degree numbers</system:String>
+  <system:String x:Key="xen.notation.mos">MOS letters (A, B, C…)</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,4 +107,11 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">Follow pitch during playback</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Show pitch-follow path</system:String>
   <system:String x:Key="xen.tab.conversion">Convert notes</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">Cannot generate a MOS scale.</system:String>
+  <system:String x:Key="xen.field.selectedKey">Selected key</system:String>
+  <system:String x:Key="xen.keyClass.white">White key</system:String>
+  <system:String x:Key="xen.keyClass.black">Black key</system:String>
+  <system:String x:Key="xen.keyClass.between">In-between key</system:String>
+  <system:String x:Key="xen.menu.pitchRows">Piano-roll rows</system:String>
+  <system:String x:Key="xen.tab.names">Names and key classes</system:String>
 </ResourceDictionary>

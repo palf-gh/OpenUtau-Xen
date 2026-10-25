@@ -109,3 +109,22 @@ Amendment (2026-10-24, user review of the first trial build):
   distinct nominal owners never share a column. Canonical 12-EDO and 13-EDT use
   traditional horizontal keyboards with seven or nine equal-width white fronts.
   Piano-roll row geometry remains in `PitchRowMapper`.
+- Tuning and MOS controls share one live settings page. Parameter changes update
+  the detached tuning and selected subset without a generation button. Invalid
+  MOS configurations show an explicit status and an all-white preview. Degree
+  colour blocks are omitted. Keyboard presses audition exact resolved pitch and
+  stop on release, lost capture/focus, detachment or reconfiguration. Project
+  mutation remains an explicit, undoable apply operation.
+- Amendment (2026-10-25, user review of the live page): the MOS selected in the
+  tuning settings now decides the keyboard, superseding "performance-scale
+  selection only changes scale markers". The seven-note octave and nine-note
+  tritave family MOS keep C-diatonic and C-Lambda names and keys; any other MOS
+  makes its notes the white keys, named A, B, C … (I is skipped), with sharps and
+  flats of its chroma. Without a MOS the preview shows white keys with degree
+  numbers. A "build the keyboard from a MOS scale" switch, available for every
+  tuning, turns this off; the keyboard is then set key by key. Equal-division
+  presets start with their family MOS selected, and the piano roll's scale rows
+  keep every white and black key, so semitones are not hidden.
+  The tuning page's scale card switches between MOS and Custom scale; the scale
+  menu belongs to Custom scale. Rast starts as a custom scale with its seven
+  notes as white keys.

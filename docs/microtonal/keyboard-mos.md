@@ -2,8 +2,10 @@
 
 Date: 2026-10-25. Source: the user's supplied
 `docs/general_mos_microtonal_keyboard_algorithm_latest.md` and the referenced
-keyboard-tool conversation. The user explicitly chose a tuning-specific baseline
-MOS, independent of the selected performance scale.
+keyboard-tool conversation. The user first chose a tuning-specific baseline MOS,
+independent of the selected performance scale. The amendment of 2026-10-25 (see
+"MOS-selected keyboards and letter names" below) lets the selected MOS decide the
+keyboard instead.
 
 ## Purpose and theory
 
@@ -101,8 +103,10 @@ previews and degree maps use a dedicated black background and light lettering.
 light, dark and custom themes and the theme editor. Piano-roll key colours keep
 their existing theme settings. The preview supports pointer selection, arrow keys, Home/End and
 horizontal scrolling. Visible shapes are culled and their drawing geometries
-are cached. Performance-scale edits reuse the baseline layout. The tuning,
-selected-scale and generator-candidate previews all use this control. The main
+are cached. Performance-scale edits reuse the baseline layout. A single live
+preview now accompanies the combined tuning and MOS controls, with an all-white
+fallback for unavailable MOS configurations and exact-frequency audition on
+press/drag. See `tuning-ui.md` for validation and voice cleanup. The main
 piano roll retains its vertical `PitchRowMapper` geometry and receives the new
 baseline role classification through the existing shared role lookup.
 
@@ -120,3 +124,49 @@ Set `OPENUTAU_KEYBOARD_CAPTURES` to an output directory when running the filtere
 53- and 73-EDO and 13-EDT. The ordinary test run uses the usual headless backend.
 Build/test results are recorded in `PRODUCTION.md`. Native high-DPI interaction
 and physical-input review remain separate checks.
+
+## MOS-selected keyboards and letter names
+
+Date: 2026-10-25. Following the user's review of the live settings page, the
+active generator scale now decides the keyboard. `KeyboardRegionizer.LetterScale`
+returns that scale unless the keyboard is manual, the scale has more than two
+step sizes counted in degrees, or it is a mode of the seven-note octave or
+nine-note tritave family (generator equal to the family generator or its
+inversion). Family modes keep the existing C-diatonic and C-Lambda baseline,
+names and traditional 12-EDO/13-EDT profiles. Any other MOS is passed to
+`MosKeyboard.FromNominals`: its degrees are the White anchors, and the same
+chroma, thirds and column rules apply. This works for any period and for
+unequal tunings, because the geometry counts degrees.
+
+`PitchNotation` adds the generated `mos` profile. Nominals are lettered A–H, then
+J–Z (I is skipped, as in Bohlen–Pierce), then doubled letters. Other degrees use
+the existing nominal speller with the MOS chroma as sharp/flat and ups and downs
+for any remainder. Automatic notation prefers `mos` over stored family names,
+unless the user has authored custom names. Name input accepts the letters, and
+the piano-roll notation menus list the profile. Explicit key classes still
+override family baselines but not a letter-named MOS.
+
+Manual keyboards: when every degree has an explicit key class, the keyboard is
+set key by key; no MOS or family baseline applies. The settings page exposes
+this as the "build the keyboard from a MOS scale" switch. Switching off copies
+the current key roles into key classes and the shown names into editable custom
+names; switching on clears the classes and drops unedited copied names.
+
+Unequal tunings (2026-10-25, user review): the just-intonation, Pythagorean,
+meantone and well-temperament presets start with MOS off. Their key classes come
+from their chromatic names (`KeyboardRegionizer.ClassesFromRoles`), so they show
+a seven-white, five-black piano keyboard; any twelve-note octave whose keys follow
+the piano pattern uses the traditional profile. Unequal tunings saved before
+this change are given the same classes when the settings open. `MosGenerator`
+now counts step sizes in degrees rather than cents, so a fifth-generated
+diatonic in just intonation or a well temperament is 5L2s. With MOS on, the
+default generator is the degree nearest 3/2 (`DefaultGenerator`); a
+fifth-generated seven-note scale in an unequal octave keeps the conventional
+C–B names and piano keys, while other MOS cardinalities take letters.
+
+Equal-division presets now add and select their family MOS (for example 12-EDO
+C major, 13-EDT C-Lambda); divisions without a valid family MOS, such as 25-EDO,
+keep all degrees. `KeyboardRegionizer.DisplayDegrees` gives the piano roll's
+Highlight/Compact rows: the scale degrees plus every White and Black key, so
+chromatic alterations remain visible and only in-between microsteps are left out.
+Scales without a generator (custom subsets, Rast) are shown as before.

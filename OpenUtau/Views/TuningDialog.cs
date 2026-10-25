@@ -45,14 +45,22 @@ namespace OpenUtau.App.Views {
         readonly TextBox customScaleName = new TextBox { Text = XenStrings.Get("scale.custom") };
         readonly TextBox customScaleDegrees = new TextBox { Text = "0" };
         readonly TextBlock scaleResult = new TextBlock { TextWrapping = Avalonia.Media.TextWrapping.Wrap };
-        readonly TextBlock tuningSummary = new TextBlock { FontSize = 18, FontWeight = Avalonia.Media.FontWeight.SemiBold };
-        readonly TextBlock scaleSummary = new TextBlock { TextWrapping = Avalonia.Media.TextWrapping.Wrap };
         readonly NotchedKeyboardPreview pitchPreview = new NotchedKeyboardPreview { Name = "TuningPitchPreview" };
-        readonly NotchedKeyboardPreview scalePreview = new NotchedKeyboardPreview { Name = "ScalePitchPreview" };
-        readonly NotchedKeyboardPreview generatorPreview = new NotchedKeyboardPreview { Name = "GeneratorPitchPreview" };
-        readonly Grid degreeMap = new Grid { Name = "TuningDegreeMap", ColumnSpacing = 3, RowSpacing = 3 };
-        readonly Grid subsetMap = new Grid { Name = "ScaleDegreeMap", ColumnSpacing = 3, RowSpacing = 3 };
+        readonly RadioButton mosScale = new RadioButton { Content = XenStrings.Get("tab.generator"), GroupName = "ScaleKind", Name = "ScaleKindMos" };
+        readonly RadioButton customScale = new RadioButton { Content = XenStrings.Get("scale.custom"), GroupName = "ScaleKind", Name = "ScaleKindCustom" };
+        readonly StackPanel mosPanel = new StackPanel { Spacing = 10 };
+        readonly StackPanel customPanel = new StackPanel { Spacing = 10 };
+        readonly WrapPanel manualKeys = new WrapPanel { Name = "ManualKeyClasses" };
         bool loading;
+        bool structureValid = true;
+        bool mosAvailable = true;
+        bool mosEditing;
+        bool customGenerator;
+        bool customCardinality;
+        string? sessionScaleId;
+        NotationProfile? seededNames;
+        string? namesBeforeManual;
+        HashSet<string> originalScaleIds = new HashSet<string>();
         int selectedPage;
         Button applyDraft = null!;
         List<DegreeEntry> entries = new List<DegreeEntry>();
@@ -64,11 +72,18 @@ namespace OpenUtau.App.Views {
             generator.Name = "MosGenerator";
             cardinality.Name = "MosCardinality";
             mode.Name = "MosMode";
+            divisions.Name = "TuningDivisions";
+            explicitCount.Name = "TuningExplicitCount";
+            period.Name = "TuningPeriod";
+            referenceDegree.Name = "TuningReferenceDegree";
+            frequency.Name = "TuningReferenceFrequency";
+            scales.Name = "TuningScale";
+            scaleResult.Name = "MosResult";
             presets.ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<TuningDefinition>(
                 (tuning, _) => new TextBlock { Text = tuning == null ? "" : XenStrings.PresetName(tuning) });
             Title = XenStrings.Get("tuning.title");
             Width = 960;
-            Height = 620;
+            Height = 760;
             MinWidth = 650;
             MinHeight = 440;
             XenDialogStyles.Apply(this);
@@ -81,7 +96,7 @@ namespace OpenUtau.App.Views {
             var footer = new StackPanel { Spacing = 6 };
             footer.Children.Add(status);
             var commands = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Right };
-            applyDraft = Button(XenStrings.Get("action.applyTuning"), () => Apply(false, UsesDisplayApply()));
+            applyDraft = Button(XenStrings.Get("action.applyTuning"), ApplyDraft);
             applyDraft.Name = "ApplyTuningDraft";
             commands.Children.Add(applyDraft);
             commands.Children.Add(Button(XenStrings.Get("action.close"), Close));
@@ -91,52 +106,40 @@ namespace OpenUtau.App.Views {
 
             var tuningPage = Page("tab.tuning");
             tuningPage.Children.Add(Field(XenStrings.Get("field.preset"), presets));
-            tuningPage.Children.Add(Field(XenStrings.Get("field.name"), name));
-            tuningPage.Children.Add(Field(XenStrings.Get("field.period"), period));
-            tuningPage.Children.Add(Field(XenStrings.Get("field.divisions"), divisions));
+            tuningPage.Children.Add(Parameters(("field.period", period), ("field.divisions", divisions),
+                ("field.referenceDegree", referenceDegree), ("field.frequency", frequency)));
             tuningPage.Children.Add(Field(XenStrings.Get("field.explicitCount"), explicitCount));
-            tuningPage.Children.Add(Button(XenStrings.Get("action.rebuild"), RebuildEntries));
-            tuningPage.Children.Add(tuningSummary);
-            tuningPage.Children.Add(degreeMap);
-            tuningPage.Children.Add(KeyboardViewport(pitchPreview));
-            tuningPage.Children.Add(new Separator());
-            tuningPage.Children.Add(Field(XenStrings.Get("field.referenceDegree"), referenceDegree));
-            tuningPage.Children.Add(Field(XenStrings.Get("field.frequency"), frequency));
-            tuningPage.Children.Add(Button(XenStrings.Get("action.changeReference"), () => Apply(true, false)));
-
-            var scalePage = Page("field.scale");
-            scalePage.Children.Add(scaleSummary);
-            scalePage.Children.Add(Field(XenStrings.Get("field.scale"), scales));
-            scalePage.Children.Add(subsetMap);
-            scalePage.Children.Add(new Expander {
-                Header = XenStrings.Get("field.scale"), Content = KeyboardViewport(scalePreview), IsExpanded = false,
-                HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            });
-            var mos = Page("tab.generator");
-            var parameters = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*"), ColumnSpacing = 12 };
-            var parameterControls = new[] {
-                Parameter("field.generatorDegree", generator), Parameter("field.cardinality", cardinality), Parameter("field.mode", mode),
-            };
-            for (int i = 0; i < parameterControls.Length; i++) {
-                Grid.SetColumn(parameterControls[i], i); parameters.Children.Add(parameterControls[i]);
+            // One scale card: a MOS decides the keyboard, or a custom scale whose keys are set one by one.
+            var scaleCard = new StackPanel { Spacing = 10 };
+            scaleCard.Children.Add(new TextBlock { Text = XenStrings.Get("field.scale"), FontSize = 16,
+                FontWeight = Avalonia.Media.FontWeight.SemiBold });
+            var kinds = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16 };
+            kinds.Children.Add(mosScale);
+            kinds.Children.Add(customScale);
+            scaleCard.Children.Add(kinds);
+            mosPanel.Children.Add(Parameters(("field.generatorDegree", generator), ("field.cardinality", cardinality), ("field.mode", mode)));
+            mosPanel.Children.Add(scaleResult);
+            scaleCard.Children.Add(mosPanel);
+            customPanel.Children.Add(Field(XenStrings.Get("field.scale"), scales));
+            var addScale = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,Auto"), ColumnSpacing = 12 };
+            addScale.Children.Add(Labelled("field.scaleName", customScaleName));
+            var degreeList = Labelled("field.degrees", customScaleDegrees);
+            Grid.SetColumn(degreeList, 1); addScale.Children.Add(degreeList);
+            var add = Button(XenStrings.Get("action.addSubset"), AddDegreeSubset);
+            add.VerticalAlignment = VerticalAlignment.Bottom;
+            Grid.SetColumn(add, 2); addScale.Children.Add(add);
+            customPanel.Children.Add(addScale);
+            manualKeys.Children.Add(new TextBlock { Text = XenStrings.Get("field.selectedKey"), VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 6) });
+            foreach (var (label, keyClass) in new[] { ("keyClass.white", "natural"), ("keyClass.black", "accidental"), ("keyClass.between", "between") }) {
+                var button = Button(XenStrings.Get(label), () => SetSelectedKeyClass(keyClass));
+                button.Name = "KeyClass-" + keyClass;
+                manualKeys.Children.Add(button);
             }
-            mos.Children.Add(parameters);
-            var outcome = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };
-            outcome.Children.Add(scaleResult);
-            var generate = Button(XenStrings.Get("action.generateSubset"), GenerateScale);
-            Grid.SetColumn(generate, 1); outcome.Children.Add(generate);
-            mos.Children.Add(outcome);
-            var candidateKeyboard = KeyboardViewport(generatorPreview);
-            mos.Children.Add(candidateKeyboard);
-            scalePage.Children.Add(Card(mos));
-            var custom = new StackPanel { Spacing = 10 };
-            custom.Children.Add(Field(XenStrings.Get("field.scaleName"), customScaleName));
-            custom.Children.Add(Field(XenStrings.Get("field.degrees"), customScaleDegrees));
-            custom.Children.Add(Button(XenStrings.Get("action.addSubset"), AddDegreeSubset));
-            scalePage.Children.Add(new Expander {
-                Header = XenStrings.Get("scale.custom"), Content = Card(custom), IsExpanded = false,
-                HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            });
+            customPanel.Children.Add(manualKeys);
+            scaleCard.Children.Add(customPanel);
+            scaleCard.Children.Add(KeyboardViewport(pitchPreview));
+            tuningPage.Children.Add(Card(scaleCard));
 
             degrees.Columns.Add(new DataGridTextColumn { Header = XenStrings.Get("field.degree"), Binding = new Binding(nameof(DegreeEntry.Degree)), IsReadOnly = true });
             degrees.Columns.Add(new DataGridTextColumn { Header = XenStrings.Get("field.interval"), Binding = new Binding(nameof(DegreeEntry.Interval)) });
@@ -145,7 +148,7 @@ namespace OpenUtau.App.Views {
             degrees.Columns.Add(new DataGridTextColumn { Header = XenStrings.Get("field.keyClass"), Binding = new Binding(nameof(DegreeEntry.KeyClass)) });
             // Give the table a bounded viewport so its own scrolling and virtualisation work.
             degrees.Height = 320;
-            var keyboardPage = Page("field.display");
+            var keyboardPage = Page("tab.names");
             keyboardPage.Children.Add(degrees);
 
             var conversionPage = Page("tab.conversion");
@@ -154,6 +157,7 @@ namespace OpenUtau.App.Views {
             conversionPage.Children.Add(Button(XenStrings.Get("action.inherit"), InheritProjectTuning));
 
             var advanced = Page("tab.definition");
+            advanced.Children.Add(Field(XenStrings.Get("field.name"), name));
             var files = new WrapPanel();
             files.Children.Add(Button(XenStrings.Get("import.tuning"), ImportTuning));
             files.Children.Add(Button(XenStrings.Get("export.tuning"), ExportTuning));
@@ -177,15 +181,15 @@ namespace OpenUtau.App.Views {
             })));
             advanced.Children.Add(yamlActions);
 
-            var pages = new[] { tuningPage, scalePage, keyboardPage, conversionPage, advanced }
+            var pages = new[] { tuningPage, keyboardPage, conversionPage, advanced }
                 .Select(page => new ScrollViewer {
                     Content = page, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
                     VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 }).ToArray();
             var navigation = new ListBox {
                 Name = "TuningNavigation", ItemsSource = new[] {
-                    XenStrings.Get("tab.tuning"), XenStrings.Get("field.scale"),
-                    XenStrings.Get("field.display"), XenStrings.Get("tab.conversion"), XenStrings.Get("tab.definition"),
+                    XenStrings.Get("tab.tuning"),
+                    XenStrings.Get("tab.names"), XenStrings.Get("tab.conversion"), XenStrings.Get("tab.definition"),
                 },
             };
             var pageHost = new ContentControl { Content = pages[0], HorizontalContentAlignment = HorizontalAlignment.Stretch };
@@ -203,12 +207,19 @@ namespace OpenUtau.App.Views {
             Grid.SetRow(body, 1);
             root.Children.Add(body);
             Content = root;
-            generator.ValueChanged += (_, _) => RefreshGeneratorPreview();
-            cardinality.ValueChanged += (_, _) => RefreshGeneratorPreview();
-            mode.ValueChanged += (_, _) => RefreshGeneratorPreview();
-            scales.SelectionChanged += (_, _) => { if (!loading) RefreshPitchPreviews(); };
+            generator.ValueChanged += (_, _) => { if (!loading) { customGenerator = true; LiveMosChanged(); } };
+            cardinality.ValueChanged += (_, _) => { if (!loading) { customCardinality = true; LiveMosChanged(); } };
+            mode.ValueChanged += (_, _) => { if (!loading) LiveMosChanged(); };
+            mosScale.IsCheckedChanged += (_, _) => { if (!loading && mosScale.IsChecked == true) SetMosKeyboard(true); };
+            customScale.IsCheckedChanged += (_, _) => { if (!loading && customScale.IsChecked == true) SetMosKeyboard(false); };
+            divisions.ValueChanged += (_, _) => { if (!loading) LiveStructureChanged(); };
+            explicitCount.ValueChanged += (_, _) => { if (!loading) LiveStructureChanged(); };
+            period.PropertyChanged += (_, e) => { if (!loading && e.Property == TextBox.TextProperty) LiveStructureChanged(); };
+            referenceDegree.ValueChanged += (_, _) => { if (!loading) LiveReferenceChanged(); };
+            frequency.ValueChanged += (_, _) => { if (!loading) LiveReferenceChanged(); };
+            scales.SelectionChanged += (_, _) => { if (!loading) SelectScale(); };
             presets.SelectionChanged += (_, _) => {
-                if (presets.SelectedItem is TuningDefinition selected) {
+                if (!loading && presets.SelectedItem is TuningDefinition selected) {
                     draft = selected.Clone();
                     draft.Name = XenStrings.PresetName(selected);
                     LoadFields();
@@ -224,30 +235,271 @@ namespace OpenUtau.App.Views {
 
         void LoadFields() {
             loading = true;
-            name.Text = draft.Name;
-            divisions.Value = draft.Divisions;
-            explicitCount.Value = draft.DegreeCount;
-            period.Text = draft.Period.Ratio ?? draft.Period.Cents?.ToString("R", XenStrings.InputCulture);
-            referenceDegree.Value = draft.Reference.Degree;
-            frequency.Value = (decimal)draft.Reference.Frequency;
-            scales.ItemsSource = draft.Scales.Select(s => s.Id == "all" ? XenStrings.Get("scale.all")
-                : s.Id == "rast" ? XenStrings.Get("preset.rast") : s.Name).ToArray();
-            scales.SelectedIndex = Math.Max(0, draft.Scales.FindIndex(s => s.Id == draft.Keyboard.ActiveScaleId));
-            LoadEntries();
-            yaml.Text = TunxenFormat.Serialize(draft);
-            if (explicitCount.Parent is Control explicitRow) explicitRow.IsVisible = draft.Divisions == 0;
-            var active = draft.Scales.FirstOrDefault(s => s.Id == draft.Keyboard.ActiveScaleId);
-            var theory = KeyboardTheory.For(draft);
-            generator.Value = active?.GeneratorDegree ?? theory?.Generator ?? 1;
-            cardinality.Maximum = draft.DegreeCount;
-            cardinality.Value = active?.GeneratorDegree != null ? active.Degrees.Count
-                : Math.Min(theory?.ReferenceDivision == 13 ? 9 : 7, draft.DegreeCount);
-            mode.Maximum = cardinality.Value ?? 1;
-            mode.Value = (active?.Mode ?? 0) + 1;
-            loading = false;
-            RefreshPitchPreviews();
-            RefreshGeneratorPreview();
+            try {
+                name.Text = draft.Name;
+                divisions.Value = draft.Divisions;
+                explicitCount.Value = draft.DegreeCount;
+                period.Text = draft.Period.Ratio ?? draft.Period.Cents?.ToString("R", XenStrings.InputCulture);
+                referenceDegree.Value = draft.Reference.Degree;
+                frequency.Value = (decimal)draft.Reference.Frequency;
+                // Unequal tunings saved before the MOS switch start off, keeping the keys their names imply.
+                if (draft.Divisions == 0 && !Manual && KeyboardRegionizer.LetterScale(draft) == null
+                    && ActiveScale()?.GeneratorDegree == null) draft.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(draft);
+                originalScaleIds = new HashSet<string>(draft.Scales.Select(scale => scale.Id));
+                sessionScaleId = null;
+                seededNames = null;
+                RefreshScaleChoices();
+                LoadEntries();
+                yaml.Text = TunxenFormat.Serialize(draft);
+                if (explicitCount.Parent is Control row) row.IsVisible = draft.Divisions == 0;
+                var active = ActiveScale();
+                var theory = KeyboardTheory.For(draft);
+                int defaultCount = Math.Min(theory?.ReferenceDivision == 13 ? 9 : 7, draft.DegreeCount);
+                generator.Value = active?.GeneratorDegree ?? KeyboardRegionizer.DefaultGenerator(draft);
+                cardinality.Maximum = draft.DegreeCount;
+                cardinality.Value = active?.GeneratorDegree != null ? active.Degrees.Count : defaultCount;
+                mode.Maximum = cardinality.Value ?? 1;
+                mode.Value = (active?.Mode ?? 0) + 1;
+                mosEditing = active?.GeneratorDegree != null;
+                customGenerator = mosEditing && active!.GeneratorDegree != KeyboardRegionizer.DefaultGenerator(draft);
+                customCardinality = mosEditing && active!.Degrees.Count != defaultCount;
+                structureValid = true;
+                RefreshPresetChoice();
+            } finally { loading = false; }
+            RefreshMosMode();
+            RefreshLiveMos(false);
+        }
+
+        bool Manual => KeyboardRegionizer.IsManual(draft);
+
+        void RefreshMosMode() {
+            bool wasLoading = loading;
+            loading = true;
+            try {
+                bool manual = Manual;
+                mosScale.IsChecked = !manual;
+                customScale.IsChecked = manual;
+                mosPanel.IsVisible = !manual;
+                customPanel.IsVisible = manual;
+            } finally { loading = wasLoading; }
+        }
+
+        /// <summary>MOS on derives every key from the MOS; off starts from the current keys and edits them one by one.</summary>
+        void SetMosKeyboard(bool on) {
+            if (!structureValid) { RefreshMosMode(); return; }
+            if (on) {
+                draft.Keyboard.Classes.Clear();
+                RemoveSeededNames();
+            } else {
+                SeedManualNames();
+                var cells = pitchPreview.Cells;
+                draft.Keyboard.Classes = Enumerable.Range(0, draft.DegreeCount).ToDictionary(degree => degree,
+                    degree => degree >= cells.Count || pitchPreview.IsWhiteKeysOnly || cells[degree].Role == KeyRole.White ? "natural"
+                        : cells[degree].Role == KeyRole.Black ? "accidental" : "between");
+            }
+            SyncEntryClasses();
+            RefreshMosMode();
+            if (on) LiveMosChanged();
+            else RefreshLiveMos(false);
+        }
+
+        /// <summary>Copies the names shown with MOS on into custom names, so switching off keeps them editable key by key.</summary>
+        void SeedManualNames() {
+            seededNames = null;
+            string primary = PitchNotation.ResolvePrimary(draft, null);
+            if (pitchPreview.IsWhiteKeysOnly || primary == "degree" || primary == "custom") return;
+            var source = PitchNotation.FindProfile(draft, primary);
+            if (source == null) return;
+            var names = source.Clone();
+            names.Id = "custom";
+            names.Name = XenStrings.Get("notation.custom");
+            draft.Notations.RemoveAll(profile => profile.Id == "custom");
+            draft.Notations.Add(names);
+            namesBeforeManual = draft.Keyboard.PrimaryNotation;
+            draft.Keyboard.PrimaryNotation = "custom";
+            seededNames = names.Clone();
+            SyncEntryNames();
+        }
+
+        /// <summary>Switching MOS back on drops seeded names the user has not edited.</summary>
+        void RemoveSeededNames() {
+            if (seededNames == null) return;
+            var current = draft.Notations.FirstOrDefault(profile => profile.Id == "custom");
+            bool edited = entries.Any(entry => entry.Name != (seededNames.Names.TryGetValue(entry.Degree, out var name) ? name : ""));
+            if (current != null && !edited) {
+                draft.Notations.Remove(current);
+                draft.Keyboard.PrimaryNotation = namesBeforeManual ?? "degree";
+                SyncEntryNames();
+            }
+            seededNames = null;
+        }
+
+        void SyncEntryNames() {
+            var profile = draft.Notations.FirstOrDefault(n => n.Id == "custom");
+            foreach (var entry in entries) {
+                entry.Name = profile != null && profile.Names.TryGetValue(entry.Degree, out var label) ? label : "";
+                entry.Aliases = profile != null && profile.Aliases.TryGetValue(entry.Degree, out var aliases) ? string.Join(", ", aliases) : "";
+            }
+        }
+
+        void SetSelectedKeyClass(string keyClass) {
+            if (!Manual || pitchPreview.SelectedDegree is not int degree) return;
+            draft.Keyboard.Classes[degree] = keyClass;
+            SyncEntryClasses();
+            RefreshPitchPreview();
             RefreshApplyAction();
+        }
+
+        void SyncEntryClasses() {
+            foreach (var entry in entries) {
+                entry.KeyClass = draft.Keyboard.Classes.TryGetValue(entry.Degree, out var keyClass) ? keyClass : "";
+            }
+            degrees.ItemsSource = null;
+            degrees.ItemsSource = entries;
+        }
+
+        ScaleDefinition? ActiveScale() => draft.Scales.FirstOrDefault(scale => scale.Id == draft.Keyboard.ActiveScaleId);
+
+        void RefreshPresetChoice() {
+            presets.SelectedItem = presets.ItemsSource!.Cast<TuningDefinition>().FirstOrDefault(preset => draft.Divisions > 0
+                ? preset.Divisions == draft.Divisions && Math.Abs(preset.PeriodCents - draft.PeriodCents) < 1e-8
+                : preset.Id == draft.Id);
+        }
+
+        void RefreshScaleChoices() {
+            bool wasLoading = loading;
+            loading = true;
+            try {
+                scales.ItemsSource = draft.Scales.Select(scale => scale.Id == "all" ? XenStrings.Get("scale.all")
+                    : scale.Id == "rast" ? XenStrings.Get("preset.rast") : scale.Name).ToArray();
+                scales.SelectedIndex = Math.Max(0, draft.Scales.FindIndex(scale => scale.Id == draft.Keyboard.ActiveScaleId));
+            } finally { loading = wasLoading; }
+        }
+
+        void SelectScale() {
+            if (scales.SelectedIndex < 0 || scales.SelectedIndex >= draft.Scales.Count) return;
+            var selected = draft.Scales[scales.SelectedIndex];
+            draft.Keyboard.ActiveScaleId = selected.Id;
+            mosEditing = selected.GeneratorDegree.HasValue;
+            if (mosEditing) {
+                loading = true;
+                try {
+                    generator.Value = selected.GeneratorDegree;
+                    cardinality.Value = selected.Degrees.Count;
+                    mode.Maximum = cardinality.Value ?? 1;
+                    mode.Value = selected.Mode + 1;
+                    var theory = KeyboardTheory.For(draft);
+                    customGenerator = selected.GeneratorDegree != KeyboardRegionizer.DefaultGenerator(draft);
+                    customCardinality = selected.Degrees.Count != Math.Min(theory?.ReferenceDivision == 13 ? 9 : 7, draft.DegreeCount);
+                } finally { loading = false; }
+                RefreshLiveMos(false);
+            } else {
+                mosAvailable = true;
+                scaleResult.Text = "";
+                RefreshPitchPreview();
+                RefreshApplyAction();
+            }
+        }
+
+        void LiveStructureChanged() {
+            loading = true;
+            try {
+                ReadStructure();
+                name.Text = draft.Name;
+                RefreshPresetChoice();
+                if (draft.Divisions > 0) explicitCount.Value = draft.DegreeCount;
+                if (explicitCount.Parent is Control row) row.IsVisible = draft.Divisions == 0;
+                referenceDegree.Value = draft.Reference.Degree;
+                var theory = KeyboardTheory.For(draft);
+                if (!customGenerator) generator.Value = KeyboardRegionizer.DefaultGenerator(draft);
+                cardinality.Maximum = draft.DegreeCount;
+                if (!customCardinality) cardinality.Value = Math.Min(theory?.ReferenceDivision == 13 ? 9 : 7, draft.DegreeCount);
+                mode.Maximum = cardinality.Value ?? 1;
+                structureValid = true;
+                status.Text = "";
+            } catch (Exception error) {
+                structureValid = false;
+                pitchPreview.SetTuning(null);
+                status.Text = XenStrings.Get("error.invalid");
+                ToolTip.SetTip(status, error.Message);
+            } finally { loading = false; }
+            RefreshMosMode();
+            if (structureValid) LiveMosChanged();
+            else RefreshApplyAction();
+        }
+
+        void LiveReferenceChanged() => Guard(() => {
+            draft.Reference.Degree = ReadInteger(referenceDegree, draft.Reference.Degree);
+            draft.Reference.Frequency = (double)(frequency.Value ?? (decimal)draft.Reference.Frequency);
+            draft.Validate();
+            RefreshPitchPreview();
+            RefreshApplyAction();
+        });
+
+        void LiveMosChanged() {
+            mosEditing = true;
+            RefreshLiveMos(true);
+        }
+
+        void RemoveSessionScale() {
+            if (sessionScaleId != null && !originalScaleIds.Contains(sessionScaleId)) draft.Scales.RemoveAll(scale => scale.Id == sessionScaleId);
+            sessionScaleId = null;
+        }
+
+        void UseAllDegrees() {
+            var all = draft.Scales.FirstOrDefault(scale => scale.Id == "all");
+            if (all == null) {
+                all = new ScaleDefinition { Id = "all", Name = XenStrings.Get("scale.all") };
+                draft.Scales.Insert(0, all);
+            }
+            all.Degrees = Enumerable.Range(0, draft.DegreeCount).ToList();
+            draft.Keyboard.ActiveScaleId = all.Id;
+        }
+
+        void RefreshLiveMos(bool activate) {
+            if (loading || !structureValid) return;
+            if (Manual) {
+                mosAvailable = true;
+                scaleResult.Text = "";
+                RefreshPitchPreview();
+                RefreshApplyAction();
+                return;
+            }
+            loading = true;
+            try {
+                mode.Maximum = cardinality.Value ?? 1;
+                var result = MosGenerator.Generate(draft, ReadInteger(generator, 0), ReadInteger(cardinality, 7), ReadInteger(mode, 1) - 1);
+                if (!result.IsMos && !result.IsEqualStep) throw new ArgumentException("The generator cardinality is not a MOS.");
+                mosAvailable = true;
+                scaleResult.Text = activate || mosEditing ? result.Pattern.Length <= 80 ? result.Pattern : result.Pattern[..80] + "…" : "";
+                ToolTip.SetTip(scaleResult, null);
+                if (activate) {
+                    RemoveSessionScale();
+                    var existing = draft.Scales.FirstOrDefault(scale => scale.Id == result.Scale.Id);
+                    if (existing != null) result.Scale.Name = existing.Name;
+                    draft.Scales.RemoveAll(scale => scale.Id == result.Scale.Id);
+                    draft.Scales.Add(result.Scale);
+                    sessionScaleId = result.Scale.Id;
+                    draft.Keyboard.ActiveScaleId = result.Scale.Id;
+                    RefreshScaleChoices();
+                }
+            } catch (Exception) {
+                mosAvailable = false;
+                scaleResult.Text = XenStrings.Get("status.mosUnavailable");
+                ToolTip.SetTip(scaleResult, null);
+                if (activate || mosEditing) {
+                    RemoveSessionScale();
+                    UseAllDegrees();
+                    RefreshScaleChoices();
+                }
+            } finally { loading = false; }
+            RefreshPitchPreview();
+            RefreshApplyAction();
+        }
+
+        void RefreshPitchPreview() {
+            if (!structureValid) return;
+            pitchPreview.SetTuning(draft, ActiveScale()?.Degrees, whiteKeysOnly: !mosAvailable && !Manual);
         }
 
         bool MatchesAppliedTuning() {
@@ -256,14 +508,22 @@ namespace OpenUtau.App.Views {
                 && Enumerable.Range(0, draft.DegreeCount).All(d => Math.Abs(applied.GetCents(d) - draft.GetCents(d)) < 1e-8);
         }
 
-        bool UsesDisplayApply() => (selectedPage == 1 || selectedPage == 2) && MatchesAppliedTuning();
+        bool ReferenceChanged() {
+            var reference = Project.GetTuning(scope.SelectedIndex == 1 ? null : CurrentTrack).Reference;
+            return reference.Degree != draft.Reference.Degree || Math.Abs(reference.Frequency - draft.Reference.Frequency) > 1e-9;
+        }
 
-        void RefreshApplyAction() => applyDraft.Content = XenStrings.Get(UsesDisplayApply() ? "action.applyDisplay" : "action.applyTuning");
+        bool UsesDisplayApply() => (selectedPage == 0 || selectedPage == 1) && MatchesAppliedTuning() && !ReferenceChanged();
+
+        void RefreshApplyAction() {
+            applyDraft.IsEnabled = structureValid;
+            applyDraft.Content = XenStrings.Get(UsesDisplayApply() ? "action.applyDisplay"
+                : MatchesAppliedTuning() && ReferenceChanged() ? "action.changeReference" : "action.applyTuning");
+        }
+
         static StackPanel Page(string heading) {
             var page = new StackPanel { Spacing = 12, Margin = new Thickness(0, 0, 12, 12) };
-            page.Children.Add(new TextBlock {
-                Text = XenStrings.Get(heading), FontSize = 20, FontWeight = Avalonia.Media.FontWeight.SemiBold,
-            });
+            page.Children.Add(new TextBlock { Text = XenStrings.Get(heading), FontSize = 20, FontWeight = Avalonia.Media.FontWeight.SemiBold });
             return page;
         }
 
@@ -273,21 +533,29 @@ namespace OpenUtau.App.Views {
             return card;
         }
 
-        static StackPanel Parameter(string label, Control control) {
-            var field = new StackPanel { Spacing = 6 };
-            field.Children.Add(new TextBlock { Text = XenStrings.Get(label), TextWrapping = Avalonia.Media.TextWrapping.Wrap, MinHeight = 32 });
-            field.Children.Add(control);
-            return field;
-        }
-
-        sealed class PreviewPitch {
-            public TuningDefinition Tuning { get; set; } = null!;
-            public string Notation { get; set; } = "degree";
-            public int Degree { get; set; }
-            public string Label => PitchNotation.Format(Tuning, Degree, Notation, false);
-            public string Cents => Tuning.GetCents(Degree).ToString("0.##", XenStrings.InputCulture) + " ¢";
-            public KeyRole Role => PitchNotation.Role(Tuning, Degree);
-            public bool Selected { get; set; }
+        static Grid Parameters(params (string Label, Control Control)[] fields) {
+            int columns = fields.Length;
+            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions(string.Join(",", fields.Select(_ => "*"))),
+                RowDefinitions = new RowDefinitions("Auto,Auto"), ColumnSpacing = 12, RowSpacing = 6 };
+            var labels = fields.Select(field => new TextBlock {
+                Text = XenStrings.Get(field.Label), TextWrapping = Avalonia.Media.TextWrapping.Wrap, MinHeight = 32,
+            }).ToArray();
+            for (int i = 0; i < fields.Length; i++) {
+                Grid.SetColumn(labels[i], i); grid.Children.Add(labels[i]);
+                Grid.SetColumn(fields[i].Control, i); Grid.SetRow(fields[i].Control, 1); grid.Children.Add(fields[i].Control);
+            }
+            if (fields.Length == 4) grid.SizeChanged += (_, _) => {
+                int count = grid.Bounds.Width < 600 ? 2 : 4;
+                if (count == columns) return;
+                columns = count;
+                grid.ColumnDefinitions = new ColumnDefinitions(string.Join(",", Enumerable.Repeat("*", count)));
+                grid.RowDefinitions = new RowDefinitions(count == 2 ? "Auto,Auto,Auto,Auto" : "Auto,Auto");
+                for (int i = 0; i < fields.Length; i++) {
+                    Grid.SetColumn(labels[i], i % count); Grid.SetRow(labels[i], i / count * 2);
+                    Grid.SetColumn(fields[i].Control, i % count); Grid.SetRow(fields[i].Control, i / count * 2 + 1);
+                }
+            };
+            return grid;
         }
 
         static ScrollViewer KeyboardViewport(NotchedKeyboardPreview preview) => new ScrollViewer {
@@ -295,75 +563,6 @@ namespace OpenUtau.App.Views {
             VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, Height = 218,
             HorizontalContentAlignment = HorizontalAlignment.Left,
         };
-
-        void RefreshPitchPreviews(ScaleDefinition? candidate = null) {
-            var selected = candidate ?? (scales.SelectedIndex >= 0 && scales.SelectedIndex < draft.Scales.Count
-                ? draft.Scales[scales.SelectedIndex] : null);
-            var active = new HashSet<int>(selected?.Degrees ?? Enumerable.Range(0, draft.DegreeCount).ToList());
-            if (candidate != null) {
-                generatorPreview.SetTuning(draft, active);
-                return;
-            }
-            string notation = PitchNotation.ResolvePrimary(draft, null);
-            var rows = Enumerable.Range(0, draft.DegreeCount).Reverse().Select(degree => new PreviewPitch {
-                Tuning = draft, Notation = notation, Degree = degree, Selected = active.Contains(degree),
-            }).ToArray();
-            pitchPreview.SetTuning(draft, active);
-            scalePreview.SetTuning(draft, active);
-            FillDegreeMap(degreeMap, rows, false);
-            FillDegreeMap(subsetMap, rows, true);
-            tuningSummary.Text = $"{draft.DegreeCount} · {draft.Period.Ratio ?? draft.Period.ToCents().ToString("0.##", XenStrings.InputCulture) + " ¢"}";
-            scaleSummary.Text = $"{draft.Name}    {active.Count} / {draft.DegreeCount}    {selected?.Name}";
-        }
-
-        static void FillDegreeMap(Grid map, PreviewPitch[] pitches, bool selection) {
-            map.Children.Clear();
-            map.ColumnDefinitions.Clear();
-            map.RowDefinitions.Clear();
-            // Large tunings retain the virtualised, exact degree list instead of tiny cells.
-            map.IsVisible = pitches.Length <= 256;
-            if (!map.IsVisible) return;
-            int columns = Math.Min(16, pitches.Length);
-            map.ColumnDefinitions = new ColumnDefinitions(string.Join(",", Enumerable.Repeat("*", columns)));
-            map.RowDefinitions = new RowDefinitions(string.Join(",", Enumerable.Repeat("Auto", (pitches.Length + columns - 1) / columns)));
-            foreach (var pitch in pitches) {
-                string role = pitch.Role.ToString();
-                var label = new TextBlock {
-                    Text = pitch.Degree.ToString(XenStrings.InputCulture), FontSize = 10,
-                    HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-                };
-                label.Bind(TextBlock.ForegroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(
-                    pitch.Role == KeyRole.Black ? "KeyboardPreviewBlackNameBrush" : role + "KeyNameBrush"));
-                var cell = new Border {
-                    Child = label, Height = 26, CornerRadius = new CornerRadius(3),
-                    BorderThickness = new Thickness(selection && pitch.Selected ? 2 : 1),
-                };
-                cell.Bind(Border.BackgroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(
-                    pitch.Role == KeyRole.Black ? "KeyboardPreviewBlackBrush" : role + "KeyBrush"));
-                cell.Bind(Border.BorderBrushProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(selection && pitch.Selected ? "AccentBrush1" : "NeutralAccentBrushSemi"));
-                ToolTip.SetTip(cell, $"{pitch.Label}  {pitch.Cents}");
-                Grid.SetRow(cell, pitch.Degree / columns);
-                Grid.SetColumn(cell, pitch.Degree % columns);
-                map.Children.Add(cell);
-            }
-        }
-
-        void RefreshGeneratorPreview() {
-            if (loading) return;
-            mode.Maximum = cardinality.Value ?? 1;
-            try {
-                var result = MosGenerator.Generate(draft, ReadInteger(generator, 0), ReadInteger(cardinality, 7), ReadInteger(mode, 1) - 1);
-                scaleResult.Text = $"{result.Scale.Name}\n{result.Pattern}";
-                ToolTip.SetTip(scaleResult, string.Join(", ", result.Scale.Degrees));
-                // A candidate is previewed without replacing the chosen scale until generated.
-                RefreshPitchPreviews(result.Scale);
-            } catch (Exception error) {
-                generatorPreview.SetTuning(null);
-                scaleResult.Text = XenStrings.Get("error.invalid");
-                ToolTip.SetTip(scaleResult, error.Message);
-                RefreshPitchPreviews();
-            }
-        }
 
         void LoadEntries() {
             var profile = draft.Notations.FirstOrDefault(n => n.Id == "custom");
@@ -377,10 +576,6 @@ namespace OpenUtau.App.Views {
             }).ToList();
             degrees.ItemsSource = entries;
         }
-        void RebuildEntries() => Guard(() => {
-            ReadStructure();
-            LoadFields();
-        });
         void ReadStructure() {
             var source = draft.Clone();
             source.Name = name.Text?.Trim() ?? "";
@@ -392,7 +587,7 @@ namespace OpenUtau.App.Views {
             var nextPeriod = ParseInterval(period.Text ?? "2/1");
             bool reset = TuningEditorStructure.RequiresReset(source, nextDivisions, nextCount, nextPeriod);
             draft = TuningEditorStructure.Rebuild(source, nextDivisions, nextCount, nextPeriod);
-            if (reset) LoadFields();
+            if (reset) LoadEntries();
         }
         void ReadFields() {
             ReadStructure();
@@ -400,8 +595,16 @@ namespace OpenUtau.App.Views {
                 ? draft.Scales[scales.SelectedIndex].Id : null;
             if (draft.Divisions == 0) draft.Degrees = entries.Select(e => ParseInterval(e.Interval)).ToList();
             var custom = new NotationProfile { Id = "custom", Name = XenStrings.Get("notation.custom") };
+            var previous = draft.Notations.FirstOrDefault(n => n.Id == "custom");
             foreach (var entry in entries) {
-                if (!string.IsNullOrWhiteSpace(entry.Name)) custom.Names[entry.Degree] = entry.Name;
+                if (!string.IsNullOrWhiteSpace(entry.Name)) {
+                    custom.Names[entry.Degree] = entry.Name;
+                    // Unchanged names keep their accidental glyph and octave offset.
+                    if (previous != null && previous.Names.TryGetValue(entry.Degree, out var before) && before == entry.Name) {
+                        if (previous.AccidentalIds.TryGetValue(entry.Degree, out var glyph)) custom.AccidentalIds[entry.Degree] = glyph;
+                        if (previous.PeriodOffsets.TryGetValue(entry.Degree, out int offset)) custom.PeriodOffsets[entry.Degree] = offset;
+                    }
+                }
                 var aliases = entry.Aliases.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 if (aliases.Length > 0) custom.Aliases[entry.Degree] = aliases.ToList();
                 if (string.IsNullOrWhiteSpace(entry.KeyClass)) draft.Keyboard.Classes.Remove(entry.Degree);
@@ -412,15 +615,6 @@ namespace OpenUtau.App.Views {
             draft.Validate();
         }
         void ReadYaml() => Guard(() => { draft = TunxenFormat.Parse(yaml.Text ?? ""); LoadFields(); status.Text = XenStrings.Get("status.definitionLoaded"); });
-        void GenerateScale() => Guard(() => {
-            ReadFields();
-            var result = MosGenerator.Generate(draft, ReadInteger(generator, 0), ReadInteger(cardinality, 7), ReadInteger(mode, 1) - 1);
-            draft.Scales.RemoveAll(s => s.Id == result.Scale.Id);
-            draft.Scales.Add(result.Scale);
-            draft.Keyboard.ActiveScaleId = result.Scale.Id;
-            scaleResult.Text = $"{result.Scale.Name}\n{string.Join(", ", result.Scale.Degrees)}\n{result.Pattern}";
-            LoadFields();
-        });
         void GenerateIntervalTuning() => Guard(() => {
             ReadFields();
             draft = MosGenerator.CreateTuning(draft.Period, ParseInterval(ratioGenerator.Text ?? "3/2"), ReadInteger(intervalCardinality, 7));
@@ -444,45 +638,34 @@ namespace OpenUtau.App.Views {
         });
         void Preview() => Guard(() => { ReadFields(); status.Text = DescribeChanges(draft); });
         string DescribeChanges(TuningDefinition target) {
-            var project = Project;
             var track = scope.SelectedIndex == 1 ? null : CurrentTrack;
-            var parts = project.parts.OfType<UVoicePart>().Where(p => track == null ? project.tracks[p.trackNo].pitchSystem == null : p.trackNo == track.TrackNo);
-            int count = 0;
-            double max = 0;
-            foreach (var part in parts) foreach (var note in part.notes) {
-                var address = PitchResolver.NearestAddress(target, note.ResolvedTone, preserve.IsChecked == true);
-                max = Math.Max(max, Math.Abs(PitchResolver.ResolveMidi(target, address) - note.ResolvedTone) * 100);
-                count++;
-            }
-            return XenStrings.Get("preview.changes", count, max);
+            var command = new SetTuningCommand(Project, track, target, preserve.IsChecked == true,
+                referenceOnly: MatchesAppliedTuning() && ReferenceChanged(), displayOnly: UsesDisplayApply());
+            double max = command.Preview.Select(change => Math.Abs(change.After - change.Before) * 100).DefaultIfEmpty().Max();
+            return XenStrings.Get("preview.changes", command.Preview.Count, max);
         }
-        void Apply(bool referenceOnly, bool displayOnly) => Guard(() => {
+        void ApplyDraft() => Guard(() => {
+            if (!structureValid) return;
             ReadFields();
-            if (displayOnly && !MatchesAppliedTuning()) {
-                RefreshApplyAction();
-                status.Text = XenStrings.Get("action.applyTuning");
-                return;
-            }
             var track = scope.SelectedIndex == 1 ? null : CurrentTrack;
+            bool referenceOnly = MatchesAppliedTuning() && ReferenceChanged();
+            bool displayOnly = UsesDisplayApply();
             string preview = DescribeChanges(draft);
             var target = draft.Clone();
-            if (referenceOnly || displayOnly) {
-                target = Project.GetTuning(track).Clone();
-                if (referenceOnly) target.Reference = draft.Reference.Clone();
-                if (displayOnly) {
-                    target.Keyboard = draft.Keyboard.Clone();
-                    target.Scales = draft.Scales.Select(s => s.Clone()).ToList();
-                    target.Notations = draft.Notations.Select(n => n.Clone()).ToList();
-                }
-            }
             DocManager.Inst.StartUndoGroup("xen.action.applyTuning");
             try {
-                DocManager.Inst.ExecuteCmd(new SetTuningCommand(Project, track, target, preserve.IsChecked == true, referenceOnly, displayOnly));
+                if (referenceOnly) {
+                    // First retain addresses while moving the reference, then apply all detached metadata.
+                    DocManager.Inst.ExecuteCmd(new SetTuningCommand(Project, track, target, referenceOnly: true));
+                }
+                DocManager.Inst.ExecuteCmd(new SetTuningCommand(Project, track, target, preserve.IsChecked == true,
+                    displayOnly: displayOnly));
             } finally { DocManager.Inst.EndUndoGroup(); }
             notes?.RefreshPitchRows();
-            RefreshPitchPreviews();
+            RefreshPitchPreview();
             RefreshApplyAction();
-            status.Text = displayOnly ? XenStrings.Get("status.displayApplied") : referenceOnly ? XenStrings.Get("status.referenceChanged") : preview;
+            status.Text = displayOnly ? XenStrings.Get("status.displayApplied")
+                : referenceOnly ? XenStrings.Get("status.referenceChanged") : preview;
         });
         void InheritProjectTuning() => Guard(() => {
             if (scope.SelectedIndex != 0 || CurrentTrack == null) return;
@@ -556,6 +739,12 @@ namespace OpenUtau.App.Views {
             var button = new Button { Content = text, Margin = new Thickness(0, 0, 8, 6) };
             button.Click += (_, _) => action();
             return button;
+        }
+        static StackPanel Labelled(string label, Control control) {
+            var panel = new StackPanel { Spacing = 6 };
+            panel.Children.Add(new TextBlock { Text = XenStrings.Get(label), TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+            panel.Children.Add(control);
+            return panel;
         }
         static Grid Field(string label, Control control) {
             var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), ColumnSpacing = 12 };

@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definiție</system:String>
   <system:String x:Key="xen.notation.degree">Numerele treptelor</system:String>
+  <system:String x:Key="xen.notation.mos">Litere MOS (A, B, C…)</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,5 +107,12 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">Urmărește înălțimea în timpul redării</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Afișează traseul de urmărire a înălțimii</system:String>
   <system:String x:Key="xen.tab.conversion">Conversie note</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">Nu se poate genera o scară MOS.</system:String>
+  <system:String x:Key="xen.field.selectedKey">Clapa selectată</system:String>
+  <system:String x:Key="xen.keyClass.white">Clapă albă</system:String>
+  <system:String x:Key="xen.keyClass.black">Clapă neagră</system:String>
+  <system:String x:Key="xen.keyClass.between">Clapă intermediară</system:String>
+  <system:String x:Key="xen.menu.pitchRows">Rândurile piano roll</system:String>
+  <system:String x:Key="xen.tab.names">Nume și tipuri de clape</system:String>
 </ResourceDictionary>
 

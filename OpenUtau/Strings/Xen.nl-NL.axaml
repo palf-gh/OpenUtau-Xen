@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Definitie</system:String>
   <system:String x:Key="xen.notation.degree">Toontrapnummers</system:String>
+  <system:String x:Key="xen.notation.mos">MOS-letters (A, B, C…)</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,5 +107,12 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">Toonhoogte volgen tijdens afspelen</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Pad van toonhoogtevolgen tonen</system:String>
   <system:String x:Key="xen.tab.conversion">Noten omzetten</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">Er kan geen MOS-toonladder worden gegenereerd.</system:String>
+  <system:String x:Key="xen.field.selectedKey">Geselecteerde toets</system:String>
+  <system:String x:Key="xen.keyClass.white">Witte toets</system:String>
+  <system:String x:Key="xen.keyClass.black">Zwarte toets</system:String>
+  <system:String x:Key="xen.keyClass.between">Tussentoets</system:String>
+  <system:String x:Key="xen.menu.pitchRows">Pianorolrijen</system:String>
+  <system:String x:Key="xen.tab.names">Namen en toetssoorten</system:String>
 </ResourceDictionary>
 

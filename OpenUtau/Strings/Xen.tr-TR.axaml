@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">Tanım</system:String>
   <system:String x:Key="xen.notation.degree">Derece numaraları</system:String>
+  <system:String x:Key="xen.notation.mos">MOS harfleri (A, B, C…)</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,5 +107,12 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">Çalarken perdeyi izle</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">Perde izleme yolunu göster</system:String>
   <system:String x:Key="xen.tab.conversion">Notaları dönüştür</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">MOS dizisi oluşturulamıyor.</system:String>
+  <system:String x:Key="xen.field.selectedKey">Seçili tuş</system:String>
+  <system:String x:Key="xen.keyClass.white">Beyaz tuş</system:String>
+  <system:String x:Key="xen.keyClass.black">Siyah tuş</system:String>
+  <system:String x:Key="xen.keyClass.between">Ara tuş</system:String>
+  <system:String x:Key="xen.menu.pitchRows">Piyano rulosu satırları</system:String>
+  <system:String x:Key="xen.tab.names">Adlar ve tuş türleri</system:String>
 </ResourceDictionary>
 

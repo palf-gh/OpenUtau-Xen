@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">定義</system:String>
   <system:String x:Key="xen.notation.degree">音度番号</system:String>
+  <system:String x:Key="xen.notation.mos">MOS音名（A, B, C…）</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,5 +107,12 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">再生中に音高を追う</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">音高追従の経路を表示</system:String>
   <system:String x:Key="xen.tab.conversion">ノート変換</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">MOSスケールを生成できません。</system:String>
+  <system:String x:Key="xen.field.selectedKey">選択した鍵</system:String>
+  <system:String x:Key="xen.keyClass.white">白鍵</system:String>
+  <system:String x:Key="xen.keyClass.black">黒鍵</system:String>
+  <system:String x:Key="xen.keyClass.between">中間の鍵</system:String>
+  <system:String x:Key="xen.menu.pitchRows">ピアノロールの行</system:String>
+  <system:String x:Key="xen.tab.names">音名と鍵の種類</system:String>
 </ResourceDictionary>
 

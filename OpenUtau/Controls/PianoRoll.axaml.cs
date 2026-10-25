@@ -391,8 +391,8 @@ namespace OpenUtau.App.Controls {
             } catch { }
         }
 
-        static readonly string[] XenPrimaryChoices = { PitchNotation.Auto, "szg", "bp", "ups-downs", "custom", "degree" };
-        static readonly string[] XenSecondaryChoices = { PitchNotation.Auto, PitchNotation.None, "degree", "szg", "bp", "ups-downs", "custom" };
+        static readonly string[] XenPrimaryChoices = { PitchNotation.Auto, PitchNotation.Mos, "szg", "bp", "ups-downs", "custom", "degree" };
+        static readonly string[] XenSecondaryChoices = { PitchNotation.Auto, PitchNotation.None, "degree", PitchNotation.Mos, "szg", "bp", "ups-downs", "custom" };
         void BuildXenViewMenus() {
             XenRowsMenu.ItemsSource = new[] { "display.full", "display.highlight", "display.compact" }
                 .Select((key, index) => XenChoice(key, () => {

@@ -7,7 +7,9 @@ using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using OpenUtau.Core;
 using OpenUtau.Core.Microtonal;
+using Serilog;
 
 namespace OpenUtau.App.Controls {
     /// <summary>A one-equave keyboard whose drawing and pointer selection share the same notched shapes.</summary>
@@ -16,45 +18,64 @@ namespace OpenUtau.App.Controls {
         readonly Dictionary<int, StreamGeometry> geometries = new Dictionary<int, StreamGeometry>();
         TuningDefinition? tuning;
         MosKeyboard? baseline;
+        bool whiteOnly;
         KeyboardPitchCell[] cells = Array.Empty<KeyboardPitchCell>();
         HashSet<int> active = new HashSet<int>();
+        readonly KeyboardAudition audition;
+        readonly HashSet<Key> auditionKeys = new HashSet<Key>();
+        IPointer? auditionPointer;
+        bool releasingCapture;
         Rect viewport;
         public NotchedKeyboardLayout? KeyLayout { get; private set; }
         public IReadOnlyList<KeyboardPitchCell> Cells => cells;
         public int ItemCount => cells.Length;
         public int? SelectedDegree { get; private set; }
+        public bool IsWhiteKeysOnly => whiteOnly;
 
-        public NotchedKeyboardPreview() {
+        public NotchedKeyboardPreview() : this(frequency => PlaybackManager.Inst.PlayTone(frequency),
+            frequency => PlaybackManager.Inst.EndTone(frequency)) { }
+
+        public NotchedKeyboardPreview(Action<double> playTone, Action<double> endTone) {
+            audition = new KeyboardAudition(playTone, endTone);
             Focusable = true;
             Height = 200;
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
             EffectiveViewportChanged += (_, e) => { viewport = e.EffectiveViewport; InvalidateVisual(); };
             ActualThemeVariantChanged += (_, _) => InvalidateVisual();
+            PointerCaptureLost += (_, _) => { if (!releasingCapture) StopAudition(); };
         }
 
-        public void SetTuning(TuningDefinition? value, IEnumerable<int>? scale = null) {
+        public void SetTuning(TuningDefinition? value, IEnumerable<int>? scale = null, bool whiteKeysOnly = false) {
+            StopAudition();
             var nextBaseline = value == null ? null : KeyboardRegionizer.Model(value);
-            bool sameGeometry = value != null && tuning != null && baseline != null && ReferenceEquals(baseline, nextBaseline)
+            bool sameGeometry = whiteOnly == whiteKeysOnly && value != null && tuning != null && baseline != null && ReferenceEquals(baseline, nextBaseline)
                 && tuning.Keyboard.Classes.Count == value.Keyboard.Classes.Count
                 && tuning.Keyboard.Classes.All(pair => value.Keyboard.Classes.TryGetValue(pair.Key, out var kind) && kind == pair.Value);
             tuning = value?.Clone();
+            whiteOnly = whiteKeysOnly;
             baseline = nextBaseline;
             if (!sameGeometry) geometries.Clear();
             if (tuning == null) {
                 cells = Array.Empty<KeyboardPitchCell>(); KeyLayout = null; active.Clear(); SelectedDegree = null;
             } else {
                 if (!sameGeometry) {
+                    bool letters = KeyboardRegionizer.LetterScale(tuning) != null;
                     cells = Enumerable.Range(0, tuning.DegreeCount).Select(step => {
+                        if (whiteOnly) return new KeyboardPitchCell(step, NotchedKeyKind.Natural, tuning.DegreeCount + step, step);
                         var cell = baseline?.Cells[step];
-                        var role = cell != null && !tuning.Keyboard.Classes.ContainsKey(step) ? cell.Role : PitchNotation.Role(tuning, step);
+                        var role = cell != null && (letters || !tuning.Keyboard.Classes.ContainsKey(step)) ? cell.Role : PitchNotation.Role(tuning, step);
                         if (cell != null && cell.Role == role) return cell;
                         // Explicit key classes retain precedence over inferred keyboard roles.
                         var kind = role == KeyRole.White ? NotchedKeyKind.Natural
                             : role == KeyRole.Black ? NotchedKeyKind.Shared : NotchedKeyKind.Between;
                         return new KeyboardPitchCell(step, kind, tuning.DegreeCount + step, step);
                     }).ToArray();
-                    bool traditional = tuning.Divisions == 12 && Math.Abs(tuning.PeriodCents - 1200) < 1e-8
-                        || tuning.Divisions == 13 && Math.Abs(tuning.PeriodCents - 1200 * Math.Log2(3)) < 1e-6;
+                    // Letter-named MOS keyboards use the generic layout even in 12-EDO and 13-EDT.
+                    bool traditional = !letters && !whiteOnly
+                        // Unequal twelve-note octaves (just intonation, well temperaments) also use the piano profile
+                        // when their keys follow the piano pattern; the layout checks the pattern itself.
+                        && (tuning.DegreeCount == 12 && Math.Abs(tuning.PeriodCents - 1200) < 1e-6
+                        || tuning.DegreeCount == 13 && Math.Abs(tuning.PeriodCents - 1200 * Math.Log2(3)) < 1e-6);
                     KeyLayout = NotchedKeyboardLayout.Create(cells.Select(cell => new NotchedKeyStep(cell.Step, cell.Kind, cell.Owner)), traditional);
                 }
                 active = new HashSet<int>((scale ?? Enumerable.Range(0, cells.Length)).Select(step => (step % cells.Length + cells.Length) % cells.Length));
@@ -72,13 +93,17 @@ namespace OpenUtau.App.Controls {
         void UpdateAccessibleName() {
             string name = $"{XenStrings.Get("field.display")} {ItemCount}";
             if (SelectedDegree is int degree && tuning != null) {
-                name += $" · {PitchNotation.Format(tuning, degree)} · {XenStrings.Get("field.degree")} {degree}";
+                name += $" · {Label(degree)} · {XenStrings.Get("field.degree")} {degree}";
             }
             AutomationProperties.SetName(this, name);
         }
 
+        string Label(int degree) => tuning == null ? "" : whiteOnly ? PitchNotation.Format(tuning, degree, "degree")
+            : PitchNotation.Format(tuning, degree, PitchNotation.ResolvePrimary(tuning, null));
+
         public int? SelectDegreeAt(Point point) {
             SelectedDegree = Bounds.Height <= 0 ? null : KeyLayout?.HitTest(point.X / ColumnWidth, point.Y / Bounds.Height)?.Degree;
+            RunAudition(() => audition.SetSelection(tuning, SelectedDegree));
             UpdateAccessibleName();
             InvalidateVisual();
             return SelectedDegree;
@@ -87,22 +112,46 @@ namespace OpenUtau.App.Controls {
         protected override void OnPointerPressed(PointerPressedEventArgs e) {
             base.OnPointerPressed(e);
             if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+            if (auditionPointer != null && !ReferenceEquals(auditionPointer, e.Pointer)) StopPointerAudition();
             Focus();
             SelectDegreeAt(e.GetPosition(this));
+            auditionPointer = e.Pointer;
+            e.Pointer.Capture(this);
+            RunAudition(() => audition.BeginPointer(tuning, SelectedDegree));
+            e.Handled = true;
+        }
+
+        protected override void OnPointerReleased(PointerReleasedEventArgs e) {
+            base.OnPointerReleased(e);
+            if (!ReferenceEquals(e.Pointer, auditionPointer) || e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+            StopPointerAudition();
             e.Handled = true;
         }
 
         protected override void OnPointerMoved(PointerEventArgs e) {
             base.OnPointerMoved(e);
+            if (ReferenceEquals(e.Pointer, auditionPointer)) {
+                if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) SelectDegreeAt(e.GetPosition(this));
+                else StopPointerAudition();
+            }
             var key = Bounds.Height <= 0 ? null : KeyLayout?.HitTest(e.GetPosition(this).X / ColumnWidth, e.GetPosition(this).Y / Bounds.Height);
             if (key != null && tuning != null) {
-                ToolTip.SetTip(this, $"{PitchNotation.Format(tuning, key.Degree)} · {key.Degree} · {tuning.GetCents(key.Degree).ToString("0.##", XenStrings.InputCulture)} ¢");
+                ToolTip.SetTip(this, $"{Label(key.Degree)} · {key.Degree} · {tuning.GetCents(key.Degree).ToString("0.##", XenStrings.InputCulture)} ¢");
             }
         }
 
         protected override void OnKeyDown(KeyEventArgs e) {
             base.OnKeyDown(e);
             if (ItemCount == 0) return;
+            if (e.Key == Key.Space || e.Key == Key.Enter) {
+                SelectedDegree ??= 0;
+                auditionKeys.Add(e.Key);
+                RunAudition(() => audition.BeginKeyboard(tuning, SelectedDegree));
+                UpdateAccessibleName();
+                InvalidateVisual();
+                e.Handled = true;
+                return;
+            }
             int next = SelectedDegree ?? 0;
             switch (e.Key) {
                 case Key.Left: case Key.Down: next--; break;
@@ -112,11 +161,58 @@ namespace OpenUtau.App.Controls {
                 default: return;
             }
             SelectedDegree = Math.Clamp(next, 0, ItemCount - 1);
+            RunAudition(() => audition.SetSelection(tuning, SelectedDegree));
             UpdateAccessibleName();
             var shape = KeyLayout!.Keys[SelectedDegree.Value];
             var column = KeyLayout.Columns[shape.Column];
             this.BringIntoView(new Rect(column.X * ColumnWidth, 0, column.Width * ColumnWidth, Bounds.Height));
             InvalidateVisual(); e.Handled = true;
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e) {
+            base.OnKeyUp(e);
+            if (!auditionKeys.Remove(e.Key)) return;
+            if (auditionKeys.Count == 0) RunAudition(audition.EndKeyboard);
+            e.Handled = true;
+        }
+
+        protected override void OnLostFocus(FocusChangedEventArgs e) {
+            StopAudition();
+            base.OnLostFocus(e);
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e) {
+            StopAudition();
+            base.OnDetachedFromVisualTree(e);
+        }
+
+        void RunAudition(Action action) {
+            try { action(); }
+            catch (Exception error) {
+                StopAudition();
+                Log.Error(error, "Failed to audition keyboard pitch.");
+            }
+        }
+
+        void StopPointerAudition() {
+            RunAudition(audition.EndPointer);
+            ReleasePointerCapture();
+        }
+
+        void ReleasePointerCapture() {
+            var pointer = auditionPointer;
+            auditionPointer = null;
+            if (pointer?.Captured != this) return;
+            releasingCapture = true;
+            try { pointer.Capture(null); }
+            finally { releasingCapture = false; }
+        }
+
+        public void StopAudition() {
+            auditionKeys.Clear();
+            try { audition.Cancel(); }
+            catch (Exception error) { Log.Error(error, "Failed to stop keyboard pitch audition."); }
+            ReleasePointerCapture();
         }
 
         IBrush Brush(string key) => this.TryFindResource(key, out var value) && value is IBrush brush ? brush : Brushes.Transparent;
@@ -188,6 +284,9 @@ namespace OpenUtau.App.Controls {
                         var a = new Point(edge.Start.X * ColumnWidth, edge.Start.Y * height);
                         var b = new Point(edge.End.X * ColumnWidth, edge.End.Y * height);
                         if (SelectedDegree == shape.Degree) context.DrawLine(new Pen(Brush("AccentBrush2"), 2), a, b);
+                        else if (active.Count != ItemCount && active.Contains(shape.Degree)) {
+                            context.DrawLine(new Pen(KeyBrush(cells[shape.Degree].Role, true), 1.3), a, b);
+                        }
                         else {
                             bool boundary = a.Y == b.Y;
                             if (!boundary) {
@@ -209,7 +308,8 @@ namespace OpenUtau.App.Controls {
                     }
                     var textBrush = KeyBrush(cells[shape.Degree].Role, true);
                     var cell = cells[shape.Degree];
-                    string label = cell.IsAnchor ? PitchNotation.Format(tuning, shape.Degree,
+                    // Without a MOS there are no nominals to name, so every white key shows its degree number.
+                    string label = cell.IsAnchor && !whiteOnly ? PitchNotation.Format(tuning, shape.Degree,
                         PitchNotation.ResolvePrimary(tuning, null), false) : shape.Degree.ToString(XenStrings.InputCulture);
                     using (context.PushClip(area)) {
                         PitchLabelLayout.Draw(context, label, textBrush, Math.Min(11, area.Height * 0.7),

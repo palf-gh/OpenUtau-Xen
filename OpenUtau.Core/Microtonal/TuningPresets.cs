@@ -51,8 +51,13 @@ namespace OpenUtau.Core.Microtonal {
                 var rast = EqualDivision(24); rast.Id = "rast-24edo-approximation"; rast.Name = "Rast (24-EDO approximation)";
                 rast.Description = "Modern quarter-tone approximation of Rast: C D E-half-flat F G A B-half-flat. Actual intonation varies by tradition and performance.";
                 rast.Source = "Analytical 24-EDO approximation of the Rast interval pattern; not a measured historical tuning.";
-                rast.Scales = new List<ScaleDefinition> { new ScaleDefinition { Id = "rast", Name = "Rast approximation", Degrees = new List<int> { 0, 4, 7, 10, 14, 18, 21 } } };
+                var rastDegrees = new List<int> { 0, 4, 7, 10, 14, 18, 21 };
+                rast.Scales = new List<ScaleDefinition> { new ScaleDefinition { Id = "rast", Name = "Rast approximation", Degrees = rastDegrees } };
                 rast.Keyboard.ActiveScaleId = "rast";
+                // Rast is not a MOS, so it starts with MOS off: its seven notes are the white keys, the remaining
+                // twelve-tone (even) degrees black and the other quarter tones in-between keys.
+                rast.Keyboard.Classes = Enumerable.Range(0, 24).ToDictionary(degree => degree,
+                    degree => rastDegrees.Contains(degree) ? "natural" : degree % 2 == 0 ? "accidental" : "between");
                 all.Add(rast);
                 return all;
             }
@@ -98,15 +103,33 @@ namespace OpenUtau.Core.Microtonal {
                 tuning.Notations.Add(PitchNotation.FiftyThreeSzg());
                 tuning.Keyboard.PrimaryNotation = "szg";
                 tuning.Keyboard.SecondaryNotation = "degree";
-                var mos = MosGenerator.Generate(tuning, 31, 7).Scale;
-                tuning.Scales.Add(mos);
-                foreach (int degree in mos.Degrees) tuning.Keyboard.Classes[degree] = "natural";
+                foreach (int degree in new[] { 0, 9, 18, 22, 31, 40, 49 }) tuning.Keyboard.Classes[degree] = "natural";
             } else if (octave && (divisions == 12 || divisions == 24)) {
                 int multiplier = divisions / 12;
                 foreach (int degree in new[] { 0, 2, 4, 5, 7, 9, 11 }) tuning.Keyboard.Classes[degree * multiplier] = "natural";
             }
+            AddFamilyMos(tuning);
             tuning.Validate();
             return tuning;
+        }
+
+        /// <summary>
+        /// Selects the family MOS (C-diatonic for the octave, C-Lambda for the tritave) so a new equal division
+        /// starts with its keyboard scale applied; other divisions keep all degrees.
+        /// </summary>
+        static void AddFamilyMos(TuningDefinition tuning) {
+            var theory = KeyboardTheory.For(tuning);
+            if (theory == null || !theory.IsValid) return;
+            int count = theory.Naturals.Count;
+            for (int mode = 0; mode < count; mode++) {
+                MosResult result;
+                try { result = MosGenerator.Generate(tuning, theory.Generator, count, mode); }
+                catch (ArgumentException) { return; }
+                if (!result.Scale.Degrees.SequenceEqual(theory.Naturals)) continue;
+                tuning.Scales.Add(result.Scale);
+                tuning.Keyboard.ActiveScaleId = result.Scale.Id;
+                return;
+            }
         }
         public static TuningDefinition FromRatios(string id, string name, IEnumerable<string> ratios, string description) {
             var tuning = new TuningDefinition {
@@ -118,6 +141,8 @@ namespace OpenUtau.Core.Microtonal {
             // Spelling follows each ratio's 5-limit function (16/15 is D-flat, 45/32 is F-sharp); septimal
             // intervals take the nearest chromatic name without marking their comma.
             if (tuning.Degrees.Count == 12) AddChromaticNames(tuning, "Ratio-based chromatic names", JustNames);
+            // Unequal presets start with MOS off: their keys follow the chromatic names.
+            tuning.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(tuning);
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, tuning.DegreeCount).ToList() });
             tuning.Validate();
             return tuning;
@@ -134,6 +159,7 @@ namespace OpenUtau.Core.Microtonal {
             };
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, 12).ToList() });
             AddChromaticNames(tuning, "Fifth-chain names (E-flat to G-sharp)", FifthChainNames);
+            tuning.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(tuning);
             tuning.Validate();
             return tuning;
         }
@@ -155,6 +181,7 @@ namespace OpenUtau.Core.Microtonal {
             };
             tuning.Scales.Add(new ScaleDefinition { Degrees = Enumerable.Range(0, 12).ToList() });
             AddChromaticNames(tuning, "Conventional chromatic names", FifthChainNames);
+            tuning.Keyboard.Classes = KeyboardRegionizer.ClassesFromRoles(tuning);
             tuning.Validate();
             return tuning;
         }

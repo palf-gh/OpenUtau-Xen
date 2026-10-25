@@ -418,3 +418,87 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   their choice (**View > Detach piano roll** switches it).
 - Still open: the checks listed in the workspace entry above, VOICEVOX verification,
   broad GUI and high-DPI review.
+
+## 2026-10-25 — Live tuning and MOS settings with audible keyboard
+
+- Purpose: the user's trial feedback asked for live updates without a generation
+  button, an explicit "cannot generate a MOS scale" state drawn with white keys
+  only, one combined tuning/MOS page, no separate degree-colour blocks, and sound
+  when a keyboard key is pressed.
+- Implementation: `TuningDialog` merges the tuning and scale pages into one live
+  page (four navigation pages remain). Period, division, reference and MOS edits
+  rebuild the detached draft immediately; invalid MOS configurations show
+  `xen.status.mosUnavailable` (all 20 languages) and an all-white keyboard.
+  `NotchedKeyboardPreview` auditions the exact `PitchResolver` frequency through
+  the new `KeyboardAudition` state machine on press, drag, Space/Enter, and stops
+  on release, capture/focus loss, detachment and reconfiguration. The default
+  sink is `PlaybackManager.PlayTone`, so the piano roll's editing-tone toggle
+  also mutes the audition. Details are in `tuning-ui.md`.
+- Verification: build passes; 451 tests pass (one opt-in voice test skipped),
+  including `KeyboardAuditionTest` and headless pointer-driven audition checks.
+  Skia captures of the unified page and the invalid-MOS state were inspected in
+  light and dark themes (Japanese). The ja-JP string was checked with yomiyasu.
+- Open: native listening, interactive launch, high-DPI review and responsiveness
+  of live edits at very large EDOs were not checked.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed with the self-contained
+  win-x64 publish (no trial was running). `OpenUtau-Xen.exe` matches the new
+  `bin` output and `OpenUtau-Xen.dll` matches the new ReadyToRun output (both
+  17:10:16 local time). Not launched interactively.
+
+## 2026-10-25 — MOS-decided keyboards, letter names and manual keys
+
+- Purpose: the user asked for nominal names that follow the MOS cardinality
+  (A, B, C … without I) on white keys, a MOS on/off switch for every tuning with
+  key-by-key settings when off, semitones in the piano roll's scale rows, a
+  clearer label than "Display" in the View menu, and presets that start with a
+  proper MOS.
+- Implementation: `KeyboardRegionizer.LetterScale`/`IsManual`/`DisplayDegrees`,
+  `MosKeyboard.FromNominals`, the generated `mos` notation profile and name input,
+  the dialog switch with White/Black/In-between buttons, family MOS in
+  equal-division presets, and the "Piano-roll rows" and "Names and key classes"
+  labels (all 20 languages). Details are in `keyboard-mos.md` and `tuning-ui.md`.
+- Verification: build passes; 465 tests pass (one opt-in voice test skipped),
+  including `MosLetterNotationTest` and dialog checks of letters, the switch,
+  manual key classes and copied names. Skia captures of the letter, manual and
+  no-MOS states were inspected. The Japanese strings were checked with yomiyasu.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (17:38:45 local time). Not launched interactively.
+- Open: the piano roll with letter names and chromatic rows was not checked in a
+  running app; unequal tunings with MOS switched on use degree-counted steps.
+
+## 2026-10-25 — Keyboards for unequal tunings
+
+- Purpose: the user found that the just-intonation and Pythagorean presets opened
+  in MOS mode with generator 1 and could not generate a scale, and asked that
+  unequal tunings get a proper keyboard.
+- Implementation: unequal presets start with MOS off, with key classes taken from
+  their chromatic names; older unequal tunings receive the same classes when the
+  settings open. Twelve-note octaves in the piano pattern use the traditional
+  keyboard. MOS step sizes are counted in degrees, the default generator is the
+  degree nearest 3/2, and a fifth-generated diatonic keeps C–B names. Details are
+  in `keyboard-mos.md`.
+- Verification: build passes; 474 tests pass (one opt-in voice test skipped),
+  including every unequal preset (piano keys and names with MOS off, 5L2s
+  C major and a 5-note MOS with MOS on). Skia captures of 5-limit just intonation
+  with MOS off and on were inspected.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (17:51:07 local time). Not launched interactively.
+
+## 2026-10-25 — Scale card and Rast keyboard
+
+- Purpose: the user chose to start Rast with MOS off and asked for the "MOS"
+  section to become "Scale", switching between MOS and Custom scale, which also
+  answers what the separate scale menu was for.
+- Implementation: Rast's seven notes are white keys, the other even (twelve-tone)
+  degrees black and the remaining quarter tones in-between keys. The tuning page
+  has one Scale card with MOS/Custom scale choices; the scale menu, custom-scale
+  fields and key-class buttons belong to Custom scale. The "build the keyboard
+  from a MOS scale" string was removed from all 20 languages.
+- Verification: build passes; 475 tests pass (one opt-in voice test skipped),
+  including the Rast keyboard and the dialog switch between MOS and Custom scale.
+  Skia captures of both choices were inspected.
+- Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
+  `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
+  (18:01:08 local time). Not launched interactively.

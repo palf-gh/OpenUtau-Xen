@@ -47,6 +47,7 @@
   <system:String x:Key="xen.tab.generator">MOS</system:String>
   <system:String x:Key="xen.tab.definition">定義</system:String>
   <system:String x:Key="xen.notation.degree">音級編號</system:String>
+  <system:String x:Key="xen.notation.mos">MOS 字母音名（A, B, C…）</system:String>
   <system:String x:Key="xen.notation.ups-downs">Ups and Downs</system:String>
   <system:String x:Key="xen.notation.szg">Stein–Zimmermann–Gould</system:String>
   <system:String x:Key="xen.notation.bp">Bohlen–Pierce (Lambda)</system:String>
@@ -106,5 +107,12 @@
   <system:String x:Key="xen.pianoroll.pitchfollow">播放時跟隨音高</system:String>
   <system:String x:Key="xen.pianoroll.pitchfollowpath">顯示音高跟隨路徑</system:String>
   <system:String x:Key="xen.tab.conversion">轉換音符</system:String>
+  <system:String x:Key="xen.status.mosUnavailable">無法產生 MOS 音階。</system:String>
+  <system:String x:Key="xen.field.selectedKey">所選琴鍵</system:String>
+  <system:String x:Key="xen.keyClass.white">白鍵</system:String>
+  <system:String x:Key="xen.keyClass.black">黑鍵</system:String>
+  <system:String x:Key="xen.keyClass.between">中間鍵</system:String>
+  <system:String x:Key="xen.menu.pitchRows">鋼琴捲簾的列</system:String>
+  <system:String x:Key="xen.tab.names">音名與琴鍵類型</system:String>
 </ResourceDictionary>
 
