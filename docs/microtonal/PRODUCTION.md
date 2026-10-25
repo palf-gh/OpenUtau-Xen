@@ -750,3 +750,10 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   yomiyasu).
 - Open: 0.1.0 builds still query upstream for updates and cannot update to Xen
   releases. macOS builds are ad-hoc signed and not notarised.
+- Verification: serial build and 498 tests pass (one opt-in voice test skipped);
+  the release workflow file parses as YAML. Platform packages are checked on the
+  GitHub release itself.
+- Trial build: the trial was running, so the build went to
+  `work/OpenUtau-Xen-staged-win-x64/` (`OpenUtau-Xen.exe` and the ReadyToRun
+  `OpenUtau-Xen.dll` match the new output, 23:45:04 local time); replacing
+  `work/OpenUtau-Xen-win-x64/` is pending. Not launched interactively.
