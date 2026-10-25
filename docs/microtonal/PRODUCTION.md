@@ -1,5 +1,18 @@
 # Production record
 
+## 2026-10-25 — Mandatory trial packaging at task completion
+
+- Added an always-applicable completion rule to `AGENTS.md`: refresh the existing
+  self-contained Windows x64 trial, preserve local data, verify the executable
+  and application DLL, record the result and link the trial executable in the
+  completion report. Local packaging is authorised; remote publication is not.
+- Documented staging/reporting when a running user session blocks replacement.
+  This is an instruction-only change; verification consists of a diff review
+  and a trial publish. The existing trial is running as process 170032 and locked
+  the application DLLs, so replacement failed and a staged build was produced in
+  `work/OpenUtau-Xen-staged-win-x64/`. No user session was terminated.
+  Interactive launch is not part of this change's checks.
+
 ## 2026-10-25 — Updated local Windows trial executable
 
 - Published commit `81a06312` as a self-contained Windows x64 Release build to

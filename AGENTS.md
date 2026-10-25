@@ -36,6 +36,31 @@ dotnet test OpenUtau.Test -m:1
 - Never edit, copy into the repository or redistribute the user's voicebanks,
   UTAU binaries or external engines.
 
+## Trial build required before completion
+
+- After completing every task and its required verification, always create or
+  refresh the self-contained Windows x64 trial build before reporting completion:
+
+  ```powershell
+  dotnet publish OpenUtau/OpenUtau.csproj -c Release -r win-x64 --self-contained true -m:1 -o work/OpenUtau-Xen-win-x64
+  ```
+
+- Update the existing `work/OpenUtau-Xen-win-x64/` trial folder. Preserve local
+  preferences, projects, caches and voicebanks; never delete or mirror the folder.
+- Verify that `OpenUtau-Xen.exe` and the application DLL match the new output.
+  A development build, an old trial executable or passing tests alone does not
+  fulfil this requirement. Record the build and verification in
+  `docs/microtonal/PRODUCTION.md`.
+- Check for a running trial before replacement. If it is running or files are
+  locked, publish to `work/OpenUtau-Xen-staged-win-x64/` instead and report the
+  pending replacement; do not terminate a user session or claim that the existing
+  trial folder was updated.
+- The completion report must link to
+  `work/OpenUtau-Xen-win-x64/OpenUtau-Xen.exe` and state the build result and
+  whether an interactive launch was checked.
+- This requirement authorises local trial packaging only. It does not authorise
+  remote publication, pushing, tagging or release completion.
+
 ## Code conventions
 
 - Follow `DESIGN.md` for colours and appearance: the layout follows OpenUtau
