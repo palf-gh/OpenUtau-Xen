@@ -762,3 +762,14 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   workflow token is read-only. `build.yml` now requests `contents: write`. The
   release is built from `develop` with that fix; it differs from `v0.2.0` only
   in the workflow file, and the release is attached to the `v0.2.0` tag.
+- Release run 2 (40205431645, from `develop` at `427b26d1`): all five platforms
+  built, passed their tests and attached their assets. Checked before
+  publishing: the Windows x64 appcast points to
+  `palf-gh/OpenUtau-Xen/releases/download/v0.2.0/OpenUtau-Xen-win-x64.zip` with
+  version 0.2.0; the zip contains `OpenUtau-Xen.exe`, its DLL, DirectML and a
+  stable-channel `prefs-default.json`; the Linux x64 archive's `OpenUtau-Xen` is
+  executable. Published as
+  [OpenUtau Xen 0.2.0](https://github.com/palf-gh/OpenUtau-Xen/releases/tag/v0.2.0)
+  (latest, not a pre-release) with Windows x64/arm64 zips and installers, a macOS
+  arm64 dmg, and Linux x64/arm64 tarballs and AppImages. None of these packages
+  was launched.
