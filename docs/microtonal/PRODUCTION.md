@@ -1,5 +1,15 @@
 # Production record
 
+## 2026-10-25 — Updated local Windows trial executable
+
+- Published commit `81a06312` as a self-contained Windows x64 Release build to
+  `work/OpenUtau-Xen-81a06312-win-x64/`, then overlaid the published files into
+  the existing `work/OpenUtau-Xen-win-x64/` trial folder without deleting its
+  local data. This includes the baseline-MOS algorithm, notched previews and
+  black settings keys. No public release or remote upload was performed.
+- Compared SHA-256 hashes of the published files against the trial copies.
+  Native interactive launch remains a separate check.
+
 ## 2026-10-25 — Baseline MOS regions and notched settings keyboards
 
 - Implemented the user's latest general-MOS keyboard specification. A general
