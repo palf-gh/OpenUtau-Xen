@@ -725,3 +725,28 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
 - Trial build: `work/OpenUtau-Xen-win-x64/` refreshed (no trial running);
   `OpenUtau-Xen.exe` and the ReadyToRun `OpenUtau-Xen.dll` match the new output
   (23:23:09 local time) and contain all 19 overlays. Not launched interactively.
+
+## 2026-10-25 — Release 0.2.0
+
+- Purpose: the user asked to complete 0.2.0, push it and publish a release for
+  every platform, to make `main` GitHub's default branch, and to release every
+  future version bump.
+- Version 0.2.0 contains the Lunai workspace layout (see "Version 0.2.0" above)
+  and the tuning work since: live tuning and MOS settings with an audible
+  keyboard, separate keyboard and scale settings with a tonic, many tuning and
+  scale presets (including Japanese scales), baseline MOS keyboards, the Xen
+  Accidentals font, and translations of the upstream strings left in English in
+  19 languages.
+- Release preparation: the in-app updater now reads this repository's releases
+  instead of stakira/OpenUtau's, so Xen can no longer offer upstream OpenUtau as
+  an update; the bug report menu opens this repository's issues; the AppImage
+  launcher starts `OpenUtau-Xen`; `appcast.py` points downloads here. The
+  `build.yml` release workflow uses `vX.Y.Z` tags, "OpenUtau Xen" release names,
+  `OpenUtau-Xen-<platform>` assets, finds the macOS `.app` by pattern and has a
+  Xen release text; `next-version.py` accepts v-prefixed tags.
+- Policy: `main` is GitHub's default branch and shows the latest release;
+  pull requests still target `develop`. Every version bump is released through
+  `build.yml` (`AGENTS.md`, README in both languages; Japanese checked with
+  yomiyasu).
+- Open: 0.1.0 builds still query upstream for updates and cannot update to Xen
+  releases. macOS builds are ad-hoc signed and not notarised.

@@ -96,16 +96,22 @@ dotnet test OpenUtau.Test -m:1
   together in `OpenUtau/OpenUtau.csproj`, record what the version contains in
   `docs/microtonal/PRODUCTION.md`, merge to `develop`, then fast-forward `main` to
   that commit and add an annotated tag `vX.Y.Z`.
+- Every version bump is released. After pushing `main`, `develop` and the tag, run
+  the `build.yml` workflow on `main` (channel `stable`, the version, release on,
+  draft on). Check that each platform's archive, installer and appcast are
+  attached, then publish the draft and record the release in `PRODUCTION.md`.
+  The maintainer's go-ahead for a version covers its merge, tag, push and release.
 - The `.ustxen`/`.tunxen` format versions are separate: change them only when the
   file format changes, with a migration and a round-trip test.
 
 ## Git
 
-- `develop` is the default branch and integrates all work. Branch from it as
-  `feature/<topic>` or `fix/<topic>` and open a pull request back into `develop`;
-  the pull-request tests must pass before merging.
-- `main` points to the latest versioned commit and only moves by fast-forward when
-  a version is tagged. Never commit to `main` directly.
+- `develop` integrates all work. Branch from it as `feature/<topic>` or
+  `fix/<topic>` and open a pull request back into `develop` (pass `--base develop`;
+  GitHub's default is `main`); the pull-request tests must pass before merging.
+- `main` is GitHub's default branch and points to the latest released version. It
+  only moves by fast-forward when a version is tagged. Never commit to `main`
+  directly.
 - The upstream fork point is tagged `upstream-base`. Bring upstream updates in as
   separate changes from the `upstream` remote.
 - Keep commits small and coherent, and make each one build.

@@ -13,6 +13,11 @@ commit `3eb9dd26459fa51dc2c5bf46693a9492d817c130`. This is a development build; 
 full first-release acceptance plan is tracked in
 [`docs/microtonal/PLAN.md`](docs/microtonal/PLAN.md).
 
+Download the latest version for Windows, macOS or Linux from
+[Releases](https://github.com/palf-gh/OpenUtau-Xen/releases/latest). Every version
+is released there; what each one contains is recorded in
+[`PRODUCTION.md`](docs/microtonal/PRODUCTION.md).
+
 ### Editing and files
 
 - Use **Project → Project tuning** for the project default, or the piano-roll
@@ -77,10 +82,11 @@ release is not declared complete while these checks remain open.
 
 ### Contributing
 
-- `develop` is the default branch. Create `feature/<topic>` or `fix/<topic>` from it
-  and open a pull request into `develop`. The pull-request tests must pass.
-- `main` always points to the latest version (`vX.Y.Z` tags); use it to try a
-  stable state.
+- Work happens on `develop`. Create `feature/<topic>` or `fix/<topic>` from it and
+  open a pull request into `develop` (not the default `main`). The pull-request
+  tests must pass.
+- `main` is the default branch and always points to the latest released version
+  (`vX.Y.Z` tags); use it to try a stable state.
 - Build and test serially with the commands above. Follow `AGENTS.md` for writing,
   versioning and code conventions, and `DESIGN.md` for colours.
 - Japanese documents are checked with the yomiyasu skill before merging. If you do
@@ -197,6 +203,11 @@ OpenUtau Xen は [OpenUtau](https://github.com/stakira/OpenUtau) を基にした
 `3eb9dd26459fa51dc2c5bf46693a9492d817c130` です。現在は開発版で、初版の受入計画は
 [`docs/microtonal/PLAN.md`](docs/microtonal/PLAN.md) で管理しています。
 
+Windows・macOS・Linux 向けの最新版は
+[Releases](https://github.com/palf-gh/OpenUtau-Xen/releases/latest) からダウンロードできます。
+バージョンを上げるたびに Releases で公開し、各バージョンの内容は
+[`PRODUCTION.md`](docs/microtonal/PRODUCTION.md) に記録しています。
+
 ### 編集とファイル
 
 - プロジェクト全体の既定音律は **Project → Project tuning** で、トラックごとの上書きは
@@ -261,10 +272,11 @@ DiffSinger の自動ピッチとリテイクの組合せは未検証です。詳
 
 ### 開発に参加するには
 
-- 既定ブランチは `develop` です。ここから `feature/<内容>` か `fix/<内容>` のブランチを作り、
-  `develop` へのプルリクエストを送ってください。プルリクエストのテストが通る必要があります。
-- `main` は常に最新のバージョン（`vX.Y.Z` タグ）を指します。安定した状態を試すときは
-  `main` を使ってください。
+- 開発は `develop` で行います。ここから `feature/<内容>` か `fix/<内容>` のブランチを作り、
+  `develop` へのプルリクエストを送ってください（既定の `main` ではありません）。
+  プルリクエストのテストが通る必要があります。
+- `main` は既定ブランチで、常に最新の公開バージョン（`vX.Y.Z` タグ）を指します。
+  安定した状態を試すときは `main` を使ってください。
 - ビルドとテストは、上のコマンドで 1 つずつ順に実行してください。文章、バージョン、コードの
   決まりは `AGENTS.md` に、配色は `DESIGN.md` にあります。
 - 日本語の文書はマージの前に yomiyasu スキルで確認します。yomiyasu を使えない場合は、
