@@ -801,7 +801,7 @@ namespace OpenUtau.App.Views {
 
         void OnMenuReportIssue(object sender, RoutedEventArgs args) {
             try {
-                OS.OpenWeb("https://github.com/stakira/OpenUtau/issues");
+                OS.OpenWeb("https://github.com/palf-gh/OpenUtau-Xen/issues");
             } catch (Exception e) {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }

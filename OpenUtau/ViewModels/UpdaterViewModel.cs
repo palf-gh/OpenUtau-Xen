@@ -112,7 +112,7 @@ namespace OpenUtau.App.ViewModels {
             client.Timeout = TimeSpan.FromSeconds(30);
             // per_page=100: with frequent alpha releases, the default 30-item
             // page could push the release of the current channel off-page.
-            using var resposne = await client.GetAsync("https://api.github.com/repos/stakira/OpenUtau/releases?per_page=100");
+            using var resposne = await client.GetAsync("https://api.github.com/repos/palf-gh/OpenUtau-Xen/releases?per_page=100");
             resposne.EnsureSuccessStatusCode();
             string respBody = await resposne.Content.ReadAsStringAsync();
             List<GithubRelease>? releases = JsonConvert.DeserializeObject<List<GithubRelease>>(respBody);

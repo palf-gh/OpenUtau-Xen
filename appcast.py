@@ -21,12 +21,12 @@ def main():
     xml = '''<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
 <channel>
-    <title>OpenUtau</title>
+    <title>OpenUtau Xen</title>
     <language>en</language>
     <item>
-    <title>OpenUtau %s</title>
+    <title>OpenUtau Xen %s</title>
     <pubDate>%s</pubDate>
-    <enclosure url="https://github.com/stakira/OpenUtau/releases/download/%s/%s"
+    <enclosure url="https://github.com/palf-gh/OpenUtau-Xen/releases/download/%s/%s"
                 sparkle:version="%s"
                 sparkle:shortVersionString="%s"
                 sparkle:os="%s"

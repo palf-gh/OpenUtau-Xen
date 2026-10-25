@@ -21,11 +21,11 @@ Reads `git ls-remote --tags` output on stdin and prints the version.
 import re
 import sys
 
-# Stable tags are bare (1.5.0) and beta tags carry a -beta suffix.
+# Stable tags are bare (1.5.0) or v-prefixed (v1.5.0) and beta tags carry a -beta suffix.
 # Legacy betas were published as bare prerelease tags, which is why the
 # suffix is optional here.
-RELEASE_TAG = re.compile(r'^(\d+\.\d+\.\d+)(?:-beta)?$')
-ALPHA_TAG = re.compile(r'^(\d+\.\d+\.\d+)\.(\d+)-alpha$')
+RELEASE_TAG = re.compile(r'^v?(\d+\.\d+\.\d+)(?:-beta)?$')
+ALPHA_TAG = re.compile(r'^v?(\d+\.\d+\.\d+)\.(\d+)-alpha$')
 
 
 def parse_base(s):

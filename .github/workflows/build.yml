@@ -51,20 +51,22 @@ jobs:
           if [ "$CHANNEL" = alpha ]; then
             git ls-remote --tags origin > tags.txt
             version=$(python .github/scripts/next-version.py < tags.txt)
-            tag="$version-alpha"
-            name="${version%.*} Alpha"
+            tag="v$version-alpha"
+            name="OpenUtau Xen ${version%.*} Alpha"
           else
             if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+[.][0-9]+[.][0-9]+$'; then
               echo "::error::version must be X.Y.Z for the $CHANNEL channel (got '$VERSION')"
               exit 1
             fi
             version="$VERSION"
+            # OpenUtau Xen tags are v-prefixed (vX.Y.Z), matching the annotated
+            # version tags on main.
             if [ "$CHANNEL" = beta ]; then
-              tag="$version-beta"
-              name="$version Beta"
+              tag="v$version-beta"
+              name="OpenUtau Xen $version Beta"
             else
-              tag="$version"
-              name="$version"
+              tag="v$version"
+              name="OpenUtau Xen $version"
             fi
           fi
           {
@@ -129,8 +131,9 @@ jobs:
         run: |
           sudo xcode-select -s /Applications/Xcode_26.2.app
           chmod +x .github/scripts/add-liquid-glass-icon.sh
+          app="$(ls -d bin/${{ matrix.arch.name }}/publish/*.app | head -n 1)"
           .github/scripts/add-liquid-glass-icon.sh \
-            bin/${{ matrix.arch.name }}/publish/OpenUtau.app \
+            "$app" \
             OpenUtau/Assets/OpenUtau.icon \
             OpenUtau
         if: ${{ matrix.arch.os == 'osx' }}
@@ -150,19 +153,19 @@ jobs:
         if: ${{ matrix.arch.os == 'win' }}
 
       - name: Set executable permission
-        run: chmod +x bin/${{ matrix.arch.name }}/OpenUtau
+        run: chmod +x bin/${{ matrix.arch.name }}/OpenUtau-Xen
         if: ${{ matrix.arch.os == 'linux' }}
 
       - name: Zip
         run: |
           cd bin/${{ matrix.arch.name }}
-          7z a ../../OpenUtau-${{ matrix.arch.name }}.zip *
+          7z a ../../OpenUtau-Xen-${{ matrix.arch.name }}.zip *
         if: ${{ matrix.arch.os == 'win' }}
 
       - name: Tar.gz
         run: |
           cd bin/${{ matrix.arch.name }}
-          tar -czf ../../OpenUtau-${{ matrix.arch.name }}.tar.gz *
+          tar -czf ../../OpenUtau-Xen-${{ matrix.arch.name }}.tar.gz *
         if: ${{ matrix.arch.os == 'linux' }}
 
       # Create Installer
@@ -182,10 +185,11 @@ jobs:
       - name: Create Dmg
         run: |
           npm install -g create-dmg
-          cp OpenUtau/Assets/OpenUtau.icns bin/${{ matrix.arch.name }}/publish/OpenUtau.app/Contents/Resources/
-          create-dmg bin/${{ matrix.arch.name }}/publish/OpenUtau.app || true
-          mv *.dmg OpenUtau-${{ matrix.arch.name }}.dmg
-          codesign -fvs - OpenUtau-${{ matrix.arch.name }}.dmg
+          app="$(ls -d bin/${{ matrix.arch.name }}/publish/*.app | head -n 1)"
+          cp OpenUtau/Assets/OpenUtau.icns "$app/Contents/Resources/"
+          create-dmg "$app" || true
+          mv *.dmg OpenUtau-Xen-${{ matrix.arch.name }}.dmg
+          codesign -fvs - OpenUtau-Xen-${{ matrix.arch.name }}.dmg
         if: ${{ matrix.arch.os == 'osx' }}
 
       # Create Appimage
@@ -204,55 +208,56 @@ jobs:
           cp OpenUtau/Assets/AppRun bin/${{ matrix.arch.name }}
           chmod 755 bin/${{ matrix.arch.name }}/AppRun
           ARCH=${{ matrix.arch.linuxarch }} linuxdeploy --appdir bin/${{ matrix.arch.name }} --output appimage
+          mv *-${{ matrix.arch.linuxarch }}.AppImage OpenUtau-Xen-${{ matrix.arch.name }}.AppImage
         if: ${{ matrix.arch.os == 'linux' }}
 
       # Upload Artifacts
       - uses: actions/upload-artifact@v4
         with:
-          name: OpenUtau-${{ matrix.arch.name }}.tar.gz
-          path: OpenUtau-${{ matrix.arch.name }}.tar.gz
+          name: OpenUtau-Xen-${{ matrix.arch.name }}.tar.gz
+          path: OpenUtau-Xen-${{ matrix.arch.name }}.tar.gz
         if: ${{ needs.next-version.outputs.release != 'true' && matrix.arch.os == 'linux' }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: OpenUtau-${{ matrix.arch.name }}.zip
-          path: OpenUtau-${{ matrix.arch.name }}.zip
+          name: OpenUtau-Xen-${{ matrix.arch.name }}.zip
+          path: OpenUtau-Xen-${{ matrix.arch.name }}.zip
         if: ${{ needs.next-version.outputs.release != 'true' && matrix.arch.os == 'win' }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: OpenUtau-${{ matrix.arch.name }}.exe
-          path: OpenUtau-${{ matrix.arch.name }}.exe
+          name: OpenUtau-Xen-${{ matrix.arch.name }}.exe
+          path: OpenUtau-Xen-${{ matrix.arch.name }}.exe
         if: ${{ needs.next-version.outputs.release != 'true' && matrix.arch.os == 'win' }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: OpenUtau-${{ matrix.arch.name }}.AppImage
-          path: OpenUtau-${{ matrix.arch.linuxarch }}.AppImage
+          name: OpenUtau-Xen-${{ matrix.arch.name }}.AppImage
+          path: OpenUtau-Xen-${{ matrix.arch.name }}.AppImage
         if: ${{ needs.next-version.outputs.release != 'true' && matrix.arch.os == 'linux' }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: OpenUtau-${{ matrix.arch.name }}.dmg
-          path: OpenUtau-${{ matrix.arch.name }}.dmg
+          name: OpenUtau-Xen-${{ matrix.arch.name }}.dmg
+          path: OpenUtau-Xen-${{ matrix.arch.name }}.dmg
         if: ${{ needs.next-version.outputs.release != 'true' && matrix.arch.os == 'osx' }}
 
       # Appcast
       - name: Appcast Windows
         shell: cmd
         run: |
-          python appcast.py -v=${{ needs.next-version.outputs.version }} --tag=${{ needs.next-version.outputs.tag }} -o=windows -r=${{ matrix.arch.name }} -f=OpenUtau-${{ matrix.arch.name }}.zip
-          python appcast.py -v=${{ needs.next-version.outputs.version }} --tag=${{ needs.next-version.outputs.tag }} -o=windows -r=${{ matrix.arch.name }}-installer -f=OpenUtau-${{ matrix.arch.name }}.exe
+          python appcast.py -v=${{ needs.next-version.outputs.version }} --tag=${{ needs.next-version.outputs.tag }} -o=windows -r=${{ matrix.arch.name }} -f=OpenUtau-Xen-${{ matrix.arch.name }}.zip
+          python appcast.py -v=${{ needs.next-version.outputs.version }} --tag=${{ needs.next-version.outputs.tag }} -o=windows -r=${{ matrix.arch.name }}-installer -f=OpenUtau-Xen-${{ matrix.arch.name }}.exe
         if: ${{ needs.next-version.outputs.release == 'true' && matrix.arch.os == 'win' }}
 
       - name: Appcast MacOS
         run: |
-          python appcast.py -v=${{ needs.next-version.outputs.version }} --tag=${{ needs.next-version.outputs.tag }} -o=macos -r=${{ matrix.arch.name }} -f=OpenUtau-${{ matrix.arch.name }}.dmg
+          python appcast.py -v=${{ needs.next-version.outputs.version }} --tag=${{ needs.next-version.outputs.tag }} -o=macos -r=${{ matrix.arch.name }} -f=OpenUtau-Xen-${{ matrix.arch.name }}.dmg
         if: ${{ needs.next-version.outputs.release == 'true' && matrix.arch.os == 'osx' }}
 
       - name: Appcast Linux
         run: |
-          python appcast.py -v=${{ needs.next-version.outputs.version }} --tag=${{ needs.next-version.outputs.tag }} -o=linux -r=${{ matrix.arch.name }} -f=OpenUtau-${{ matrix.arch.name }}.tar.gz
+          python appcast.py -v=${{ needs.next-version.outputs.version }} --tag=${{ needs.next-version.outputs.tag }} -o=linux -r=${{ matrix.arch.name }} -f=OpenUtau-Xen-${{ matrix.arch.name }}.tar.gz
         if: ${{ needs.next-version.outputs.release == 'true' && matrix.arch.os == 'linux' }}
 
       # Release
@@ -265,12 +270,12 @@ jobs:
           draft: ${{ needs.next-version.outputs.draft }}
           files: |
             appcast.${{ matrix.arch.name }}*.xml
-            OpenUtau-${{ matrix.arch.name }}.*
+            OpenUtau-Xen-${{ matrix.arch.name }}.*
           body: |
-            See [Getting Started](https://github.com/stakira/OpenUtau/wiki/Getting-Started) for how to use.
+            OpenUtau Xen is a development build of OpenUtau for microtonal and multi-tuning singing synthesis. See the [README](https://github.com/palf-gh/OpenUtau-Xen#readme) and the [production record](https://github.com/palf-gh/OpenUtau-Xen/blob/main/docs/microtonal/PRODUCTION.md) for what this version contains and what is still unverified.
 
-            If you encountered issues, see [FAQ](https://github.com/stakira/OpenUtau/wiki/FAQ)
+            General OpenUtau usage: [Getting Started](https://github.com/stakira/OpenUtau/wiki/Getting-Started) and [FAQ](https://github.com/stakira/OpenUtau/wiki/FAQ). Report OpenUtau Xen issues [in this repository](https://github.com/palf-gh/OpenUtau-Xen/issues), not upstream.
 
             ## macOS says "This app is damaged"
-            Open a terminal and run `xattr -rc /Applications/OpenUtau.app`. Try opening OpenUtau again.
+            Open a terminal and run `xattr -rc "/Applications/OpenUtau Xen.app"`. Try opening OpenUtau Xen again.
         if: ${{ needs.next-version.outputs.release == 'true' }}
