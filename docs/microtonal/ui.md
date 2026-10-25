@@ -174,3 +174,15 @@ pitch), which Xen does not take.
 - Verification: `XenPitchFollowTest` covers the 12-EDO offset, 31-EDO zone grouping
   in cents, and path targets in 31-EDO and Bohlen–Pierce.
 - Open: not watched during real playback.
+
+### Workspace review corrections
+
+- Pitch follow: a manual vertical scroll stops the follow only while playback is
+  running. Play-position updates arrive every 15 ms during playback and none while
+  paused, so a gap of more than 250 ms marks a new play and clears the manual
+  override; pausing, scrolling and playing again follows again.
+- A custom theme saved without the workspace colours was rendered headlessly: the
+  workspace surfaces take the dark defaults for a dark theme.
+- The four new Japanese labels were checked with yomiyasu.
+- The real-voice check was not run: rendering code is unchanged except
+  `CancelActiveRender`, which only runs from the stop chip.

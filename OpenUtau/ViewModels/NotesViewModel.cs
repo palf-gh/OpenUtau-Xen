@@ -148,7 +148,7 @@ namespace OpenUtau.App.ViewModels {
         public IReadOnlyList<PitchFollowPathSamplePoint> PitchFollowPathSamples => pitchFollowPathSamples;
         bool inPitchFollowStep;
         bool pitchFollowUserOverride;
-        bool pitchFollowWasPlaying;
+        DateTime pitchFollowLastStepUtc;
         [Reactive] public partial bool ShowExpressions { get; set; }
         [Reactive] public partial bool IsSnapOn { get; set; }
         [Reactive] public partial string SnapDivText { get; set; }
@@ -371,7 +371,7 @@ namespace OpenUtau.App.ViewModels {
             .Subscribe(_ => RebuildPitchFollowPath());
             this.WhenAnyValue(x => x.TrackOffset)
             .Subscribe(_ => {
-                if (!inPitchFollowStep && pitchFollowWasPlaying) {
+                if (!inPitchFollowStep && PlaybackManager.Inst.PlayingMaster) {
                     pitchFollowUserOverride = true;
                 }
             });
@@ -693,13 +693,18 @@ namespace OpenUtau.App.ViewModels {
             pitchFollowPath.EvaluateSmoothedAtTick(pitchFollowPathSamples, localTick);
 
         // Runs on each play-position update; the playhead and playback timing are unchanged.
+        // Updates arrive every 15 ms while playing and none arrive while paused, so a gap
+        // marks a new play, which clears an earlier manual scroll.
         void PitchFollowStep(int playPosTick) {
-            bool playing = PlaybackManager.Inst.PlayingMaster;
-            if (playing && !pitchFollowWasPlaying) {
+            if (!PlaybackManager.Inst.PlayingMaster) {
+                return;
+            }
+            var now = DateTime.UtcNow;
+            if ((now - pitchFollowLastStepUtc).TotalMilliseconds > 250) {
                 pitchFollowUserOverride = false;
             }
-            pitchFollowWasPlaying = playing;
-            if (!playing || !PitchFollow || Part == null || pitchFollowUserOverride || !pitchFollowPath.IsBuilt) {
+            pitchFollowLastStepUtc = now;
+            if (!PitchFollow || Part == null || pitchFollowUserOverride || !pitchFollowPath.IsBuilt) {
                 return;
             }
             double target = EvaluatePitchFollowPath(playPosTick - Part.position);
