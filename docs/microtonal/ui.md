@@ -80,3 +80,14 @@ pitch), which Xen does not take.
 - Not ported: `WorkspaceScrollbarHelper` and `RoundedClipBorder`, which only serve
   Lunai's overlay scrollbars and re-skinned combo boxes.
 - Verification: `XenThemeTest` loads custom themes with and without the new keys.
+
+### Welcome screen
+
+- Purpose: Lunai's card-based start page.
+- Implementation: a Start card (recovery button, New and Open tiles) above Recent
+  and Template cards on the workspace canvas. Lunai's Singer Hub column is left out,
+  so the two lists share the full width. `OnCarouselPageKeyDown` stops the Carousel
+  from switching pages on arrow, Home and End keys that bubble up from page content;
+  the keys are passed to the window's own handler first, so Home/End still move the
+  playhead.
+- Verification: rendered headlessly in the light theme (welcome cards, menu above).
