@@ -757,3 +757,8 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   `work/OpenUtau-Xen-staged-win-x64/` (`OpenUtau-Xen.exe` and the ReadyToRun
   `OpenUtau-Xen.dll` match the new output, 23:45:04 local time); replacing
   `work/OpenUtau-Xen-win-x64/` is pending. Not launched interactively.
+- Release run 1 (40204389009): all five platforms built and passed their tests,
+  but the release step failed with 403 because the repository's default
+  workflow token is read-only. `build.yml` now requests `contents: write`. The
+  release is built from `develop` with that fix; it differs from `v0.2.0` only
+  in the workflow file, and the release is attached to the `v0.2.0` tag.

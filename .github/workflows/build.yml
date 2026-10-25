@@ -23,6 +23,11 @@ on:
         default: true
         description: "Draft"
 
+# The release step creates the GitHub release and uploads assets; the
+# repository's default token is read-only.
+permissions:
+  contents: write
+
 jobs:
   next-version:
     runs-on: ubuntu-latest
