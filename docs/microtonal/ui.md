@@ -121,3 +121,23 @@ pitch), which Xen does not take.
   doubles, Ctrl 0.1, Alt 0.01). The old playback panel above the track headers is
   gone.
 - Verification: rendered headlessly in light and dark themes.
+
+### Piano-roll dock and side toolbar
+
+- Purpose: Lunai's piano-roll workspace: view toggles in a side toolbar, notes and
+  expressions as separate cards, note properties as a resizable dock.
+- Implementation: tips, play tone, vibrato, pitch, final pitch, pitch overwrite,
+  waveform, phonemes, expressions and phonemiser tags moved from the top toolbar to a
+  48px side toolbar card, in three groups. Checked toggles use the sub colour. The
+  tools, snap, snap division, key menu and note-properties toggle stay in the top
+  toolbar, as do the Xen View menus (rows, primary and secondary notation) and the
+  Tuning menu. The keyboard column stays 92px. The notes and expression areas sit on
+  separate cards with an 8px splitter showing the canvas. The note-properties dock is
+  350–450px wide, resized from the splitter on its left edge, and its width is kept in
+  `NotePropertiesPanelWidth`.
+- Not ported: Lunai's left docks (appearance, theme editor, DiffSinger, expression
+  defaults), its separate phoneme card, the expression stretch and shift tools, and
+  the horizontal toggle row used in its expanded layout; Xen keeps the side toolbar in
+  every layout.
+- Verification: rendered headlessly with the piano roll docked; build and the full
+  test suite pass.

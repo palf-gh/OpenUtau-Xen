@@ -374,4 +374,74 @@
   <Style Selector="Button.playPauseChip.playing Path.pauseIcon">
     <Setter Property="IsVisible" Value="True" />
   </Style>
+  <!-- Piano roll side toolbar (from OpenUtau Lunai). Xen uses one sub-colour accent for every
+       checked toggle instead of Lunai's per-toggle hues. -->
+  <Style Selector="Border.sideToolbarSeparator">
+    <Setter Property="Background" Value="{DynamicResource TickLineBrushLow}"/>
+    <Setter Property="Height" Value="1"/>
+    <Setter Property="Margin" Value="2,6,2,4"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+  </Style>
+  <Style Selector="ToggleButton.sideToolbarToggle">
+    <Setter Property="Width" Value="32"/>
+    <Setter Property="Height" Value="32"/>
+    <Setter Property="MinWidth" Value="32"/>
+    <Setter Property="MinHeight" Value="32"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Background" Value="{DynamicResource WorkspaceCardBrush}"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="ToolTip.Placement" Value="Right"/>
+    <Setter Property="ToolTip.HorizontalOffset" Value="4"/>
+    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource WorkspaceCardBrush}"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Margin" Value="0"/>
+    </Style>
+    <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter, ^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource PianoRollSideHoverBackgroundBrush}"/>
+    </Style>
+    <Style Selector="^:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Margin" Value="2"/>
+      <Setter Property="CornerRadius" Value="2"/>
+      <Setter Property="Background" Value="{DynamicResource PianoRollSideAccentCheckedBrush}"/>
+    </Style>
+    <Style Selector="^:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource PianoRollSideAccentCheckedBrush}"/>
+    </Style>
+    <Style Selector="^ Path.filled">
+      <Setter Property="Fill" Value="{DynamicResource PianoRollSideIconOffBrush}"/>
+    </Style>
+    <Style Selector="^ Path.stroked, ^ Ellipse.stroked">
+      <Setter Property="StrokeThickness" Value="1"/>
+      <Setter Property="Stroke" Value="{DynamicResource PianoRollSideIconOffBrush}"/>
+    </Style>
+    <Style Selector="^ TextBlock.sideToolbarGlyph">
+      <Setter Property="Foreground" Value="{DynamicResource PianoRollSideIconOffBrush}"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="^:pointerover Path.filled">
+      <Setter Property="Fill" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+    </Style>
+    <Style Selector="^:pointerover Path.stroked, ^:pointerover Ellipse.stroked">
+      <Setter Property="Stroke" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+    </Style>
+    <Style Selector="^:pointerover TextBlock.sideToolbarGlyph">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+    </Style>
+    <Style Selector="^:checked Path.filled">
+      <Setter Property="Fill" Value="{DynamicResource PianoRollSideAccentBrush}"/>
+    </Style>
+    <Style Selector="^:checked Path.stroked, ^:checked Ellipse.stroked">
+      <Setter Property="Stroke" Value="{DynamicResource PianoRollSideAccentBrush}"/>
+    </Style>
+    <Style Selector="^:checked TextBlock.sideToolbarGlyph">
+      <Setter Property="Foreground" Value="{DynamicResource PianoRollSideAccentBrush}"/>
+    </Style>
+  </Style>
 </Styles>

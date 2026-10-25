@@ -242,6 +242,17 @@ namespace OpenUtau.App.Controls {
                     }
                 });
 
+            Dispatcher.UIThread.Post(() => {
+                this.WhenAnyValue(x => x.ViewModel!.NotesViewModel.ShowNoteParams)
+                    .Subscribe(_ => Dispatcher.UIThread.Post(ApplyNotePropsDockWidth));
+                NotePropsSplitter.DragCompleted += (_, _) => {
+                    Preferences.Default.NotePropertiesPanelWidth =
+                        NotePropsPanelMetrics.ClampWidth(PianoRollWorkspaceGrid.ColumnDefinitions[4].ActualWidth);
+                    Preferences.Save();
+                    ApplyNotePropsDockWidth();
+                };
+            });
+
             MessageBus.Current.Listen<PianorollRefreshEvent>()
                 .Subscribe(e => {
                     if(e.refreshItem == "Attachment") {
@@ -251,6 +262,18 @@ namespace OpenUtau.App.Controls {
                 });
 
             DocManager.Inst.AddSubscriber(this);
+        }
+
+        // Note-properties dock (from OpenUtau Lunai): 350-450 px, resized with the splitter
+        // on its left edge and kept in the preferences.
+        void ApplyNotePropsDockWidth() {
+            var columns = PianoRollWorkspaceGrid.ColumnDefinitions;
+            bool show = ViewModel?.NotesViewModel?.ShowNoteParams == true;
+            columns[3].Width = new GridLength(show ? 8 : 0);
+            columns[4].MinWidth = show ? NotePropsPanelMetrics.MinWidth : 0;
+            columns[4].MaxWidth = show ? NotePropsPanelMetrics.MaxWidth : 0;
+            columns[4].Width = new GridLength(show
+                ? NotePropsPanelMetrics.ClampWidth(Preferences.Default.NotePropertiesPanelWidth) : 0);
         }
 
         void OnMenuClosed(object sender, RoutedEventArgs args) {

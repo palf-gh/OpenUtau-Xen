@@ -226,6 +226,7 @@ namespace OpenUtau.Core.Util {
             public bool ShowExpressions = true;
             public bool ShowPhonemizerTags = true;
             public bool ShowNoteParams = true;
+            public double NotePropertiesPanelWidth = 400;
             public Dictionary<string, string> DefaultResamplers = new Dictionary<string, string>();
             public Dictionary<string, string> DefaultWavtools = new Dictionary<string, string>();
             public string LyricHelper = string.Empty;
