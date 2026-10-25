@@ -773,3 +773,30 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   (latest, not a pre-release) with Windows x64/arm64 zips and installers, a macOS
   arm64 dmg, and Linux x64/arm64 tarballs and AppImages. None of these packages
   was launched.
+
+## 2026-10-26 — Lone Alt no longer leaves the lyric box
+
+- Purpose: IME switchers that toggle the IME on a lone Alt, such as
+  alt-ime-ahk, opened the main menu while a lyric was being edited after a
+  double-click, so the box lost focus and the next keys went to the menu.
+- Cause: alt-ime-ahk masks the lone Alt with an unassigned virtual key (such as
+  `vk07`) so that Windows does not activate the menu. Avalonia 12.1 drops a key
+  event whose key, physical key and symbol are all empty, so its access key
+  handler never sees the masking key and opens the main menu on Alt-up.
+- Implementation: `LyricBox` registers a tunnelling `KeyDown` class handler on
+  `TopLevel`. Class handlers run before the window's access key handler; when
+  the focus is inside a `LyricBox`, the handler marks Left/Right Alt as handled,
+  so the menu neither opens nor shows its access keys. Alt+letter shortcuts and
+  Alt with the mouse in the piano roll are unchanged, and a lone Alt still opens
+  the menu when the focus is elsewhere.
+- Tests: the test app now initialises ReactiveUI as the application does, and
+  `StringsTest` checks that a lone Alt keeps the lyric box focused with the menu
+  closed but opens the menu from a button. With the handler removed, the check
+  fails.
+- Open: other text fields (track names, dialogs) still open the menu on a lone
+  Alt. Not checked interactively with alt-ime-ahk itself.
+- Verification: serial build and 498 tests pass (one opt-in voice test skipped).
+- Trial build: no trial was running; `work/OpenUtau-Xen-win-x64/` was updated in
+  place (07:24 local time). `OpenUtau-Xen.exe` matches the apphost and
+  `OpenUtau-Xen.dll` matches the ReadyToRun output, which contains the new
+  handler. Not launched interactively.

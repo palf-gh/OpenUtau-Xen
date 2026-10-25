@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.VisualTree;
 using Avalonia.LogicalTree;
 using OpenUtau.App;
+using ReactiveUI.Avalonia;
 
 [assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]
 
@@ -16,7 +17,8 @@ public class TestAppBuilder {
     public static AppBuilder BuildAvaloniaApp() {
         bool capture = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENUTAU_KEYBOARD_CAPTURES"));
         var builder = AppBuilder.Configure<App>().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = !capture })
-            .With(OpenUtau.App.Program.FontOptions());
+            .With(OpenUtau.App.Program.FontOptions())
+            .UseReactiveUI(_ => { });
         return capture ? builder.UseSkia() : builder;
     }
 }
@@ -111,6 +113,36 @@ namespace OpenUtau.App {
             }
             VerifyTuningPages(dialog);
             dialog.Close();
+            VerifyLyricBoxAlt();
+        }
+
+        // A lone Alt, as left by IME switchers such as alt-ime-ahk whose masking key Avalonia drops,
+        // must not open the main menu while a lyric is edited, but still does elsewhere.
+        static void VerifyLyricBoxAlt() {
+            var menu = new Menu { ItemsSource = new[] { new MenuItem { Header = "_File" } } };
+            var lyricBox = new OpenUtau.App.Controls.LyricBox();
+            var button = new Button { Content = "Other" };
+            var window = new Window { Content = new StackPanel { Children = { menu, lyricBox, button } } };
+            void TapAlt() {
+                window.KeyPress(Avalonia.Input.Key.LeftAlt, Avalonia.Input.RawInputModifiers.Alt, Avalonia.Input.PhysicalKey.AltLeft, null);
+                window.KeyRelease(Avalonia.Input.Key.LeftAlt, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.AltLeft, null);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            }
+            try {
+                window.Show();
+                lyricBox.DataContext!.GetType().GetProperty("IsVisible")!.SetValue(lyricBox.DataContext, true);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                var box = lyricBox.FindControl<TextBox>("PART_Box")!;
+                Assert.True(box.Focus());
+                TapAlt();
+                Assert.False(menu.IsOpen);
+                Assert.True(box.IsFocused);
+                Assert.True(button.Focus());
+                TapAlt();
+                Assert.True(menu.IsOpen);
+            } finally {
+                window.Close();
+            }
         }
 
         static void VerifyTuningPages(OpenUtau.App.Views.TuningDialog dialog) {
