@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">Hệ trung âm 1/6 comma</system:String>
   <system:String x:Key="xen.preset.rast">Rast (xấp xỉ bằng 24 phần chia đều quãng tám)</system:String>
   <system:String x:Key="xen.midi.recording">Đang ghi âm</system:String>
+  <system:String x:Key="xen.progress.stoprender">Dừng kết xuất</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Mở rộng piano roll trong cửa sổ</system:String>
 </ResourceDictionary>
 

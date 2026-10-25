@@ -69,6 +69,7 @@ namespace OpenUtau.App.ViewModels {
         public bool PlaybackAutoScroll2 { get => Preferences.Default.PlaybackAutoScroll == 2 ? true : false; }
         public bool PianoRollDetached { get => Preferences.Default.DetachPianoRoll; }
         public bool HideMenuItemVisible => !Preferences.Default.DetachPianoRoll;
+        [Reactive] public partial bool PianoRollFullscreen { get; set; }
         public bool ShowPhonemizerTags {
             get => Preferences.Default.ShowPhonemizerTags;
             set {

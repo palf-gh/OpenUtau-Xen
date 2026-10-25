@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">Среднетоновый строй (1/6 коммы)</system:String>
   <system:String x:Key="xen.preset.rast">Раст (приближение в 24-EDO)</system:String>
   <system:String x:Key="xen.midi.recording">Идёт запись</system:String>
+  <system:String x:Key="xen.progress.stoprender">Остановить рендеринг</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Развернуть пианоролл в окне</system:String>
 </ResourceDictionary>
 

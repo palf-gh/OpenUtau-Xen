@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">Strój średniotonowy (1/6 komatu)</system:String>
   <system:String x:Key="xen.preset.rast">Rast (przybliżenie w 24-EDO)</system:String>
   <system:String x:Key="xen.midi.recording">Nagrywanie</system:String>
+  <system:String x:Key="xen.progress.stoprender">Zatrzymaj renderowanie</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Rozwiń piano roll w oknie</system:String>
 </ResourceDictionary>
 

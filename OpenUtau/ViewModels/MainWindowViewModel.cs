@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using DynamicData.Binding;
 using OpenUtau.App.Views;
@@ -87,6 +88,15 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public partial bool ShowPianoRoll { get; set; }
         [Reactive] public partial double PianoRollMaxHeight { get; set; }
         [Reactive] public partial double PianoRollMinHeight { get; set; }
+        // Workspace rows from OpenUtau Lunai: tracks card, 8px splitter, docked piano roll.
+        [Reactive] public partial bool PianoRollFullscreen { get; set; }
+        public bool ShowTracksArea => !PianoRollFullscreen;
+        public double TracksRowMinHeight => PianoRollFullscreen ? 0 : ViewConstants.TracksPanelMinHeight;
+        public bool ShowPianoRollSplitter => ShowPianoRoll && !PianoRollFullscreen;
+        public GridLength PianoRollSplitterRowHeight =>
+            ShowPianoRoll && !PianoRollFullscreen ? new GridLength(8) : new GridLength(0);
+        [Reactive] public partial double TracksPanelHeightPx { get; set; }
+        double savedTracksPanelHeightPx;
         public ReactiveCommand<UPart, RxVoid> PartDeleteCommand { get; set; }
         public ReactiveCommand<int, RxVoid>? AddTempoChangeCmd { get; set; }
         public ReactiveCommand<int, RxVoid>? DelTempoChangeCmd { get; set; }
@@ -144,8 +154,45 @@ namespace OpenUtau.App.ViewModels {
                 .Subscribe(x => {
                     PianoRollMaxHeight = x ? double.PositiveInfinity : 0.01;
                     PianoRollMinHeight = x ? ViewConstants.PianoRollMinHeight : 0.01;
+                    if (!x && PianoRollFullscreen) {
+                        PianoRollFullscreen = false;
+                    }
+                    this.RaisePropertyChanged(nameof(ShowPianoRollSplitter));
+                    this.RaisePropertyChanged(nameof(PianoRollSplitterRowHeight));
+                });
+            this.WhenAnyValue(vm => vm.PianoRollFullscreen)
+                .Subscribe(fullscreen => {
+                    if (fullscreen) {
+                        savedTracksPanelHeightPx = TracksPanelHeightPx;
+                        TracksPanelHeightPx = 0;
+                    } else {
+                        TracksPanelHeightPx = savedTracksPanelHeightPx;
+                    }
+                    this.RaisePropertyChanged(nameof(ShowTracksArea));
+                    this.RaisePropertyChanged(nameof(ShowPianoRollSplitter));
+                    this.RaisePropertyChanged(nameof(PianoRollSplitterRowHeight));
+                    this.RaisePropertyChanged(nameof(TracksRowMinHeight));
                 });
         }
+
+        /// <summary>Keeps the tracks row within the space the piano roll leaves.</summary>
+        public void ClampWorkspaceRowHeights(double workspaceHeight) {
+            if (PianoRollFullscreen || !ShowPianoRoll) {
+                return;
+            }
+            double available = workspaceHeight - WorkspaceFixedRowsHeight;
+            if (available <= 0) {
+                return;
+            }
+            double maxTracks = Math.Max(TracksRowMinHeight, available - PianoRollMinHeight);
+            double clamped = Math.Clamp(TracksPanelHeightPx, TracksRowMinHeight, maxTracks);
+            if (Math.Abs(clamped - TracksPanelHeightPx) > 0.5) {
+                TracksPanelHeightPx = clamped;
+            }
+        }
+
+        /// <summary>Splitter row and render progress strip.</summary>
+        public const double WorkspaceFixedRowsHeight = 8 + 24;
 
         public void Undo() {
             DocManager.Inst.Undo();

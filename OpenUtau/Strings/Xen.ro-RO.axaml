@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">Temperament mezotonic de 1/6 de comă</system:String>
   <system:String x:Key="xen.preset.rast">Rast (aproximare în 24-EDO)</system:String>
   <system:String x:Key="xen.midi.recording">Înregistrare în curs</system:String>
+  <system:String x:Key="xen.progress.stoprender">Oprește randarea</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Extinde piano roll-ul în fereastră</system:String>
 </ResourceDictionary>
 

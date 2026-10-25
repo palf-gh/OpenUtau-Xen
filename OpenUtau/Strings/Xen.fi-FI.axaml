@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">Keskisävelviritys (1/6 kommaa)</system:String>
   <system:String x:Key="xen.preset.rast">Rast (24-EDO-likiarvo)</system:String>
   <system:String x:Key="xen.midi.recording">Tallennetaan</system:String>
+  <system:String x:Key="xen.progress.stoprender">Pysäytä renderöinti</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Laajenna pianorulla ikkunaan</system:String>
 </ResourceDictionary>
 

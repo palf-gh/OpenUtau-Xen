@@ -101,4 +101,6 @@
   <system:String x:Key="xen.preset.sixth">Tempérament mésotonique au sixième de comma</system:String>
   <system:String x:Key="xen.preset.rast">Rast (approximation en 24-EDO)</system:String>
   <system:String x:Key="xen.midi.recording">Enregistrement en cours</system:String>
+  <system:String x:Key="xen.progress.stoprender">Arrêter le rendu</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Agrandir le piano roll dans la fenêtre</system:String>
 </ResourceDictionary>

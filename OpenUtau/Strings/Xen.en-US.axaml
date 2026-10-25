@@ -101,4 +101,6 @@
   <system:String x:Key="xen.preset.sixth">Sixth-comma meantone</system:String>
   <system:String x:Key="xen.preset.rast">Rast (24-EDO approximation)</system:String>
   <system:String x:Key="xen.midi.recording">Recording</system:String>
+  <system:String x:Key="xen.progress.stoprender">Stop rendering</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Expand piano roll in window</system:String>
 </ResourceDictionary>

@@ -405,6 +405,10 @@ namespace OpenUtau.App.Controls {
             SearchNote();
         }
 
+        void OnMenuExpandPianoRoll(object sender, RoutedEventArgs args) {
+            MainWindow?.TogglePianoRollFullscreen();
+        }
+
         void OnMenuDetachPianoRoll(object sender, RoutedEventArgs args) {
             Preferences.Default.DetachPianoRoll ^= true;
             Preferences.Save();

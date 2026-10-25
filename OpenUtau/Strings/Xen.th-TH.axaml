@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">มีนโทน 1/6 คอมมา</system:String>
   <system:String x:Key="xen.preset.rast">ราสต์ (ประมาณด้วยการแบ่งอ็อกเทฟเท่ากัน 24 ส่วน)</system:String>
   <system:String x:Key="xen.midi.recording">กำลังบันทึก</system:String>
+  <system:String x:Key="xen.progress.stoprender">หยุดเรนเดอร์</system:String>
+  <system:String x:Key="xen.pianoroll.expand">ขยายเปียโนโรลในหน้าต่าง</system:String>
 </ResourceDictionary>
 

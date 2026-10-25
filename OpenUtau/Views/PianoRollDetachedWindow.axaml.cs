@@ -30,7 +30,11 @@ namespace OpenUtau.App.Views {
         }
 
         public void WindowClosing(object? sender, WindowClosingEventArgs e) {
-            Preferences.Default.PianorollWindowSize.Set(Width, Height, Position.X, Position.Y, (int)WindowState);
+            var size = Preferences.Default.PianorollWindowSize;
+            // A maximised window keeps its restored size for the next normal opening.
+            bool maximised = WindowState == WindowState.Maximized;
+            size.Set(maximised ? size.Width : Width, maximised ? size.Height : Height,
+                Position.X, Position.Y, (int)WindowState);
             Preferences.Save();
             Hide();
             e.Cancel = !forceClose;

@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">1/6콤마 중전음률</system:String>
   <system:String x:Key="xen.preset.rast">라스트 (24평균율 근사)</system:String>
   <system:String x:Key="xen.midi.recording">녹음 중</system:String>
+  <system:String x:Key="xen.progress.stoprender">렌더링 중지</system:String>
+  <system:String x:Key="xen.pianoroll.expand">피아노 롤을 창 안에서 확장</system:String>
 </ResourceDictionary>
 

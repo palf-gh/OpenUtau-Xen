@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">Penalaan nada tengah 1/6 koma</system:String>
   <system:String x:Key="xen.preset.rast">Rast (pendekatan 24 pembagian oktaf sama rata)</system:String>
   <system:String x:Key="xen.midi.recording">Merekam</system:String>
+  <system:String x:Key="xen.progress.stoprender">Hentikan render</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Perluas piano roll di jendela</system:String>
 </ResourceDictionary>
 

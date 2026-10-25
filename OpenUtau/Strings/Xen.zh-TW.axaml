@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">六分之一音差中全音律</system:String>
   <system:String x:Key="xen.preset.rast">拉斯特（24平均律近似）</system:String>
   <system:String x:Key="xen.midi.recording">錄音中</system:String>
+  <system:String x:Key="xen.progress.stoprender">停止算繪</system:String>
+  <system:String x:Key="xen.pianoroll.expand">在視窗內展開鋼琴捲簾</system:String>
 </ResourceDictionary>
 

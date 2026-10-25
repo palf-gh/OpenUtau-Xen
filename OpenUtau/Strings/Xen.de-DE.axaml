@@ -101,4 +101,6 @@
   <system:String x:Key="xen.preset.sixth">Mitteltönige Stimmung (⅙-Komma)</system:String>
   <system:String x:Key="xen.preset.rast">Rast (Annäherung in 24-EDO)</system:String>
   <system:String x:Key="xen.midi.recording">Aufnahme läuft</system:String>
+  <system:String x:Key="xen.progress.stoprender">Rendern stoppen</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Pianoroll im Fenster maximieren</system:String>
 </ResourceDictionary>

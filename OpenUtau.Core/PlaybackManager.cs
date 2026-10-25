@@ -303,6 +303,18 @@ namespace OpenUtau.Core {
             loopProjectOnPlaybackEnd = false;
         }
 
+        /// <summary>
+        /// Cancels in-flight playback rendering and clears the progress bar; export is unaffected.
+        /// The next edit or Play starts a fresh render pass.
+        /// </summary>
+        public void CancelActiveRender() {
+            renderCancellation?.Cancel();
+            if (StartingToPlay || PlayingMaster) {
+                StopPlayback();
+            }
+            DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, string.Empty));
+        }
+
         public void PausePlayback() {
             AudioOutput.Pause();
             StartingToPlay = false;

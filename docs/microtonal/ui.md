@@ -91,3 +91,33 @@ pitch), which Xen does not take.
   the keys are passed to the window's own handler first, so Home/End still move the
   playhead.
 - Verification: rendered headlessly in the light theme (welcome cards, menu above).
+
+### Docked workspace
+
+- Purpose: keep the piano roll in the main window under the tracks, as in Lunai.
+- Implementation: the main page is a tracks card, an 8px splitter, the piano-roll
+  host and a render progress strip. The tracks card starts at a quarter of the page
+  and keeps the pixel height set with the splitter; a hidden or detached piano roll
+  gives the tracks card the whole page. **View > Expand piano roll in window** hides
+  the tracks card. `DetachPianoRoll` now defaults to `false`; saved preferences are
+  kept. The track timeline sits above the tracks and the horizontal scrollbar below
+  them. The render strip shows progress and a stop chip on hover, which calls the new
+  `PlaybackManager.CancelActiveRender` (cancels playback rendering and stops playback;
+  export is unaffected). A maximised detached piano roll keeps its restored size.
+- Strings: `xen.progress.stoprender`, `xen.pianoroll.expand` in every language.
+- Verification: rendered headlessly with the piano roll docked and expanded, light
+  and dark themes; build and the full test suite pass.
+- Open: splitter dragging and detaching/re-attaching were not exercised with a real
+  pointer.
+
+### Top bar
+
+- Purpose: Lunai's 48px top bar with the menu and transport in one row.
+- Implementation: the menu moved into the top bar card, with transport chips (go to
+  start, play/pause, go to end, loop), a value strip (BPM, time signature, project
+  tuning) and the timer. Xen keeps upstream's loop toggle where Lunai has a
+  metronome, and shows the project tuning name where Lunai shows the key; clicking it
+  opens the project tuning editor. The mouse wheel on the BPM changes it by 1 (Shift
+  doubles, Ctrl 0.1, Alt 0.01). The old playback panel above the track headers is
+  gone.
+- Verification: rendered headlessly in light and dark themes.

@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">Zesdekomma-middentoonstemming</system:String>
   <system:String x:Key="xen.preset.rast">Rast (benadering in 24-EDO)</system:String>
   <system:String x:Key="xen.midi.recording">Opname bezig</system:String>
+  <system:String x:Key="xen.progress.stoprender">Renderen stoppen</system:String>
+  <system:String x:Key="xen.pianoroll.expand">Pianorol in venster vergroten</system:String>
 </ResourceDictionary>
 

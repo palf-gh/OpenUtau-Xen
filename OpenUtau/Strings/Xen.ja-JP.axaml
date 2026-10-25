@@ -101,5 +101,7 @@
   <system:String x:Key="xen.preset.sixth">1/6コンマ中全音律</system:String>
   <system:String x:Key="xen.preset.rast">ラースト（24平均律による近似）</system:String>
   <system:String x:Key="xen.midi.recording">録音中</system:String>
+  <system:String x:Key="xen.progress.stoprender">レンダリングを停止</system:String>
+  <system:String x:Key="xen.pianoroll.expand">ピアノロールをウィンドウ内で拡大</system:String>
 </ResourceDictionary>
 

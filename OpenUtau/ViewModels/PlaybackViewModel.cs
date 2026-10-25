@@ -13,6 +13,7 @@ namespace OpenUtau.App.ViewModels {
         public double Bpm => Project.tempos[0].bpm;
         public int Key => Project.key;
         public string KeyName => MusicMath.KeysInOctave[Key].Item1;
+        public string TuningName => XenStrings.PresetName(Project.GetTuning());
         public int Resolution => Project.resolution;
         public int PlayPosTick => DocManager.Inst.playPosTick;
         public TimeSpan PlayPosTime => TimeSpan.FromMilliseconds((int)Project.timeAxis.TickPosToMsPos(DocManager.Inst.playPosTick));
@@ -92,11 +93,13 @@ namespace OpenUtau.App.ViewModels {
                 cmd is AddTimeSigCommand ||
                 cmd is DelTimeSigCommand ||
                 cmd is KeyCommand ||
+                cmd is SetTuningCommand ||
                 cmd is LoadProjectNotification) {
                 this.RaisePropertyChanged(nameof(BeatPerBar));
                 this.RaisePropertyChanged(nameof(BeatUnit));
                 this.RaisePropertyChanged(nameof(Bpm));
                 this.RaisePropertyChanged(nameof(KeyName));
+                this.RaisePropertyChanged(nameof(TuningName));
                 MessageBus.Current.SendMessage(new TimeAxisChangedEvent());
                 if (cmd is LoadProjectNotification) {
                     DocManager.Inst.ExecuteCmd(new SetPlayPosTickNotification(0));
