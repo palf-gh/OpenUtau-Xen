@@ -270,3 +270,22 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
 - README gained a bilingual "Contributing" section; the Japanese text was checked
   with yomiyasu.
 
+
+## 2026-10-25 — Workspace layout from OpenUtau Lunai
+
+- The welcome screen, docked workspace, top bar, piano-roll side toolbar and
+  note-properties dock, portrait across the cards and pitch follow are reimplemented
+  from OpenUtau Lunai at commit `01be2980269b01fb2d3f90e311d1132e91588768` (MIT).
+  Lunai's commits are not cherry-picked. Details per step are in `ui.md`.
+- `DESIGN.md` now takes Lunai's workspace as the layout reference; colours stay as
+  before. Controls use a 6px corner radius. The piano roll is docked by default for
+  new preferences; existing preferences keep their choice.
+- Left out: Singer Hub, DiffSinger quality presets and panels, key/scale overlay,
+  harmony, live pitch, Lunai's appearance and theme-editor docks, ThemeHub, track
+  colours and Original themes, TikTok mode, toasts, overlay scrollbars and the
+  separate phoneme card.
+- Verification: build and 397 tests pass (one opt-in voice test skipped); the
+  welcome screen and workspace were rendered headlessly in light and dark themes.
+  Not verified: pointer dragging of the splitters, detaching and re-attaching with a
+  real window manager, pitch follow during real playback, a real singer portrait,
+  high DPI, macOS and Linux.
