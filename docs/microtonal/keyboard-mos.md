@@ -61,12 +61,25 @@ unchanged.
 ## Shapes, drawing and selection
 
 `NotchedKeyboardLayout` consumes already classified degrees in ascending order.
-It groups contiguous kinds, distinguishing Black owners, then splits each run
+It groups contiguous kinds, distinguishing Natural and Black owners, then splits each run
 into `ceil(length / 5)` columns. Earlier columns receive any remainder, so seven
 cells split as `[4,3]` and thirteen as `[5,4,4]`. All degrees in a left column
 precede those in a right column. Degrees within a column increase bottom to top.
+Known neighbouring nominal owners always have separate runs, including E–F and
+the adjacent Bohlen–Pierce nominals. Only microsteps belonging to the same
+nominal are eligible for the same balanced Natural column.
 
-Natural keys have depth 1, Between/Conflict keys 2/3, and Black keys 1/3. Below
+The settings preview opts into a shared traditional-keyboard profile for
+canonical 12-EDO and 13-EDT. 12-EDO has seven white and five black keys; 13-EDT
+has nine white and four black keys. White fronts have equal unit widths; black keys are centred at
+the appropriate natural boundaries with width 0.6 and depth 0.62. Every nominal
+is a distinct full-depth key. Logical column indices remain in degree order,
+with separate horizontal position/width metadata for drawing and focus scrolling.
+Explicit role overrides or other division/period combinations use the generic
+layout instead. Labels are centred, with the traditional white-key labels aligned
+along the front of the keyboard.
+
+In the generic layout Natural keys have depth 1, Between/Conflict keys 2/3, and Black keys 1/3. Below
 each ending depth, surviving columns divide the released horizontal interval
 at their centre midpoints. The finite outside edges extend to the outer frame.
 Intersecting each column's resulting polygon with its original vertical degree

@@ -106,4 +106,6 @@ Amendment (2026-10-24, user review of the first trial build):
   changes scale markers, never the baseline key roles or shapes. Equal divisions
   of the tritave retain Bohlen–Pierce Lambda names. Settings previews use
   interlocking notched shapes with at most five degrees in each balanced column;
-  piano-roll row geometry remains in `PitchRowMapper`.
+  distinct nominal owners never share a column. Canonical 12-EDO and 13-EDT use
+  traditional horizontal keyboards with seven or nine equal-width white fronts.
+  Piano-roll row geometry remains in `PitchRowMapper`.

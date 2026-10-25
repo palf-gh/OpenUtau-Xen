@@ -1,5 +1,32 @@
 # Production record
 
+## 2026-10-25 — Separate nominal keys in 12-EDO and Bohlen–Pierce previews
+
+- User review found that adjacent White nominals, including E/F in 12-EDO and
+  D/E/F in 13-EDT, were being stacked within a single generic run. Natural runs
+  now retain their nominal owner, so only microsteps around the same nominal
+  can share a balanced column. Explicit class-override owners use a separate
+  range to avoid accidental merging with baseline nominals.
+- Added an opt-in shared traditional layout for the exact canonical 12-EDO and
+  13-EDT role patterns. Their seven or nine white fronts are equal-width,
+  full-depth keys, with five or four black accidentals respectively. Black keys
+  have width 0.6 and depth 0.62. The full-frame slab partition continues to supply
+  drawing, notch selection and exact-boundary ownership. Custom role patterns
+  and other periods retain the generic layout.
+- Physical column position/width are separate from logical degree order.
+  Settings previews use those coordinates for focus scrolling, align traditional
+  white labels along the front, and centre the labels. Piano-roll text keeps
+  its existing alignment. No pitch, baseline-MOS, colour or format changes.
+- The targeted regression run passed 44 cases. Serial solution build and the
+  Skia-backed application check succeeded. Full suite: 441 passed, one opt-in
+  external-voice test skipped. Light/dark captures for 12-, 31-,
+  53-, 73-EDO and 13-EDT are in ignored `work/traditional-keyboard-review/`.
+  Geometry tests cover equal fronts, distinct nominals, accidental positions,
+  complete tiling, notch ownership, exact boundaries and profile fallback guards.
+- Native high-DPI interaction and first-release renderer checks remain open.
+  The current trial is running; trial packaging and any pending replacement
+  are recorded below when completed.
+
 ## 2026-10-25 — Mandatory trial packaging at task completion
 
 - Added an always-applicable completion rule to `AGENTS.md`: refresh the existing

@@ -11,7 +11,7 @@ namespace OpenUtau.App.Controls {
         static readonly Typeface music = new Typeface(new FontFamily(XenStrings.AssetRoot + "Assets/Fonts#Bravura Text"));
         static readonly Dictionary<(string, IBrush, double), TextLayout[]> cache = new();
         public static void Draw(DrawingContext context, string text, IBrush brush, double fontSize,
-            double right, double top, double availableHeight) {
+            double right, double top, double availableHeight, bool centre = false) {
             var key = (text, brush, fontSize);
             if (!cache.TryGetValue(key, out var runs)) {
                 if (cache.Count > 1024) cache.Clear();
@@ -32,7 +32,7 @@ namespace OpenUtau.App.Controls {
             if (runs.Length == 0) return;
             double baseline = runs.Max(r => r.Baseline);
             double height = baseline + runs.Max(r => r.Height - r.Baseline);
-            double x = Math.Max(4, right - runs.Sum(r => r.Width));
+            double x = Math.Max(4, right - runs.Sum(r => r.Width) * (centre ? 0.5 : 1));
             double y = top + (availableHeight - height) / 2;
             foreach (var run in runs) {
                 using (context.PushTransform(Matrix.CreateTranslation(x, y + baseline - run.Baseline))) {

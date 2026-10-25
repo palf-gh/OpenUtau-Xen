@@ -8,6 +8,12 @@ namespace OpenUtau.Test {
         static NotchedKeyboardLayout Layout(params NotchedKeyKind[] kinds) =>
             NotchedKeyboardLayout.Create(kinds.Select((kind, degree) => new NotchedKeyStep(degree, kind)));
 
+        static NotchedKeyStep[] TraditionalSteps(int divisions) {
+            var naturals = divisions == 12 ? new[] { 0, 2, 4, 5, 7, 9, 11 } : new[] { 0, 2, 3, 4, 6, 7, 9, 10, 12 };
+            return Enumerable.Range(0, divisions).Select(degree => new NotchedKeyStep(degree,
+                naturals.Contains(degree) ? NotchedKeyKind.Natural : NotchedKeyKind.Shared, degree)).ToArray();
+        }
+
         [Theory]
         [InlineData(1, new[] { 1 })]
         [InlineData(5, new[] { 5 })]
@@ -54,14 +60,135 @@ namespace OpenUtau.Test {
                 new NotchedKeyStep(6, NotchedKeyKind.Conflict),
                 new NotchedKeyStep(7, NotchedKeyKind.Flat, 2),
             });
-            Assert.Equal(new[] { 2, 1, 1, 2, 1, 1 }, layout.Columns.Select(column => column.Degrees.Count));
-            Assert.Equal(new[] { -1, 0, 1, 1, -1, 2 }, layout.Columns.Select(column => column.Owner));
-            Assert.Equal(Enumerable.Range(0, 6), layout.Columns.Select(column => column.RunIndex));
-            Assert.Equal(NotchedKeyKind.Shared, layout.Columns[3].Kind);
-            Assert.Equal(1.0 / 3, layout.Columns[3].Depth);
-            Assert.Equal(NotchedKeyKind.Conflict, layout.Columns[4].Kind);
-            Assert.Equal(2.0 / 3, layout.Columns[4].Depth);
+            Assert.Equal(new[] { 1, 1, 1, 1, 2, 1, 1 }, layout.Columns.Select(column => column.Degrees.Count));
+            Assert.Equal(new[] { 0, 1, 0, 1, 1, -1, 2 }, layout.Columns.Select(column => column.Owner));
+            Assert.Equal(Enumerable.Range(0, 7), layout.Columns.Select(column => column.RunIndex));
+            Assert.Equal(NotchedKeyKind.Shared, layout.Columns[4].Kind);
+            Assert.Equal(1.0 / 3, layout.Columns[4].Depth);
+            Assert.Equal(NotchedKeyKind.Conflict, layout.Columns[5].Kind);
+            Assert.Equal(2.0 / 3, layout.Columns[5].Depth);
             Assert.Equal(1, layout.Keys.Single(key => key.Degree == 1).Owner);
+        }
+
+        [Fact]
+        public void AdjacentNominalOwnersStaySeparateWhileUnknownNaturalsRemainBalanced() {
+            var steps = new[] {
+                new NotchedKeyStep(0, NotchedKeyKind.Natural, 0),
+                new NotchedKeyStep(1, NotchedKeyKind.Natural, 1),
+            }.Concat(Enumerable.Range(2, 7).Select(degree => new NotchedKeyStep(degree, NotchedKeyKind.Natural)));
+            var layout = NotchedKeyboardLayout.Create(steps);
+            Assert.Equal(new[] { 1, 1, 4, 3 }, layout.Columns.Select(column => column.Degrees.Count));
+            Assert.Equal(new[] { 0, 1, -1, -1 }, layout.Columns.Select(column => column.Owner));
+            Assert.Equal(new[] { 0, 1, 2, 2 }, layout.Columns.Select(column => column.RunIndex));
+            Assert.Equal(0, layout.HitTest(0.5, 0.8)!.Degree);
+            Assert.Equal(1, layout.HitTest(1.5, 0.8)!.Degree);
+            Assert.All(layout.Columns, column => {
+                Assert.Equal(column.Index, column.X);
+                Assert.Equal(1, column.Width);
+            });
+        }
+
+        [Theory]
+        [InlineData(12, new[] { 0, 2, 4, 5, 7, 9, 11 })]
+        [InlineData(13, new[] { 0, 2, 3, 4, 6, 7, 9, 10, 12 })]
+        public void TraditionalProfilesHaveEqualWhiteFrontsAndDistinctNominals(int divisions, int[] whiteDegrees) {
+            var layout = NotchedKeyboardLayout.Create(TraditionalSteps(divisions), preferTraditionalKeyboard: true);
+            Assert.True(layout.IsTraditionalKeyboard);
+            Assert.Equal(whiteDegrees.Length, layout.Width);
+            Assert.Equal(divisions, layout.Columns.Count);
+            Assert.Equal(divisions, layout.Keys.Count);
+            Assert.Equal(Enumerable.Range(0, divisions), layout.Columns.Select(column => column.RunIndex));
+            for (int i = 0; i < whiteDegrees.Length; i++) {
+                var key = layout.Keys[whiteDegrees[i]];
+                var front = Assert.Single(key.Rectangles.Where(rectangle => rectangle.Bottom == 1));
+                Assert.Equal(i, front.X);
+                Assert.Equal(1, front.Width);
+                Assert.Equal(whiteDegrees[i], layout.HitTest(i + 0.5, 0.9)!.Degree);
+                if (i > 0) {
+                    Assert.NotEqual(layout.Keys[whiteDegrees[i - 1]].Column, key.Column);
+                    Assert.NotEqual(layout.Keys[whiteDegrees[i - 1]].RunIndex, key.RunIndex);
+                }
+            }
+            Assert.Equal(whiteDegrees[0], layout.HitTest(0, 0.9)!.Degree);
+            Assert.Equal(whiteDegrees[whiteDegrees.Length - 1], layout.HitTest(layout.Width, 0.9)!.Degree);
+            if (divisions == 12) {
+                Assert.Equal(4, layout.HitTest(2.9, 0.2)!.Degree);
+                Assert.Equal(5, layout.HitTest(3.1, 0.2)!.Degree);
+            }
+        }
+
+        [Theory]
+        [InlineData(12, new[] { 1, 3, 6, 8, 10 }, new[] { 1, 2, 4, 5, 6 })]
+        [InlineData(13, new[] { 1, 5, 8, 11 }, new[] { 1, 4, 6, 8 })]
+        public void TraditionalAccidentalsHaveStandardCentresAndCompleteHitAreas(int divisions, int[] blackDegrees, int[] centres) {
+            var steps = TraditionalSteps(divisions);
+            var blackKinds = new[] { NotchedKeyKind.Shared, NotchedKeyKind.Sharp, NotchedKeyKind.Flat };
+            for (int i = 0; i < blackDegrees.Length; i++) steps[blackDegrees[i]] = new NotchedKeyStep(blackDegrees[i], blackKinds[i % blackKinds.Length], i);
+            var layout = NotchedKeyboardLayout.Create(steps, preferTraditionalKeyboard: true);
+            Assert.True(layout.IsTraditionalKeyboard);
+            for (int i = 0; i < blackDegrees.Length; i++) {
+                int degree = blackDegrees[i];
+                var rectangle = Assert.Single(layout.Keys[degree].Rectangles);
+                Assert.Equal(centres[i], rectangle.X + rectangle.Width / 2, 10);
+                Assert.Equal(0.6, rectangle.Width, 10);
+                Assert.Equal(0.62, rectangle.Height, 10);
+                Assert.Equal(rectangle.X, layout.Columns[degree].X);
+                Assert.Equal(rectangle.Width, layout.Columns[degree].Width);
+                Assert.Equal(0.62, layout.Columns[degree].Depth);
+                Assert.Equal(degree, layout.HitTest(centres[i], 0.3)!.Degree);
+                var belowLeft = layout.HitTest(centres[i] - 0.1, 0.9)!;
+                var belowRight = layout.HitTest(centres[i] + 0.1, 0.9)!;
+                Assert.Equal(NotchedKeyKind.Natural, belowLeft.Kind);
+                Assert.Equal(NotchedKeyKind.Natural, belowRight.Kind);
+                Assert.NotEqual(belowLeft.Degree, belowRight.Degree);
+                Assert.Contains(belowLeft.Rectangles, rect => rect.Contains(centres[i] - 0.1, 0.9));
+                Assert.Contains(belowRight.Rectangles, rect => rect.Contains(centres[i] + 0.1, 0.9));
+            }
+        }
+
+        [Theory]
+        [InlineData(12)]
+        [InlineData(13)]
+        public void TraditionalProfilesTileTheEntireFrameWithoutOverlap(int divisions) {
+            var layout = NotchedKeyboardLayout.Create(TraditionalSteps(divisions), preferTraditionalKeyboard: true);
+            var rectangles = layout.Keys.SelectMany(key => key.Rectangles.Select(rectangle => (key, rectangle))).ToArray();
+            Assert.Equal(layout.Width, rectangles.Sum(item => item.rectangle.Width * item.rectangle.Height), 10);
+            for (int i = 0; i < rectangles.Length; i++) {
+                var first = rectangles[i].rectangle;
+                for (int j = i + 1; j < rectangles.Length; j++) {
+                    var second = rectangles[j].rectangle;
+                    double width = Math.Min(first.Right, second.Right) - Math.Max(first.X, second.X);
+                    double height = Math.Min(first.Bottom, second.Bottom) - Math.Max(first.Y, second.Y);
+                    Assert.True(width <= 1e-12 || height <= 1e-12);
+                }
+            }
+            var xs = rectangles.SelectMany(item => new[] { item.rectangle.X, item.rectangle.Right,
+                (item.rectangle.X + item.rectangle.Right) / 2 }).Distinct();
+            var ys = new[] { 0.0, 0.31, 0.62, 0.81, 1.0 };
+            foreach (double x in xs) {
+                foreach (double y in ys) {
+                    double insideX = x == layout.Width ? Math.BitDecrement(x) : x;
+                    double insideY = y == layout.Height ? Math.BitDecrement(y) : y;
+                    var owner = Assert.Single(rectangles.Where(item => item.rectangle.Contains(insideX, insideY)));
+                    Assert.Same(owner.key, layout.HitTest(x, y));
+                }
+            }
+        }
+
+        [Theory]
+        [InlineData(12)]
+        [InlineData(13)]
+        public void TraditionalProfilesRequireOptInAndTheExactDegreeRolePattern(int divisions) {
+            var steps = TraditionalSteps(divisions);
+            Assert.False(NotchedKeyboardLayout.Create(steps).IsTraditionalKeyboard);
+            Assert.False(NotchedKeyboardLayout.Create(steps.Take(divisions - 1), preferTraditionalKeyboard: true).IsTraditionalKeyboard);
+            Assert.False(NotchedKeyboardLayout.Create(steps.Select(step => new NotchedKeyStep(step.Degree + 1, step.Kind, step.Owner)),
+                preferTraditionalKeyboard: true).IsTraditionalKeyboard);
+            steps[1] = new NotchedKeyStep(1, NotchedKeyKind.Between);
+            Assert.False(NotchedKeyboardLayout.Create(steps, preferTraditionalKeyboard: true).IsTraditionalKeyboard);
+            steps = TraditionalSteps(divisions);
+            steps[0] = new NotchedKeyStep(0, NotchedKeyKind.Shared);
+            Assert.False(NotchedKeyboardLayout.Create(steps, preferTraditionalKeyboard: true).IsTraditionalKeyboard);
         }
 
         [Fact]

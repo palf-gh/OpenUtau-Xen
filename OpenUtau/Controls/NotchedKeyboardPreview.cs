@@ -12,7 +12,7 @@ using OpenUtau.Core.Microtonal;
 namespace OpenUtau.App.Controls {
     /// <summary>A one-equave keyboard whose drawing and pointer selection share the same notched shapes.</summary>
     public sealed class NotchedKeyboardPreview : Control {
-        const double ColumnWidth = 36;
+        double ColumnWidth => KeyLayout?.IsTraditionalKeyboard == true ? 56 : 36;
         readonly Dictionary<int, StreamGeometry> geometries = new Dictionary<int, StreamGeometry>();
         TuningDefinition? tuning;
         MosKeyboard? baseline;
@@ -51,9 +51,11 @@ namespace OpenUtau.App.Controls {
                         // Explicit key classes retain precedence over inferred keyboard roles.
                         var kind = role == KeyRole.White ? NotchedKeyKind.Natural
                             : role == KeyRole.Black ? NotchedKeyKind.Shared : NotchedKeyKind.Between;
-                        return new KeyboardPitchCell(step, kind, step, step);
+                        return new KeyboardPitchCell(step, kind, tuning.DegreeCount + step, step);
                     }).ToArray();
-                    KeyLayout = NotchedKeyboardLayout.Create(cells.Select(cell => new NotchedKeyStep(cell.Step, cell.Kind, cell.Owner)));
+                    bool traditional = tuning.Divisions == 12 && Math.Abs(tuning.PeriodCents - 1200) < 1e-8
+                        || tuning.Divisions == 13 && Math.Abs(tuning.PeriodCents - 1200 * Math.Log2(3)) < 1e-6;
+                    KeyLayout = NotchedKeyboardLayout.Create(cells.Select(cell => new NotchedKeyStep(cell.Step, cell.Kind, cell.Owner)), traditional);
                 }
                 active = new HashSet<int>((scale ?? Enumerable.Range(0, cells.Length)).Select(step => (step % cells.Length + cells.Length) % cells.Length));
                 if (SelectedDegree >= cells.Length) SelectedDegree = null;
@@ -112,7 +114,8 @@ namespace OpenUtau.App.Controls {
             SelectedDegree = Math.Clamp(next, 0, ItemCount - 1);
             UpdateAccessibleName();
             var shape = KeyLayout!.Keys[SelectedDegree.Value];
-            this.BringIntoView(new Rect(shape.Column * ColumnWidth, 0, ColumnWidth, Bounds.Height));
+            var column = KeyLayout.Columns[shape.Column];
+            this.BringIntoView(new Rect(column.X * ColumnWidth, 0, column.Width * ColumnWidth, Bounds.Height));
             InvalidateVisual(); e.Handled = true;
         }
 
@@ -167,6 +170,8 @@ namespace OpenUtau.App.Controls {
         public override void Render(DrawingContext context) {
             if (tuning == null || KeyLayout == null || Bounds.Height <= 0) return;
             double height = Bounds.Height;
+            double frontTop = KeyLayout.IsTraditionalKeyboard
+                ? KeyLayout.Keys.Where(key => cells[key.Degree].Role == KeyRole.Black).Max(key => key.Rectangles.Max(rect => rect.Bottom)) : 0;
             var visible = viewport.Width > 0 ? viewport : new Rect(Bounds.Size);
             var shapes = KeyLayout.Keys.Where(shape => shape.Rectangles.Any(rect =>
                 rect.Right * ColumnWidth >= visible.Left && rect.X * ColumnWidth <= visible.Right)).ToArray();
@@ -197,12 +202,18 @@ namespace OpenUtau.App.Controls {
                     var largest = shape.Rectangles.OrderByDescending(rect => rect.Width * rect.Height).First();
                     var area = new Rect(largest.X * ColumnWidth + 2, largest.Y * height + 1,
                         Math.Max(1, largest.Width * ColumnWidth - 4), Math.Max(1, largest.Height * height - 2));
+                    if (KeyLayout.IsTraditionalKeyboard && cells[shape.Degree].Role == KeyRole.White) {
+                        double left = shape.Rectangles.Min(rect => rect.X), right = shape.Rectangles.Max(rect => rect.Right);
+                        area = new Rect(left * ColumnWidth + 2, frontTop * height + 1,
+                            (right - left) * ColumnWidth - 4, (1 - frontTop) * height - 2);
+                    }
                     var textBrush = KeyBrush(cells[shape.Degree].Role, true);
                     var cell = cells[shape.Degree];
                     string label = cell.IsAnchor ? PitchNotation.Format(tuning, shape.Degree,
                         PitchNotation.ResolvePrimary(tuning, null), false) : shape.Degree.ToString(XenStrings.InputCulture);
                     using (context.PushClip(area)) {
-                        PitchLabelLayout.Draw(context, label, textBrush, Math.Min(11, area.Height * 0.7), area.Right - 2, area.Top, area.Height);
+                        PitchLabelLayout.Draw(context, label, textBrush, Math.Min(11, area.Height * 0.7),
+                            area.Left + area.Width / 2, area.Top, area.Height, centre: true);
                         if (active.Count != ItemCount && active.Contains(shape.Degree)) {
                             context.DrawEllipse(textBrush, null, new Point(area.Left + 3, area.Bottom - 4), 2, 2);
                         }

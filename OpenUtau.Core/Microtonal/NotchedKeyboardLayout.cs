@@ -38,12 +38,16 @@ namespace OpenUtau.Core.Microtonal {
         public int Index { get; }
         public int RunIndex { get; }
         public NotchedKeyKind Kind { get; }
-        /// <summary>The black anchor's owner, or -1 for runs not grouped by owner.</summary>
+        /// <summary>The natural or black anchor's owner, or -1 when the owner is unknown.</summary>
         public int Owner { get; }
         public IReadOnlyList<int> Degrees { get; }
         public double Depth { get; }
-        internal NotchedKeyColumn(int index, int runIndex, NotchedKeyKind kind, int owner, int[] degrees, double depth) {
+        public double X { get; }
+        public double Width { get; }
+        internal NotchedKeyColumn(int index, int runIndex, NotchedKeyKind kind, int owner, int[] degrees, double depth,
+            double? x = null, double width = 1) {
             Index = index; RunIndex = runIndex; Kind = kind; Owner = owner; Degrees = Array.AsReadOnly(degrees); Depth = depth;
+            X = x ?? index; Width = width;
         }
     }
 
@@ -73,8 +77,9 @@ namespace OpenUtau.Core.Microtonal {
     }
 
     /// <summary>
-    /// A horizontal keyboard tiled by notched key shapes. Coordinates use one unit per column
-    /// and a total depth of one; no physical pitch-to-row conversion is performed here.
+    /// A horizontal keyboard tiled by notched key shapes. Generic layouts use one unit per
+    /// column; traditional piano and Bohlen–Pierce profiles use one unit per white front. Total depth is
+    /// one, and no physical pitch-to-row conversion is performed here.
     /// </summary>
     public sealed class NotchedKeyboardLayout {
         sealed class Span {
@@ -90,14 +95,17 @@ namespace OpenUtau.Core.Microtonal {
         readonly Slab[] slabs;
         public IReadOnlyList<NotchedKeyColumn> Columns { get; }
         public IReadOnlyList<NotchedKeyShape> Keys { get; }
-        public double Width => Columns.Count;
+        public double Width { get; }
         public double Height => 1;
+        public bool IsTraditionalKeyboard { get; }
 
-        NotchedKeyboardLayout(NotchedKeyColumn[] columns, NotchedKeyShape[] keys, Slab[] slabs) {
+        NotchedKeyboardLayout(NotchedKeyColumn[] columns, NotchedKeyShape[] keys, Slab[] slabs,
+            double? width = null, bool traditionalKeyboard = false) {
             Columns = Array.AsReadOnly(columns); Keys = Array.AsReadOnly(keys); this.slabs = slabs;
+            IsTraditionalKeyboard = traditionalKeyboard; Width = width ?? columns.Length;
         }
 
-        public static NotchedKeyboardLayout Create(IEnumerable<NotchedKeyStep> steps) {
+        public static NotchedKeyboardLayout Create(IEnumerable<NotchedKeyStep> steps, bool preferTraditionalKeyboard = false) {
             if (steps == null) throw new ArgumentNullException(nameof(steps));
             var ordered = steps.ToArray();
             for (int i = 0; i < ordered.Length; i++) {
@@ -108,6 +116,14 @@ namespace OpenUtau.Core.Microtonal {
             }
             if (ordered.Length == 0) return new NotchedKeyboardLayout(Array.Empty<NotchedKeyColumn>(), Array.Empty<NotchedKeyShape>(), Array.Empty<Slab>());
             bool IsBlack(NotchedKeyKind kind) => kind == NotchedKeyKind.Flat || kind == NotchedKeyKind.Sharp || kind == NotchedKeyKind.Shared;
+            if (preferTraditionalKeyboard && (ordered.Length == 12 || ordered.Length == 13)
+                && ordered.Select(step => step.Degree).SequenceEqual(Enumerable.Range(0, ordered.Length))) {
+                var naturalDegrees = ordered.Length == 12 ? new[] { 0, 2, 4, 5, 7, 9, 11 } : new[] { 0, 2, 3, 4, 6, 7, 9, 10, 12 };
+                var naturals = new HashSet<int>(naturalDegrees);
+                if (ordered.All(step => naturals.Contains(step.Degree) ? step.Kind == NotchedKeyKind.Natural : IsBlack(step.Kind))) {
+                    return TraditionalKeyboard(ordered, naturalDegrees);
+                }
+            }
             double Depth(NotchedKeyKind kind) => kind == NotchedKeyKind.Natural ? 1
                 : kind == NotchedKeyKind.Between || kind == NotchedKeyKind.Conflict ? 2.0 / 3 : 1.0 / 3;
             // A fallback containing no natural keys still fills its complete outer rectangle.
@@ -119,7 +135,8 @@ namespace OpenUtau.Core.Microtonal {
             for (int start = 0; start < ordered.Length;) {
                 int end = start + 1;
                 while (end < ordered.Length && ordered[end].Kind == ordered[start].Kind
-                    && (!IsBlack(ordered[start].Kind) || ordered[end].Owner == ordered[start].Owner)) end++;
+                    && (!(IsBlack(ordered[start].Kind) || ordered[start].Kind == NotchedKeyKind.Natural)
+                        || ordered[end].Owner == ordered[start].Owner)) end++;
                 int length = end - start;
                 int count = (length + 4) / 5;
                 int small = length / count, remainder = length % count;
@@ -129,7 +146,8 @@ namespace OpenUtau.Core.Microtonal {
                     var degrees = ordered.Skip(position).Take(size).Select(step => step.Degree).ToArray();
                     int index = columns.Count;
                     var kind = ordered[start].Kind;
-                    columns.Add(new NotchedKeyColumn(index, runIndex, kind, IsBlack(kind) ? ordered[start].Owner : -1, degrees, Depth(kind) / deepest));
+                    columns.Add(new NotchedKeyColumn(index, runIndex, kind,
+                        IsBlack(kind) || kind == NotchedKeyKind.Natural ? ordered[start].Owner : -1, degrees, Depth(kind) / deepest));
                     foreach (var step in ordered.Skip(position).Take(size)) {
                         var key = new NotchedKeyShape(step.Degree, kind, step.Owner, index, runIndex);
                         keys.Add(key); byDegree.Add(step.Degree, key);
@@ -163,6 +181,37 @@ namespace OpenUtau.Core.Microtonal {
                 slabs.Add(new Slab(bottom, spans.ToArray()));
             }
             return new NotchedKeyboardLayout(columns.ToArray(), keys.ToArray(), slabs.ToArray());
+        }
+
+        static NotchedKeyboardLayout TraditionalKeyboard(NotchedKeyStep[] steps, int[] whiteDegrees) {
+            const double blackDepth = 0.62;
+            var keys = steps.Select(step => new NotchedKeyShape(step.Degree, step.Kind, step.Owner, step.Degree, step.Degree)).ToArray();
+            var upper = steps.Select(step => {
+                int white = Array.BinarySearch(whiteDegrees, step.Degree);
+                if (white < 0) {
+                    double centre = ~white;
+                    return NotchedKeyRectangle.FromBounds(centre - 0.3, 0, centre + 0.3, blackDepth);
+                }
+                double left = white, right = white + 1;
+                if (step.Degree > 0 && steps[step.Degree - 1].Kind != NotchedKeyKind.Natural) left += 0.3;
+                if (step.Degree + 1 < steps.Length && steps[step.Degree + 1].Kind != NotchedKeyKind.Natural) right -= 0.3;
+                return NotchedKeyRectangle.FromBounds(left, 0, right, blackDepth);
+            }).ToArray();
+            var columns = steps.Select(step => new NotchedKeyColumn(step.Degree, step.Degree, step.Kind, step.Owner,
+                new[] { step.Degree }, step.Kind == NotchedKeyKind.Natural ? 1 : blackDepth,
+                upper[step.Degree].X, upper[step.Degree].Width)).ToArray();
+            var top = new Span[steps.Length];
+            for (int i = 0; i < keys.Length; i++) {
+                keys[i].Add(upper[i].X, 0, upper[i].Right, blackDepth);
+                top[i] = new Span(upper[i].Right, keys[i]);
+            }
+            var bottom = new Span[whiteDegrees.Length];
+            for (int i = 0; i < whiteDegrees.Length; i++) {
+                var key = keys[whiteDegrees[i]];
+                key.Add(i, blackDepth, i + 1, 1);
+                bottom[i] = new Span(i + 1, key);
+            }
+            return new NotchedKeyboardLayout(columns, keys, new[] { new Slab(blackDepth, top), new Slab(1, bottom) }, whiteDegrees.Length, true);
         }
 
         /// <summary>Returns the owning degree throughout a key, including every notch extension.</summary>
