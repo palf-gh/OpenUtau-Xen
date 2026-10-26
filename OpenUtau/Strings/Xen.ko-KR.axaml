@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">생성 음정 (음도 수)</system:String>
   <system:String x:Key="xen.field.cardinality">음의 수</system:String>
   <system:String x:Key="xen.field.mode">모드</system:String>
+  <system:String x:Key="xen.field.periods">주기당 반복 수</system:String>
   <system:String x:Key="xen.field.generatorInterval">생성 음정 (비율 또는 센트)</system:String>
   <system:String x:Key="xen.field.scaleName">음계 이름</system:String>
   <system:String x:Key="xen.field.degrees">음도 (쉼표로 구분)</system:String>

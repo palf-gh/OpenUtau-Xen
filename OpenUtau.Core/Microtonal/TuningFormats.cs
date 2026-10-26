@@ -16,15 +16,23 @@ namespace OpenUtau.Core.Microtonal {
 
     public static class TunxenFormat {
         public const string Extension = ".tunxen";
-        /// <summary>Version 2 adds the keyboard layout, keyboard MOS and scale tonic; version 1 is upgraded on reading.</summary>
-        public const int CurrentVersion = 2;
+        /// <summary>
+        /// Version 2 adds the keyboard layout, keyboard MOS and scale tonic; version 3 adds the keyboard MOS repeat
+        /// count. Version 1 is upgraded on reading; version 2 reads unchanged with one repeat.
+        /// </summary>
+        public const int CurrentVersion = 3;
         static readonly ISerializer Serializer = new SerializerBuilder()
             .WithNamingConvention(UnderscoredNamingConvention.Instance)
             .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull).Build();
         static readonly IDeserializer Deserializer = new DeserializerBuilder()
             .WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
+        // YamlDotNet's object factory caches are not thread-safe, as in Yaml.
+        static readonly object serializerLock = new object();
+        static readonly object deserializerLock = new object();
         public static TuningDefinition Parse(string text) {
-            var document = Deserializer.Deserialize<TunxenDocument>(text) ?? throw new FormatException("Empty tuning document.");
+            TunxenDocument? parsed;
+            lock (deserializerLock) parsed = Deserializer.Deserialize<TunxenDocument>(text);
+            var document = parsed ?? throw new FormatException("Empty tuning document.");
             if (document.Format != "OpenUtauXenTuning" || document.Version < 1 || document.Version > CurrentVersion)
                 throw new FormatException("Unsupported OpenUtau Xen tuning format or version.");
             if (document.Tuning == null) throw new FormatException("The document has no tuning.");
@@ -34,7 +42,9 @@ namespace OpenUtau.Core.Microtonal {
         }
         public static string Serialize(TuningDefinition tuning) {
             tuning.Validate();
-            return Serializer.Serialize(new TunxenDocument { Format = "OpenUtauXenTuning", Version = CurrentVersion, Tuning = tuning });
+            lock (serializerLock) {
+                return Serializer.Serialize(new TunxenDocument { Format = "OpenUtauXenTuning", Version = CurrentVersion, Tuning = tuning });
+            }
         }
         public static TuningDefinition Load(string path) => Parse(File.ReadAllText(path));
         public static void Save(string path, TuningDefinition tuning) => File.WriteAllText(path, Serialize(tuning), new UTF8Encoding(false));

@@ -42,8 +42,8 @@ namespace OpenUtau.Test {
             var (project, _, _) = Create();
             project.pitchSystem.Keyboard.Classes = Enumerable.Range(0, project.pitchSystem.DegreeCount).ToDictionary(d => d, _ => "natural");
             string text = XenProjectFormat.Serialize(project);
-            Assert.Contains("version: 2", text);
-            var read = XenProjectFormat.Parse(text.Replace("version: 2", "version: 1").Replace("layout: manual", "layout: mos"));
+            Assert.Contains("version: 3", text);
+            var read = XenProjectFormat.Parse(text.Replace("version: 3", "version: 1").Replace("layout: manual", "layout: mos"));
             Assert.Equal(KeyboardLayout.ManualLayout, read.pitchSystem.Keyboard.Layout);
         }
 
@@ -52,7 +52,7 @@ namespace OpenUtau.Test {
             var (project, _, _) = Create();
             project.pitchSystem = TuningPresets.EqualDivision(12);
             project.key = 2;
-            string v1 = XenProjectFormat.Serialize(project).Replace("version: 2", "version: 1");
+            string v1 = XenProjectFormat.Serialize(project).Replace("version: 3", "version: 1");
             Assert.Equal(2, XenProjectFormat.Parse(v1).pitchSystem.Keyboard.Tonic);
             string path = Path.Combine(Path.GetTempPath(), "xen-key-" + Guid.NewGuid().ToString("N") + ".ustx");
             try {
@@ -68,7 +68,7 @@ namespace OpenUtau.Test {
         public void NativeRejectsUnknownVersionsAndIdentifiers() {
             var (project, _, _) = Create();
             string text = XenProjectFormat.Serialize(project);
-            Assert.Throws<FileFormatException>(() => XenProjectFormat.Parse(text.Replace("version: 2", "version: 999")));
+            Assert.Throws<FileFormatException>(() => XenProjectFormat.Parse(text.Replace("version: 3", "version: 999")));
             Assert.Throws<FileFormatException>(() => XenProjectFormat.Parse(text.Replace(XenProjectFormat.Identifier, "other-project")));
         }
 

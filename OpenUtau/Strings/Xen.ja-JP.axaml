@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">生成音程（音度数）</system:String>
   <system:String x:Key="xen.field.cardinality">音の数</system:String>
   <system:String x:Key="xen.field.mode">モード</system:String>
+  <system:String x:Key="xen.field.periods">周期内の繰り返し数</system:String>
   <system:String x:Key="xen.field.generatorInterval">生成音程（比率またはセント）</system:String>
   <system:String x:Key="xen.field.scaleName">スケール名</system:String>
   <system:String x:Key="xen.field.degrees">音度（コンマ区切り）</system:String>

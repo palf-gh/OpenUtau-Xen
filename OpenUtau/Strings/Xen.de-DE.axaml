@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Generator (Tonstufen)</system:String>
   <system:String x:Key="xen.field.cardinality">Anzahl der Tonhöhen</system:String>
   <system:String x:Key="xen.field.mode">Modus</system:String>
+  <system:String x:Key="xen.field.periods">Wiederholungen pro Periode</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (Verhältnis oder Cent)</system:String>
   <system:String x:Key="xen.field.scaleName">Skalenname</system:String>
   <system:String x:Key="xen.field.degrees">Tonstufen (durch Kommas getrennt)</system:String>

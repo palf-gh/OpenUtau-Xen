@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Генератор (ступени)</system:String>
   <system:String x:Key="xen.field.cardinality">Число звуков</system:String>
   <system:String x:Key="xen.field.mode">Лад</system:String>
+  <system:String x:Key="xen.field.periods">Повторов в периоде</system:String>
   <system:String x:Key="xen.field.generatorInterval">Генератор (отношение или центы)</system:String>
   <system:String x:Key="xen.field.scaleName">Название звукоряда</system:String>
   <system:String x:Key="xen.field.degrees">Ступени (через запятую)</system:String>

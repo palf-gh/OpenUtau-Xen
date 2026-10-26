@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Interval pembangkit (derajat)</system:String>
   <system:String x:Key="xen.field.cardinality">Jumlah nada</system:String>
   <system:String x:Key="xen.field.mode">Modus</system:String>
+  <system:String x:Key="xen.field.periods">Pengulangan per periode</system:String>
   <system:String x:Key="xen.field.generatorInterval">Interval pembangkit (rasio atau sen)</system:String>
   <system:String x:Key="xen.field.scaleName">Nama tangga nada</system:String>
   <system:String x:Key="xen.field.degrees">Derajat nada (dipisahkan koma)</system:String>

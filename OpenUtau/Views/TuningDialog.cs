@@ -40,6 +40,7 @@ namespace OpenUtau.App.Views {
         readonly NumericUpDown generator = Number(-65536, 65536, 31, 0);
         readonly NumericUpDown cardinality = Number(1, 65536, 7, 0);
         readonly NumericUpDown mode = Number(1, 65536, 1, 0);
+        readonly NumericUpDown periods = Number(1, 65536, 1, 0);
         readonly NumericUpDown intervalCardinality = Number(1, 65536, 7, 0);
         readonly TextBox ratioGenerator = new TextBox { Text = "3/2" };
         readonly TextBox customScaleName = new TextBox { Text = XenStrings.Get("scale.custom") };
@@ -60,6 +61,7 @@ namespace OpenUtau.App.Views {
         bool structureValid = true;
         bool customGenerator;
         bool customCardinality;
+        bool customPeriods;
         string? editingScaleId;
         NotationProfile? seededNames;
         string? namesBeforeManual;
@@ -74,6 +76,7 @@ namespace OpenUtau.App.Views {
             generator.Name = "MosGenerator";
             cardinality.Name = "MosCardinality";
             mode.Name = "MosMode";
+            periods.Name = "MosPeriods";
             divisions.Name = "TuningDivisions";
             explicitCount.Name = "TuningExplicitCount";
             period.Name = "TuningPeriod";
@@ -120,7 +123,7 @@ namespace OpenUtau.App.Views {
             kinds.Children.Add(mosKeyboard);
             kinds.Children.Add(manualKeyboard);
             keyboardCard.Children.Add(kinds);
-            mosPanel.Children.Add(Parameters(("field.generatorDegree", generator), ("field.cardinality", cardinality), ("field.mode", mode)));
+            mosPanel.Children.Add(Parameters(("field.generatorDegree", generator), ("field.cardinality", cardinality), ("field.periods", periods), ("field.mode", mode)));
             mosPanel.Children.Add(scaleResult);
             keyboardCard.Children.Add(mosPanel);
             manualKeys.Children.Add(new TextBlock { Text = XenStrings.Get("field.selectedKey"), VerticalAlignment = VerticalAlignment.Center,
@@ -219,6 +222,7 @@ namespace OpenUtau.App.Views {
             generator.ValueChanged += (_, _) => { if (!loading) { customGenerator = true; LiveMosChanged(); } };
             cardinality.ValueChanged += (_, _) => { if (!loading) { customCardinality = true; LiveMosChanged(); } };
             mode.ValueChanged += (_, _) => { if (!loading) LiveMosChanged(); };
+            periods.ValueChanged += (_, _) => { if (!loading) { customPeriods = true; LiveMosChanged(); } };
             mosKeyboard.IsCheckedChanged += (_, _) => { if (!loading && mosKeyboard.IsChecked == true) SetMosKeyboard(true); };
             manualKeyboard.IsCheckedChanged += (_, _) => { if (!loading && manualKeyboard.IsChecked == true) SetMosKeyboard(false); };
             keyboardCycle.ValueChanged += (_, _) => { if (!loading) ChangeKeyboardCycle(); };
@@ -280,10 +284,13 @@ namespace OpenUtau.App.Views {
             generator.Value = mos?.Generator ?? fallback.Generator;
             cardinality.Maximum = draft.DegreeCount;
             cardinality.Value = mos?.Cardinality ?? fallback.Cardinality;
-            mode.Maximum = cardinality.Value ?? 1;
+            periods.Maximum = draft.DegreeCount;
+            periods.Value = mos?.Periods ?? 1;
+            RefreshModeMaximum();
             mode.Value = (mos?.Mode ?? fallback.Mode) + 1;
             customGenerator = mos != null && mos.Generator != fallback.Generator;
             customCardinality = mos != null && mos.Cardinality != fallback.Cardinality;
+            customPeriods = (mos?.Periods ?? 1) != 1;
         }
 
         bool Manual => KeyboardRegionizer.IsManual(draft);
@@ -511,7 +518,9 @@ namespace OpenUtau.App.Views {
                 if (!customGenerator) generator.Value = fallback.Generator;
                 cardinality.Maximum = draft.DegreeCount;
                 if (!customCardinality) cardinality.Value = fallback.Cardinality;
-                mode.Maximum = cardinality.Value ?? 1;
+                periods.Maximum = draft.DegreeCount;
+                if (!customPeriods) periods.Value = 1;
+                RefreshModeMaximum();
                 RefreshKeyboardCycle();
                 structureValid = true;
                 status.Text = "";
@@ -523,7 +532,7 @@ namespace OpenUtau.App.Views {
             } finally { loading = false; }
             RefreshKeyboardMode();
             if (structureValid) {
-                if (!Manual && (customGenerator || customCardinality)) StoreMos();
+                if (!Manual && (customGenerator || customCardinality || customPeriods)) StoreMos();
                 editingScaleId = null;
                 RefreshScaleChoices();
                 RefreshMosStatus();
@@ -543,7 +552,7 @@ namespace OpenUtau.App.Views {
         /// <summary>MOS parameter edits change only the keyboard; the scale stays as chosen.</summary>
         void LiveMosChanged() {
             if (loading || !structureValid || Manual) return;
-            mode.Maximum = cardinality.Value ?? 1;
+            RefreshModeMaximum();
             StoreMos();
             RefreshMosStatus();
             RefreshTonicChoices();
@@ -551,11 +560,23 @@ namespace OpenUtau.App.Views {
             RefreshApplyAction();
         }
 
+        /// <summary>Modes rotate within one period, so a multi-period MOS has fewer modes than notes.</summary>
+        void RefreshModeMaximum() {
+            int count = (int)(cardinality.Value ?? 1), repeats = (int)(periods.Value ?? 1);
+            mode.Maximum = Math.Max(1, count % repeats == 0 ? count / repeats : count);
+        }
+
+        KeyboardMos ReadMos() {
+            int repeats = ReadInteger(periods, 1);
+            return new KeyboardMos {
+                Generator = ReadInteger(generator, 0), Cardinality = ReadInteger(cardinality, FamilyCount), Mode = ReadInteger(mode, 1) - 1,
+                Periods = repeats == 1 ? null : repeats,
+            };
+        }
+
         void StoreMos() {
             try {
-                draft.Keyboard.Mos = new KeyboardMos {
-                    Generator = ReadInteger(generator, 0), Cardinality = ReadInteger(cardinality, FamilyCount), Mode = ReadInteger(mode, 1) - 1,
-                };
+                draft.Keyboard.Mos = ReadMos();
             } catch (Exception) {
                 draft.Keyboard.Mos = new KeyboardMos { Generator = 0, Cardinality = FamilyCount };
             }
@@ -563,9 +584,7 @@ namespace OpenUtau.App.Views {
 
         void RefreshMosStatus() {
             if (!structureValid || Manual) { scaleResult.Text = ""; return; }
-            var mos = draft.Keyboard.Mos ?? new KeyboardMos {
-                Generator = ReadInteger(generator, 0), Cardinality = ReadInteger(cardinality, FamilyCount), Mode = ReadInteger(mode, 1) - 1,
-            };
+            var mos = draft.Keyboard.Mos ?? ReadMos();
             var degrees = KeyboardRegionizer.MosDegrees(draft, mos);
             if (degrees == null) {
                 scaleResult.Text = XenStrings.Get("status.mosUnavailable");

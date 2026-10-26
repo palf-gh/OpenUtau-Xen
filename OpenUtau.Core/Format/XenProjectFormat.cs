@@ -9,8 +9,11 @@ namespace OpenUtau.Core.Format {
     /// <summary>Native Xen envelope. Upstream USTX versioning remains independent.</summary>
     public static class XenProjectFormat {
         public const string Identifier = "openutau-xen-project";
-        /// <summary>Version 2 stores tunings with keyboard layout, keyboard MOS and scale tonic; version 1 is upgraded.</summary>
-        public const int CurrentVersion = 2;
+        /// <summary>
+        /// Version 2 stores tunings with keyboard layout, keyboard MOS and scale tonic; version 3 adds the keyboard
+        /// MOS repeat count. Version 1 is upgraded; version 2 reads unchanged with one repeat.
+        /// </summary>
+        public const int CurrentVersion = 3;
         public const string Extension = ".ustxen";
         public sealed class Document {
             public string? Format { get; set; }

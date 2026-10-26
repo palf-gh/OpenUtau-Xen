@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Generator (trepte)</system:String>
   <system:String x:Key="xen.field.cardinality">Număr de sunete</system:String>
   <system:String x:Key="xen.field.mode">Mod</system:String>
+  <system:String x:Key="xen.field.periods">Repetări pe perioadă</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (raport sau cenți)</system:String>
   <system:String x:Key="xen.field.scaleName">Numele gamei</system:String>
   <system:String x:Key="xen.field.degrees">Trepte (separate prin virgulă)</system:String>

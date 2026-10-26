@@ -10,7 +10,7 @@ Nearest-degree conversion compares physical cents distances, including across ne
 
 ## Formats
 
-`.tunxen` is a versioned YAML document with `format: OpenUtauXenTuning`, `version: 2` and a complete `tuning` definition, including the keyboard layout, keyboard MOS and scale tonic. Version 1 is upgraded on reading (see `keyboard-mos.md`); other versions are rejected. Exact ratios, keyboard mapping holes and aliases round-trip.
+`.tunxen` is a versioned YAML document with `format: OpenUtauXenTuning`, `version: 3` and a complete `tuning` definition, including the keyboard layout, keyboard MOS (with its repeat count for a multi-period MOS) and scale tonic. Version 2 is read with one repeat and version 1 is upgraded on reading (see `keyboard-mos.md`); other versions are rejected. Exact ratios, keyboard mapping holes and aliases round-trip.
 
 Scala `.scl` import/export retains rational intervals and the final period. `.kbm` supports unmapped and repeated degrees, negative mapping cycles, formal periods distinct from the degree count and independent reference frequency. A formal octave of zero resolves to the imported tuning's degree count when applied. Native input mapping is exported as a finite 128-key Scala map so non-octave tunings retain their exact MIDI input mapping.
 
@@ -18,7 +18,7 @@ Scala `.scl` import/export retains rational intervals and the final period. `.kb
 
 Equal divisions 12, 17, 19, 22, 24, 31, 41, 53 and 72, explicit 5/7-limit examples, fifth-chain Pythagorean and meantone definitions, Werckmeister III, Kirnberger III, Vallotti, Young II, 13-division Bohlen–Pierce and a clearly labelled 24-EDO Rast approximation are generated analytically. No external scale archive is copied. Presets are deep-cloned to prevent library mutations leaking into other projects.
 
-The 53-EDO seven-note MOS uses the generator chain F–C–G–D–A–E–B, yielding degrees 0, 9, 18, 22, 31, 40 and 49. Mode rotation, degenerate equal-step subsets and early generator repetition are handled separately. Rational generators can create exact explicit tunings rather than silently quantising into an unrelated tuning.
+The 53-EDO seven-note MOS uses the generator chain F–C–G–D–A–E–B, yielding degrees 0, 9, 18, 22, 31, 40 and 49. Mode rotation, degenerate equal-step subsets and early generator repetition are handled separately. A multi-period MOS repeats a shorter chain in each equal part of the tuning period (12-EDO 4L4s, 22-EDO 2L8s). Rational generators can create exact explicit tunings rather than silently quantising into an unrelated tuning.
 
 Ups and Downs candidates are derived from the period's nearest fifth and preserve different sharp/flat degrees in 53-EDO. Verified Stein–Zimmermann mappings are provided for 24-EDO and 53-EDO, with semantic accidental IDs translated to glyphs only when formatting. The 53-EDO mapping uses tuning-specific offsets from the [53edo SZG table](https://en.xen.wiki/w/53edo#Stein%E2%80%93Zimmermann%E2%80%93Gould_notation); SMuFL names and codepoints are checked against [W3C metadata](https://github.com/w3c/smufl/blob/gh-pages/metadata/glyphnames.json). In 53-EDO, a glyph whose SMuFL name mentions a quarter tone does not imply an invariant 50-cent alteration. Other SZG mappings fall back to degree labels unless explicitly defined.
 

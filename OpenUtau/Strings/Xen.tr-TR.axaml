@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Üreteç (derece)</system:String>
   <system:String x:Key="xen.field.cardinality">Perde sayısı</system:String>
   <system:String x:Key="xen.field.mode">Mod</system:String>
+  <system:String x:Key="xen.field.periods">Periyot başına tekrar</system:String>
   <system:String x:Key="xen.field.generatorInterval">Üreteç (oran veya sent)</system:String>
   <system:String x:Key="xen.field.scaleName">Dizi adı</system:String>
   <system:String x:Key="xen.field.degrees">Dereceler (virgülle ayrılmış)</system:String>

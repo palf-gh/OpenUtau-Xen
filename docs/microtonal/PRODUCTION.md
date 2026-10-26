@@ -854,3 +854,41 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   configuration, so `work/OpenUtau-Xen-win-x64/` still holds the 07:24 build,
   which covers only the lyric box. Replacing it is pending. Not launched
   interactively.
+
+## 2026-10-26 — Multi-period MOS keyboards
+
+- Purpose: build keyboards from a MOS whose generator chain repeats several times
+  in the tuning period, such as 12-EDO diminished 4L4s, 15-EDO blackwood 5L5s and
+  22-EDO pajara 2L8s. Previously the chain repeated early and the MOS was reported
+  unavailable.
+- Implementation: `MosGenerator.Generate` takes a repeat count. The generator is
+  counted inside one repeat, the note count covers the tuning period and modes
+  rotate within one repeat. `KeyboardMos.Periods` stores the count (null means one
+  and is not written). The regionizer's MOS cache includes it, and a multi-period
+  MOS never takes family names. The tuning settings MOS card has a "Repeats per
+  period" field in every Xen language; the mode maximum follows the note count
+  divided by the repeats. Like generator and note count, an edited repeat count
+  survives a structure change and otherwise returns to one. `.tunxen` and `.ustxen` move to version 3; version 2
+  reads with one repeat. `TunxenFormat` now locks its YAML serialiser and
+  deserialiser as `Yaml` already does, after a parallel test run hit YamlDotNet's
+  thread-unsafe object factory cache. Default and family MOS stay single-period.
+  Unequal tunings repeat in equal degree counts, not necessarily equal cents.
+- Verification: serial solution build succeeded with zero errors. Full suite:
+  511 passed, one opt-in external-voice test skipped. `MultiPeriodMosTest`
+  covers 4L4s degrees and modes, 5L5s, 2L8s with equivalent generators, rejected
+  repeat counts, shared black keys and letter names, the cache key, family
+  names, validation and version 3 round trips for both formats with version 2
+  reads. AppTest sets 12-EDO 4L4s, an unfitting repeat count and the return to one
+  repeat in the settings dialog, and keeps an edited repeat count through a
+  division change; it fails without that fix. `git diff --check` passed.
+- Trial: no trial was running, so the self-contained Windows x64 Release build
+  replaced `work/OpenUtau-Xen-win-x64/` in place with local data kept. It was
+  built from the uncommitted working tree on top of `a6f5eca`, so its version
+  string names `a6f5eca`, which does not contain this work.
+  `OpenUtau-Xen.exe` matches the generated apphost; the application and core
+  DLLs match the ReadyToRun outputs by SHA-256. The branch starts from `develop`,
+  so this trial does not contain the unmerged JOB plug-in, rhythm grid and Alt
+  key changes from `feature/job-plugin-compatibility`. Native interactive launch
+  was not checked.
+- Open issues: the default MOS search does not propose multi-period MOS, and
+  multi-period scale presets are not offered.

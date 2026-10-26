@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Generator (toontrappen)</system:String>
   <system:String x:Key="xen.field.cardinality">Aantal tonen</system:String>
   <system:String x:Key="xen.field.mode">Modus</system:String>
+  <system:String x:Key="xen.field.periods">Herhalingen per periode</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (verhouding of cents)</system:String>
   <system:String x:Key="xen.field.scaleName">Toonladdernaam</system:String>
   <system:String x:Key="xen.field.degrees">Toontrappen (gescheiden door komma's)</system:String>

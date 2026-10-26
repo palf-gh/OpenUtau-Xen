@@ -258,6 +258,7 @@ namespace OpenUtau.App {
             period.Text = "3/1"; Layout();
             Assert.Equal(25, keyboard.ItemCount);
             Assert.Equal("3/1", Draft().Period.Ratio);
+            VerifyMultiPeriodMos(dialog, presets, keyboard, Layout, Draft);
             VerifyKeyboardCycle(dialog, presets, keyboard, Layout, Draft);
             VerifyScaleEditing(dialog, presets, keyboard, Layout, Draft);
             Assert.Equal(projectBefore, OpenUtau.Core.Microtonal.TunxenFormat.Serialize(OpenUtau.Core.DocManager.Inst.Project.pitchSystem));
@@ -274,6 +275,44 @@ namespace OpenUtau.App {
             VerifyTraditionalProfiles();
             VerifyAudibleKeyboard();
             CaptureNotchedKeyboards();
+        }
+
+        static void VerifyMultiPeriodMos(OpenUtau.App.Views.TuningDialog dialog, ComboBox presets, OpenUtau.App.Controls.NotchedKeyboardPreview keyboard,
+            Action layout, Func<OpenUtau.Core.Microtonal.TuningDefinition> draft) {
+            presets.SelectedItem = presets.ItemsSource!.Cast<OpenUtau.Core.Microtonal.TuningDefinition>().Single(t => t.Id == "12edo");
+            layout();
+            NumericUpDown Number(string name) => dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(c => c.Name == name);
+            var generator = Number("MosGenerator");
+            var cardinality = Number("MosCardinality");
+            var periods = Number("MosPeriods");
+            var mode = Number("MosMode");
+            var resultText = dialog.GetVisualDescendants().OfType<TextBlock>().Single(c => c.Name == "MosResult");
+            // 12-EDO diminished: two notes from a one-step generator, repeated in each minor third.
+            generator.Value = 1; cardinality.Value = 8; periods.Value = 4; layout();
+            Assert.Equal(2, mode.Maximum);
+            Assert.StartsWith("4L4s", resultText.Text);
+            Assert.False(keyboard.KeyLayout!.IsTraditionalKeyboard);
+            Assert.Equal(new[] { 0, 2, 3, 5, 6, 8, 9, 11 },
+                keyboard.Cells.Where(cell => cell.Role == OpenUtau.Core.Microtonal.KeyRole.White).Select(cell => cell.Step));
+            Assert.Equal(4, draft().Keyboard.Mos!.Periods);
+            periods.Value = 5; layout();
+            Assert.Equal(XenStrings.Get("status.mosUnavailable"), resultText.Text);
+            Assert.True(keyboard.IsWhiteKeysOnly);
+            periods.Value = 1; layout();
+            Assert.Equal(8, mode.Maximum);
+            Assert.Null(draft().Keyboard.Mos!.Periods);
+            generator.Value = 7; cardinality.Value = 7; layout();
+            Assert.True(keyboard.KeyLayout!.IsTraditionalKeyboard);
+            // A repeat count edited on its own survives a structure change, like generator and note count.
+            var twelve = presets.SelectedItem;
+            presets.SelectedItem = null; layout();
+            presets.SelectedItem = twelve; layout();
+            periods.Value = 4; layout();
+            Number("TuningDivisions").Value = 24; layout();
+            Assert.Equal(4, periods.Value);
+            Assert.Equal(4, draft().Keyboard.Mos!.Periods);
+            presets.SelectedItem = twelve; layout();
+            Assert.Equal(1, periods.Value);
         }
 
         static void VerifyKeyboardCycle(OpenUtau.App.Views.TuningDialog dialog, ComboBox presets, OpenUtau.App.Controls.NotchedKeyboardPreview keyboard,
