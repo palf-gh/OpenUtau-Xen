@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Număr de sunete</system:String>
   <system:String x:Key="xen.field.mode">Mod</system:String>
   <system:String x:Key="xen.field.periods">Repetări pe perioadă</system:String>
+  <system:String x:Key="xen.field.mosChoice">Gamă MOS</system:String>
+  <system:String x:Key="xen.mos.custom">Personalizată</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · generator {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · generator {1} ({2}¢) · {3} repetări</system:String>
+  <system:String x:Key="xen.mos.group">{0} sunete</system:String>
+  <system:String x:Key="xen.mos.improper">improprie</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Afișează MOS improprii în lista MOS a acordajului</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (raport sau cenți)</system:String>
   <system:String x:Key="xen.field.scaleName">Numele gamei</system:String>
   <system:String x:Key="xen.field.degrees">Trepte (separate prin virgulă)</system:String>

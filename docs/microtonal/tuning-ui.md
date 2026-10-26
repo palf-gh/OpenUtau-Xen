@@ -76,10 +76,19 @@ Date: 2026-10-25 (supersedes the single scale card with MOS/custom-scale
 choices). The tuning page has a **Keyboard** card and a **Scale** card, with the
 keyboard preview between them.
 
-- Keyboard: **MOS** shows generator, note count, repeats per period, mode and the
+- Keyboard: **MOS** shows the MOS scale list, generator, note count, repeats per
+  period, mode and the
   step pattern (for example `5L2s · LLsLLLs`, or `4L4s · LsLsLsLs` for 12-EDO
   diminished with 4 repeats); the mode count is the note count divided by the
-  repeats; **Key by key** shows the selected-key buttons
+  repeats. The list groups entries under note-count headings ("7 notes"), which
+  cannot be chosen. Each list entry shows the step counts, the generator in degrees and its
+  cents, and the repeats when there are more than one. Choosing an entry sets
+  the fields at mode 1; the default MOS keeps its own generator and mode (12-EDO
+  5L2s stays generator 7, C major). Fields that give a listed MOS select it;
+  others leave the list on "Custom". Improper MOS are listed only when the
+  preference "Show improper MOS in the tuning MOS list" is on (off by default);
+  a keyboard built from an improper MOS still works, and its step pattern ends
+  with "not proper"; **Key by key** shows the selected-key buttons
   White key, Black key and In-between key. Selecting a key (which also auditions
   it) and pressing a button sets its class; the names and key classes page shows
   the same classes. MOS edits change only the keyboard.

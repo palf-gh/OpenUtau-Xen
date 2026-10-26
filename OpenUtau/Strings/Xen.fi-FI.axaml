@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Sävelten määrä</system:String>
   <system:String x:Key="xen.field.mode">Moodi</system:String>
   <system:String x:Key="xen.field.periods">Toistoja jaksossa</system:String>
+  <system:String x:Key="xen.field.mosChoice">MOS-asteikko</system:String>
+  <system:String x:Key="xen.mos.custom">Oma</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · generaattori {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · generaattori {1} ({2}¢) · {3} toistoa</system:String>
+  <system:String x:Key="xen.mos.group">{0} säveltä</system:String>
+  <system:String x:Key="xen.mos.improper">ei säännöllinen</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Näytä epäsäännölliset MOS-asteikot virityksen MOS-luettelossa</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generaattori (suhde tai senttiä)</system:String>
   <system:String x:Key="xen.field.scaleName">Asteikon nimi</system:String>
   <system:String x:Key="xen.field.degrees">Asteet (pilkuin eroteltuina)</system:String>

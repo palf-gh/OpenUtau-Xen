@@ -909,3 +909,59 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and
   core DLLs match the ReadyToRun outputs by SHA-256; the version string names
   `580ccf5`. Native interactive launch was not checked.
+
+## 2026-10-26 — MOS scale list on the keyboard card
+
+- Purpose: user request to switch between the MOS that hold in the current tuning
+  from a drop-down list instead of typing generator, note count and repeats.
+- Implementation: `MosGenerator.Choices` enumerates single- and multi-period MOS
+  of four to 24 notes per degree count (see `keyboard-mos.md`), keeping only
+  balanced step patterns and leaving out one-degree chromatic chains. A user check
+  found 24-EDO's 5L2s missing: the first version listed only generators coprime
+  with the period, which drops the 14-step fifth. Generators sharing a factor
+  are now kept until their chain closes. The MOS
+  card has a "MOS scale" list above the fields. At the user's suggestion, entries
+  are grouped under note-count headings that cannot be chosen; choosing one
+  returns the list to the row the fields give. An entry is labelled with its step
+  counts, generator degrees and cents, and its repeats. Choosing one sets the
+  fields; the default MOS keeps its generator and mode. The list follows the
+  fields, and shows "Custom" when they give no listed MOS. New strings are in
+  every Xen language.
+- Verification: serial solution build succeeded with zero errors. Full suite:
+  567 passed, one opt-in external-voice test skipped. `MosChoiceTest` checks
+  that every listed MOS in 12-, 15-, 22-, 24-, 31- and 53-EDO generates with the
+  listed step counts, has no inversion duplicates and is sorted. It also checks
+  12-EDO's 13 entries, including 5L2s and 4L4s, the exclusion of the degenerate
+  eight-note chain of fourths, 24-EDO's 5L2s matching the default generator 14,
+  the multi-period examples and the limits. AppTest
+  checks the headings and their count, that choosing a heading changes nothing,
+  selects 4L4s and 5L2s from the list and checks the placeholder for fields that
+  give no MOS.
+- Open issues: `Generate` still calls a degenerate two-step-size chain a MOS, so
+  typed fields such as 12-EDO generator 5 with eight notes draw a keyboard with
+  status 4L4s.
+- Trial: no trial was running, so the self-contained Windows x64 Release build
+  replaced `work/OpenUtau-Xen-win-x64/` in place with local data kept. It was
+  built from the uncommitted working tree on `feature/mos-choices` on top of
+  `df91e22`, so its version string names `df91e22`. `OpenUtau-Xen.exe` matches
+  the generated apphost; the application and core DLLs match the ReadyToRun
+  outputs by SHA-256. Native interactive launch was not checked.
+
+## 2026-10-26 — Proper MOS by default in the MOS list
+
+- Purpose: user request after a discussion of the claim that 31-EDO has only four
+  seven-note MOS. It has eleven; four are Rothenberg-proper. Improper MOS should
+  not be offered by default, with a preference to allow them.
+- Implementation: `MosGenerator.IsProper` checks propriety in degrees with
+  equal sizes allowed, in O(k²) with prefix sums; `MosChoice.IsProper` records
+  it. The preference `XenAllowImproperMos` (off by default) is a toggle in
+  Preferences, Editing. The tuning settings list offers only proper MOS unless
+  it is on, and the step-pattern status ends with "not proper" for an improper
+  MOS. Keyboards are unchanged, because the standard 5L2s keyboards of 17-, 22-,
+  41- and 53-EDO are improper. New strings are in every Xen language.
+- Verification: serial solution build succeeded with zero errors. Full suite:
+  569 passed, one opt-in external-voice test skipped. `MosChoiceTest` checks the
+  four proper and six improper listed seven-note MOS in 31-EDO, equal-size
+  propriety in 12-EDO, the improper 53-EDO diatonic and a 4096-step scale.
+  AppTest checks the filtered list for either preference value and the
+  "not proper" status on the 53-EDO keyboard, which stays available.

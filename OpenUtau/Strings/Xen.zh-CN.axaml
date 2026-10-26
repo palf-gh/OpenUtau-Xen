@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">音数</system:String>
   <system:String x:Key="xen.field.mode">调式</system:String>
   <system:String x:Key="xen.field.periods">每周期重复次数</system:String>
+  <system:String x:Key="xen.field.mosChoice">MOS 音阶</system:String>
+  <system:String x:Key="xen.mos.custom">自定义</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · 生成音程 {1}（{2}¢）</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · 生成音程 {1}（{2}¢） · 重复 {3} 次</system:String>
+  <system:String x:Key="xen.mos.group">{0} 音</system:String>
+  <system:String x:Key="xen.mos.improper">非正规</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">在音律设置的 MOS 列表中显示非正规 MOS</system:String>
   <system:String x:Key="xen.field.generatorInterval">生成音程（比率或音分）</system:String>
   <system:String x:Key="xen.field.scaleName">音阶名称</system:String>
   <system:String x:Key="xen.field.degrees">音级（逗号分隔）</system:String>

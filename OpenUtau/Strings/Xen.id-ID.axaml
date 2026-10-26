@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Jumlah nada</system:String>
   <system:String x:Key="xen.field.mode">Modus</system:String>
   <system:String x:Key="xen.field.periods">Pengulangan per periode</system:String>
+  <system:String x:Key="xen.field.mosChoice">Tangga nada MOS</system:String>
+  <system:String x:Key="xen.mos.custom">Khusus</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · pembangkit {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · pembangkit {1} ({2}¢) · {3} pengulangan</system:String>
+  <system:String x:Key="xen.mos.group">{0} nada</system:String>
+  <system:String x:Key="xen.mos.improper">tidak proper</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Tampilkan MOS tidak proper di daftar MOS penalaan</system:String>
   <system:String x:Key="xen.field.generatorInterval">Interval pembangkit (rasio atau sen)</system:String>
   <system:String x:Key="xen.field.scaleName">Nama tangga nada</system:String>
   <system:String x:Key="xen.field.degrees">Derajat nada (dipisahkan koma)</system:String>

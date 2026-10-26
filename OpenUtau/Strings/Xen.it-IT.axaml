@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Numero di altezze</system:String>
   <system:String x:Key="xen.field.mode">Modo</system:String>
   <system:String x:Key="xen.field.periods">Ripetizioni per periodo</system:String>
+  <system:String x:Key="xen.field.mosChoice">Scala MOS</system:String>
+  <system:String x:Key="xen.mos.custom">Personalizzata</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · generatore {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · generatore {1} ({2}¢) · {3} ripetizioni</system:String>
+  <system:String x:Key="xen.mos.group">{0} note</system:String>
+  <system:String x:Key="xen.mos.improper">non proprio</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Mostra MOS non propri nell’elenco MOS dell’accordatura</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generatore (rapporto o cent)</system:String>
   <system:String x:Key="xen.field.scaleName">Nome della scala</system:String>
   <system:String x:Key="xen.field.degrees">Gradi (separati da virgole)</system:String>

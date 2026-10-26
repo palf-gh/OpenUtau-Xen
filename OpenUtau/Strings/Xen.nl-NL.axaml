@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Aantal tonen</system:String>
   <system:String x:Key="xen.field.mode">Modus</system:String>
   <system:String x:Key="xen.field.periods">Herhalingen per periode</system:String>
+  <system:String x:Key="xen.field.mosChoice">MOS-toonladder</system:String>
+  <system:String x:Key="xen.mos.custom">Eigen</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · generator {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · generator {1} ({2}¢) · {3} herhalingen</system:String>
+  <system:String x:Key="xen.mos.group">{0} tonen</system:String>
+  <system:String x:Key="xen.mos.improper">niet eigenlijk</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Niet-eigenlijke MOS tonen in de MOS-lijst van de stemming</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (verhouding of cents)</system:String>
   <system:String x:Key="xen.field.scaleName">Toonladdernaam</system:String>
   <system:String x:Key="xen.field.degrees">Toontrappen (gescheiden door komma's)</system:String>

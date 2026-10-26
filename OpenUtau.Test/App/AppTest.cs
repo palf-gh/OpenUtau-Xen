@@ -313,6 +313,56 @@ namespace OpenUtau.App {
             Assert.Equal(4, draft().Keyboard.Mos!.Periods);
             presets.SelectedItem = twelve; layout();
             Assert.Equal(1, periods.Value);
+            // The MOS list selects the family diatonic and applies a listed MOS to the fields.
+            var choices = dialog.GetVisualDescendants().OfType<ComboBox>().Single(c => c.Name == "MosChoices");
+            // Improper MOS are hidden unless the preference allows them.
+            var all = OpenUtau.Core.Microtonal.MosGenerator.Choices(12);
+            var listed = all.Where(c => OpenUtau.Core.Util.Preferences.Default.XenAllowImproperMos || c.IsProper).ToList();
+            Assert.Contains(all, c => !c.IsProper);
+            // Each note count starts with a heading that cannot be chosen.
+            int groups = listed.Select(c => c.Mos.Cardinality).Distinct().Count();
+            Assert.Equal(listed.Count + groups, choices.ItemCount);
+            var rows = choices.Items.Cast<ComboBoxItem>().ToArray();
+            Assert.Equal(XenStrings.Get("mos.group", 4), rows[0].Content);
+            Assert.False(rows[0].IsEnabled);
+            Assert.Equal(groups, rows.Count(row => !row.IsEnabled));
+            string Selected() => (string)((ComboBoxItem)choices.SelectedItem!).Content!;
+            int Row(Func<OpenUtau.Core.Microtonal.MosChoice, bool> match) {
+                int i = listed.FindIndex(c => match(c));
+                return i + listed.Take(i + 1).Select(c => c.Mos.Cardinality).Distinct().Count();
+            }
+            Assert.StartsWith("5L2s", Selected());
+            choices.SelectedIndex = 0; layout();
+            Assert.Equal(7m, generator.Value);
+            Assert.StartsWith("5L2s", Selected());
+            choices.SelectedIndex = Row(c => c.Periods == 4 && c.Mos.Cardinality == 8); layout();
+            Assert.Equal((1m, 8m, 4m, 1m), (generator.Value!.Value, cardinality.Value!.Value, periods.Value!.Value, mode.Value!.Value));
+            Assert.StartsWith("4L4s", resultText.Text);
+            Assert.Equal(4, draft().Keyboard.Mos!.Periods);
+            choices.SelectedIndex = Row(c => c.Mos.Cardinality == 7 && c.LargeCount == 5); layout();
+            Assert.Equal((7m, 7m, 1m), (generator.Value!.Value, cardinality.Value!.Value, periods.Value!.Value));
+            Assert.True(keyboard.KeyLayout!.IsTraditionalKeyboard);
+            // Fields that give no MOS leave the list on its placeholder.
+            generator.Value = 0; layout();
+            Assert.Equal(-1, choices.SelectedIndex);
+            generator.Value = 7; layout();
+            Assert.StartsWith("5L2s", Selected());
+            bool allowed = OpenUtau.Core.Util.Preferences.Default.XenAllowImproperMos;
+            try {
+                OpenUtau.Core.Util.Preferences.Default.XenAllowImproperMos = !allowed;
+                generator.Value = 5; layout(); generator.Value = 7; layout();
+                var shown = all.Where(c => !allowed || c.IsProper).ToList();
+                Assert.Equal(shown.Count + shown.Select(c => c.Mos.Cardinality).Distinct().Count(), choices.ItemCount);
+            } finally {
+                OpenUtau.Core.Util.Preferences.Default.XenAllowImproperMos = allowed;
+                generator.Value = 5; layout(); generator.Value = 7; layout();
+            }
+            Assert.DoesNotContain(XenStrings.Get("mos.improper"), resultText.Text);
+            // A 53-EDO diatonic keyboard stays available but its status says that it is not proper.
+            presets.SelectedItem = presets.ItemsSource!.Cast<OpenUtau.Core.Microtonal.TuningDefinition>().Single(t => t.Id == "53edo");
+            layout();
+            Assert.False(keyboard.IsWhiteKeysOnly);
+            Assert.EndsWith(XenStrings.Get("mos.improper"), resultText.Text);
         }
 
         static void VerifyKeyboardCycle(OpenUtau.App.Views.TuningDialog dialog, ComboBox presets, OpenUtau.App.Controls.NotchedKeyboardPreview keyboard,

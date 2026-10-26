@@ -172,6 +172,8 @@ namespace OpenUtau.Core.Util {
             /// <summary>Xen key labels: "auto", a notation id, or for the secondary label "none".</summary>
             public string XenPrimaryNotation = "auto";
             public string XenSecondaryNotation = "auto";
+            /// <summary>Whether the tuning settings' MOS list also offers MOS that are not Rothenberg-proper.</summary>
+            public bool XenAllowImproperMos = false;
             public string ThemeName = "Light";
             public int DegreeStyle;
             public bool UseTrackColor = false;

@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Anzahl der Tonhöhen</system:String>
   <system:String x:Key="xen.field.mode">Modus</system:String>
   <system:String x:Key="xen.field.periods">Wiederholungen pro Periode</system:String>
+  <system:String x:Key="xen.field.mosChoice">MOS-Skala</system:String>
+  <system:String x:Key="xen.mos.custom">Benutzerdefiniert</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · Generator {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · Generator {1} ({2}¢) · {3} Wiederholungen</system:String>
+  <system:String x:Key="xen.mos.group">{0} Töne</system:String>
+  <system:String x:Key="xen.mos.improper">nicht proprietär</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Nicht-proprietäre MOS in der MOS-Liste der Stimmung zeigen</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (Verhältnis oder Cent)</system:String>
   <system:String x:Key="xen.field.scaleName">Skalenname</system:String>
   <system:String x:Key="xen.field.degrees">Tonstufen (durch Kommas getrennt)</system:String>

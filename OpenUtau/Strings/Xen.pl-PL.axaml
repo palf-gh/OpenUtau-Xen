@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Liczba dźwięków</system:String>
   <system:String x:Key="xen.field.mode">Tryb</system:String>
   <system:String x:Key="xen.field.periods">Powtórzenia na okres</system:String>
+  <system:String x:Key="xen.field.mosChoice">Skala MOS</system:String>
+  <system:String x:Key="xen.mos.custom">Własna</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · generator {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · generator {1} ({2}¢) · {3} powtórzenia</system:String>
+  <system:String x:Key="xen.mos.group">Dźwięki: {0}</system:String>
+  <system:String x:Key="xen.mos.improper">niewłaściwa</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Pokazuj niewłaściwe MOS na liście MOS stroju</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (stosunek lub centy)</system:String>
   <system:String x:Key="xen.field.scaleName">Nazwa skali</system:String>
   <system:String x:Key="xen.field.degrees">Stopnie (oddzielone przecinkami)</system:String>

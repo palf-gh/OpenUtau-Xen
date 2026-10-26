@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Number of pitches</system:String>
   <system:String x:Key="xen.field.mode">Mode</system:String>
   <system:String x:Key="xen.field.periods">Repeats per period</system:String>
+  <system:String x:Key="xen.field.mosChoice">MOS scale</system:String>
+  <system:String x:Key="xen.mos.custom">Custom</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · generator {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · generator {1} ({2}¢) · {3} repeats</system:String>
+  <system:String x:Key="xen.mos.group">{0} notes</system:String>
+  <system:String x:Key="xen.mos.improper">not proper</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Show improper MOS in the tuning MOS list</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (ratio or cents)</system:String>
   <system:String x:Key="xen.field.scaleName">Scale name</system:String>
   <system:String x:Key="xen.field.degrees">Degrees (comma separated)</system:String>
