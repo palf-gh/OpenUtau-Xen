@@ -200,5 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">新增資料夾…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">移除</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">找到 {0} 個外掛，{1} 個問題</system:String>
+  <system:String x:Key="xen.vibrato.curves">顫音曲線</system:String>
+  <system:String x:Key="xen.vibrato.depth">深度（音分）</system:String>
+  <system:String x:Key="xen.vibrato.rate">速度（Hz）</system:String>
+  <system:String x:Key="xen.vibrato.length">長度（%）</system:String>
+  <system:String x:Key="xen.vibrato.position">音符內位置（%）</system:String>
+  <system:String x:Key="xen.vibrato.addPoint">新增點</system:String>
+  <system:String x:Key="xen.vibrato.removePoint">刪除點</system:String>
+  <system:String x:Key="xen.vibrato.resetCurve">重設曲線</system:String>
+  <system:String x:Key="xen.vibrato.applySelected">套用至所選音符</system:String>
+  <system:String x:Key="xen.vibrato.removeCurves">刪除曲線</system:String>
+  <system:String x:Key="xen.export.vibratoBake">可變顫音將轉換為音高點後匯出。</system:String>
 </ResourceDictionary>
 

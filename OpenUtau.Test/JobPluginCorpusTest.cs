@@ -13,6 +13,10 @@ namespace OpenUtau.Test {
     /// Opt-in run of user-installed JOB plugins, read in place. Set OPENUTAU_XEN_JOB_PLUGIN_DIRS to
     /// folders separated by ';' and optionally OPENUTAU_XEN_JOB_REPORT to a Markdown output path.
     /// Dialogs are accepted with their initial values and Yes/No questions are answered Yes.
+    /// OPENUTAU_XEN_JOB_FILTER limits the run to plugins whose file name contains one of its
+    /// '|'-separated parts. OPENUTAU_XEN_JOB_VIBRATO=1 gives the first note vibrato curves and the
+    /// third scalar vibrato, puts the playhead inside the first note and reports how far the
+    /// resulting vibrato departs from the original. OPENUTAU_XEN_JOB_SONG_TICK moves the playhead.
     /// </summary>
     public class JobPluginCorpusTest {
         sealed class AutoAccept : IJobPluginInteraction {
@@ -20,7 +24,7 @@ namespace OpenUtau.Test {
             public int ShowMessage(string message, int flags) => flags == 0 ? JobPluginApi.ResultOk : JobPluginApi.ResultYes;
         }
 
-        static (UProject, UVoicePart) Project() {
+        static (UProject, UVoicePart) Project(bool vibrato) {
             var project = Ustx.Create();
             var part = new UVoicePart { trackNo = 0, position = 1920, Duration = 7680, name = "corpus" };
             project.parts.Add(part);
@@ -31,6 +35,16 @@ namespace OpenUtau.Test {
                 part.notes.Add(note);
             }
             part.curves.Add(new UCurve(project.expressions[Ustx.PITD]) { xs = { 0, 240, 480 }, ys = { 0, 50, 0 } });
+            if (vibrato) {
+                var curved = part.notes.ElementAt(0).vibrato;
+                curved.length = 80;
+                curved.rateCurve = new List<VibratoPoint> { new VibratoPoint(0.2f, 4), new VibratoPoint(1, 8) };
+                curved.depthCurve = new List<VibratoPoint> { new VibratoPoint(0.2f, 20), new VibratoPoint(1, 80) };
+                var scalar = part.notes.ElementAt(2).vibrato;
+                scalar.length = 60;
+                scalar.period = 180;
+                scalar.depth = 30;
+            }
             project.timeAxis.BuildSegments(project);
             foreach (var note in part.notes) note.RefreshPitch(project, project.tracks[0]);
             return (project, part);
@@ -42,16 +56,24 @@ namespace OpenUtau.Test {
             if (string.IsNullOrWhiteSpace(dirs)) {
                 return;
             }
+            bool vibrato = Environment.GetEnvironmentVariable("OPENUTAU_XEN_JOB_VIBRATO") == "1";
+            var filter = Environment.GetEnvironmentVariable("OPENUTAU_XEN_JOB_FILTER")?
+                .Split('|', StringSplitOptions.RemoveEmptyEntries);
+            int songTick = int.TryParse(Environment.GetEnvironmentVariable("OPENUTAU_XEN_JOB_SONG_TICK"), out int tick)
+                ? tick : vibrato ? 240 : 960;
             var catalog = JobPluginCatalog.Scan(dirs.Split(';', StringSplitOptions.RemoveEmptyEntries));
             var report = new StringBuilder();
             report.AppendLine("| Plugin | Static scan | Result |");
             report.AppendLine("| --- | --- | --- |");
             foreach (var plugin in catalog.Plugins) {
-                var (project, part) = Project();
+                if (filter != null && !filter.Any(f => Path.GetFileName(plugin.FilePath).Contains(f, StringComparison.OrdinalIgnoreCase))) {
+                    continue;
+                }
+                var (project, part) = Project(vibrato);
                 string outcome;
                 try {
                     var session = JobPluginRunner.Prepare(project, part,
-                        new JobPluginProcessParameters { BeginTick = 0, EndTick = part.Duration, SongTick = 960 }, new AutoAccept());
+                        new JobPluginProcessParameters { BeginTick = 0, EndTick = part.Duration, SongTick = songTick }, new AutoAccept());
                     var result = JobPluginRunner.Run(plugin, session, new JobPluginLimits());
                     if (result.Edit == null) {
                         outcome = result.Cancelled ? "cancelled" : $"returned {result.ReturnCode}";
@@ -72,6 +94,7 @@ namespace OpenUtau.Test {
                             parts.Add($"pitd@120 25→{after.Sample(120)}");
                         }
                         if (e.Position != null || e.Duration != null || e.Name != null) parts.Add("part");
+                        if (vibrato) parts.Add(DescribeVibrato(project, part, e));
                         outcome = "ran: " + string.Join("; ", parts);
                     }
                 } catch (Exception e) {
@@ -87,6 +110,44 @@ namespace OpenUtau.Test {
                 ?? Path.Combine(AppContext.BaseDirectory, "job-plugin-corpus.md");
             File.WriteAllText(output, report.ToString(), new UTF8Encoding(false));
             Assert.NotEmpty(catalog.Plugins);
+        }
+
+        // Compares vibrato offsets (excluding the base pitch) of the original and edited notes.
+        static string DescribeVibrato(UProject project, UVoicePart part, JobPluginEdit edit) {
+            var after = part.notes.Except(edit.RemovedNotes).Concat(edit.AddedNotes).OrderBy(n => n.position).ToList();
+            double Offset(UNote note, int tick) {
+                if (note.vibrato.length <= 0) {
+                    return 0;
+                }
+                // Detached notes have no cached duration in ms, so derive the period from the time axis.
+                double startMs = project.timeAxis.TickPosToMsPos(part.position + note.position);
+                float nPeriod = (float)project.timeAxis.TicksBetweenMsPos(startMs, startMs + note.vibrato.period) / note.duration;
+                var point = note.vibrato.HasCurves
+                    ? note.vibrato.EvaluateAtTick(project, part, note, tick)
+                    : note.vibrato.Evaluate((float)(tick - note.position) / note.duration, nPeriod, note);
+                return (point.Y - note.AdjustedTone) * 100;
+            }
+            double maxCents = 0, maxRate = 0, maxDepth = 0;
+            int compared = 0;
+            float NPos(UNote note, int tick) => (float)(tick - note.position) / note.duration;
+            for (int tick = 0; tick < 1440; tick += 5) {
+                var original = part.notes.FirstOrDefault(n => n.position <= tick && tick < n.End);
+                var edited = after.FirstOrDefault(n => n.position <= tick && tick < n.End);
+                if (original == null || edited == null) {
+                    continue;
+                }
+                maxCents = Math.Max(maxCents, Math.Abs(Offset(original, tick) - Offset(edited, tick)));
+                compared++;
+                float before = NPos(original, tick), now = NPos(edited, tick);
+                if (edited.vibrato.length > 0 && now >= edited.vibrato.NormalizedStart) {
+                    maxRate = Math.Max(maxRate, Math.Abs(original.vibrato.SampleRate(before) - edited.vibrato.SampleRate(now)));
+                    maxDepth = Math.Max(maxDepth, Math.Abs(original.vibrato.SampleDepth(before) - edited.vibrato.SampleDepth(now)));
+                }
+            }
+            var notes = after.Where(n => n.position < 1440).Select(n =>
+                $"{n.position}+{n.duration} len {n.vibrato.length:0.#} in {n.vibrato.@in:0.#} out {n.vibrato.@out:0.#} shift {n.vibrato.shift:0.#} rate {Points(n.vibrato.rateCurve)} depth {Points(n.vibrato.depthCurve)}");
+            string Points(List<VibratoPoint>? points) => points == null ? "-" : string.Join(" ", points.Select(p => $"{p.x:0.###}:{p.y:0.##}"));
+            return $"vibrato max Δ {maxCents:0.###} cents over {compared} ticks, active rate Δ {maxRate:0.###} Hz, depth Δ {maxDepth:0.###} cents [{string.Join(", ", notes)}]";
         }
     }
 }

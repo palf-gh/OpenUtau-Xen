@@ -90,6 +90,7 @@ namespace OpenUtau.Core.Ustx {
         }
 
         public void AfterLoad(UProject project, UTrack track, UVoicePart part) {
+            vibrato.ValidateCurves();
             RefreshPitch(project, track);
             foreach (var exp in phonemeExpressions) {
                 if (track.TryGetExpDescriptor(project, exp.abbr, out var descriptor)) {
@@ -100,6 +101,7 @@ namespace OpenUtau.Core.Ustx {
         }
 
         public void BeforeSave(UProject project, UTrack track, UVoicePart part) {
+            vibrato.ValidateCurves();
             phonemeExpressions = phonemeExpressions
                 .OrderBy(exp => exp.index)
                 .ThenBy(exp => exp.abbr)
@@ -303,6 +305,20 @@ namespace OpenUtau.Core.Ustx {
         }
     }
     public class UVibrato {
+        public const float MinRateHz = 0.01f;
+        public const float MaxRateHz = 200f;
+        public const float MaxDepthCents = 1200f;
+        public List<VibratoPoint>? rateCurve;
+        public List<VibratoPoint>? depthCurve;
+        [YamlIgnore] public bool HasCurves => (rateCurve?.Count ?? 0) > 0 || (depthCurve?.Count ?? 0) > 0;
+
+        public void ValidateCurves() {
+            rateCurve = VibratoCurve.Validate(rateCurve, MinRateHz, MaxRateHz);
+            depthCurve = VibratoCurve.Validate(depthCurve, 0, MaxDepthCents);
+        }
+
+        public float SampleRate(float notePosition) => VibratoCurve.Sample(rateCurve, notePosition, 1000f / period);
+        public float SampleDepth(float notePosition) => VibratoCurve.Sample(depthCurve, notePosition, depth);
         // Vibrato percentage of note length.
         float _length;
         // Period in milliseconds.
@@ -354,7 +370,9 @@ namespace OpenUtau.Core.Ustx {
                 @out = @out,
                 shift = shift,
                 drift = drift,
-                volLink = volLink
+                volLink = volLink,
+                rateCurve = rateCurve?.Select(point => point.Clone()).ToList(),
+                depthCurve = depthCurve?.Select(point => point.Clone()).ToList(),
             };
             return result;
         }
@@ -370,6 +388,10 @@ namespace OpenUtau.Core.Ustx {
         /// <param name="nPos">Normalized position in note length.</param>
         /// <returns>Vector2(tick, noteNum)</returns>
         public Vector2 Evaluate(float nPos, float nPeriod, UNote note) {
+            if (HasCurves) {
+                double seconds = period / (1000.0 * nPeriod);
+                return EvaluateVariable(nPos, note, PhaseCycles(nPos, seconds));
+            }
             float nStart = NormalizedStart;
             float nIn = length / 100f * @in / 100f;
             float nInPos = nStart + nIn;
@@ -390,6 +412,10 @@ namespace OpenUtau.Core.Ustx {
         /// Evaluate the volume of the position on the vibrato curve.
         /// </summary>
         public float EvaluateVolume(float nPos, float nPeriod) {
+            if (HasCurves) {
+                double seconds = period / (1000.0 * nPeriod);
+                return EvaluateVariableVolume(nPos, PhaseCycles(nPos, seconds));
+            }
             float nStart = NormalizedStart;
             float nIn = length / 100f * @in / 100f;
             float nInPos = nStart + nIn;
@@ -415,6 +441,93 @@ namespace OpenUtau.Core.Ustx {
             }
             float y = 1 - reduction;
             return y;
+        }
+
+        public Vector2 EvaluateAtTick(UProject project, UPart part, UNote note, double partTick) {
+            float nPos = (float)((partTick - note.position) / note.duration);
+            if (!HasCurves) {
+                return Evaluate(nPos, (float)(period / note.DurationMs), note);
+            }
+            return EvaluateVariable(nPos, note, PhaseCyclesAtTick(project, part, note, partTick));
+        }
+
+        public float EvaluateVolumeAtTick(UProject project, UPart part, UNote note, double partTick) {
+            float nPos = (float)((partTick - note.position) / note.duration);
+            if (!HasCurves) {
+                return EvaluateVolume(nPos, (float)(period / note.DurationMs));
+            }
+            return EvaluateVariableVolume(nPos, PhaseCyclesAtTick(project, part, note, partTick));
+        }
+
+        // Integrate frequency rather than multiplying the current rate by elapsed
+        // time: that would introduce phase jumps whenever the rate changes.
+        public double PhaseCycles(float nPos, double noteSeconds) {
+            return IntegrateRate(nPos, (left, right) => (right - left) * noteSeconds) + shift / 100.0;
+        }
+
+        public double PhaseCyclesAtTick(UProject project, UPart part, UNote note, double partTick) {
+            float nPos = (float)((partTick - note.position) / note.duration);
+            double origin = part.position + note.position;
+            var tempoPositions = project.tempos.Select(tempo => (float)((tempo.position - origin) / note.duration));
+            return IntegrateRate(nPos, (left, right) =>
+                project.timeAxis.MsBetweenTickPos(origin + left * note.duration,
+                    origin + right * note.duration) / 1000.0, tempoPositions) + shift / 100.0;
+        }
+
+        double IntegrateRate(float nPos, Func<float, float, double> elapsedSeconds,
+                IEnumerable<float>? extraPositions = null) {
+            float start = NormalizedStart;
+            float end = Math.Clamp(nPos, start, 1);
+            if (end <= start) {
+                return 0;
+            }
+            var boundaries = new List<float> { start, end };
+            if (rateCurve != null) {
+                boundaries.AddRange(rateCurve.Select(point => point.x).Where(x => x > start && x < end));
+            }
+            if (extraPositions != null) {
+                boundaries.AddRange(extraPositions.Where(x => x > start && x < end));
+            }
+            boundaries.Sort();
+            double cycles = 0;
+            for (int i = 1; i < boundaries.Count; ++i) {
+                float left = boundaries[i - 1];
+                float right = boundaries[i];
+                cycles += (SampleRate(left) + SampleRate(right)) * 0.5 * elapsedSeconds(left, right);
+            }
+            return cycles;
+        }
+
+        Vector2 EvaluateVariable(float nPos, UNote note, double cycles) {
+            float currentDepth = SampleDepth(nPos);
+            float y = ((float)Math.Sin(2 * Math.PI * cycles) * currentDepth + currentDepth / 100 * drift)
+                * Envelope(nPos);
+            return new Vector2(note.position + note.duration * nPos, note.AdjustedTone + y / 100f);
+        }
+
+        float EvaluateVariableVolume(float nPos, double cycles) {
+            if (volLink < 0) {
+                cycles += 0.5;
+            }
+            float reduction = (-(float)Math.Sin(2 * Math.PI * cycles) / 2 + 0.3f)
+                * Math.Abs(volLink) / 100 * Envelope(nPos);
+            return 1 - reduction;
+        }
+
+        float Envelope(float nPos) {
+            float start = NormalizedStart;
+            float fadeIn = length / 100f * @in / 100f;
+            float fadeOut = length / 100f * @out / 100f;
+            if (nPos < start || length <= 0) {
+                return 0;
+            }
+            if (nPos < start + fadeIn) {
+                return (nPos - start) / fadeIn;
+            }
+            if (nPos > 1 - fadeOut) {
+                return (1 - nPos) / fadeOut;
+            }
+            return 1;
         }
 
         public Vector2 GetEnvelopeStart(UNote note) {

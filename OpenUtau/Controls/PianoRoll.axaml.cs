@@ -1054,6 +1054,15 @@ namespace OpenUtau.App.Controls {
                             Command = ReactiveCommand.Create(() => ViewModel.NotesViewModel.PasteSelectedParams(RootWindow)),
                             InputGesture = new KeyGesture(Key.V, KeyModifiers.Alt),
                         });
+                    ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
+                        Header = XenStrings.Get("vibrato.curves"),
+                        Command = ReactiveCommand.Create(() => {
+                            var notes = ViewModel.NotesViewModel.Selection.ToArray();
+                            if (notes.Length > 0 && ViewModel.NotesViewModel.Part != null) {
+                                new VibratoCurvesDialog(ViewModel.NotesViewModel.Part, notes).ShowDialog(RootWindow);
+                            }
+                        }),
+                    });
                         ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
                             Header = ThemeManager.GetString("pianoroll.menu.notes"),
                             Items = ViewModel.NoteBatchEdits.ToArray(),

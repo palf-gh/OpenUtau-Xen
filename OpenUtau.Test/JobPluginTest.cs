@@ -94,14 +94,14 @@ end
             Write("Computed.lua", "function manifest() return { name = make() } end\nfunction main() return 0 end", b);
             Write("NoMain.lua", "function manifest() return {} end", b);
             File.WriteAllBytes(Path.Combine(b, "Bad.lua"), new byte[] { 0x66, 0xff, 0xfe });
-            Write("Uses.lua", Plugin("-- VSInsertNoteExpression(n, e)\nos.execute('x') VSGetNextNoteExpression(n, 'VR')"), b);
+            Write("Uses.lua", Plugin("-- VSInsertNoteExpression(n, e)\nos.execute('x') VSGetUnknownExpression(n, 'VR')"), b);
             var result = JobPluginCatalog.Scan(new[] { a, b, a + Path.DirectorySeparatorChar, Path.Combine(root, "missing") });
             Assert.Equal(4, result.Plugins.Count);
             Assert.Equal(2, result.Plugins.Count(p => p.Name == "Same"));
             Assert.Equal(2, result.Plugins.Where(p => p.Name == "Same").Select(p => p.DisplayName).Distinct().Count());
             Assert.Equal("Computed", result.Plugins.Single(p => p.FilePath.EndsWith("Computed.lua")).Name);
             var uses = result.Plugins.Single(p => p.FilePath.EndsWith("Uses.lua"));
-            Assert.Equal(new[] { "VSGetNextNoteExpression" }, uses.UnsupportedApis);
+            Assert.Equal(new[] { "VSGetUnknownExpression" }, uses.UnsupportedApis);
             Assert.Contains("os.execute", uses.RestrictedFeatures);
             Assert.Contains(result.Diagnostics, d => d.Contains("NoMain.lua"));
             Assert.Contains(result.Diagnostics, d => d.Contains("Bad.lua") && d.Contains("UTF-8"));
@@ -434,6 +434,257 @@ end
             Assert.Equal(0, JobPluginSession.DynToNative(64));
             Assert.Equal(-240, JobPluginSession.DynToNative(0));
             Assert.Equal(64, JobPluginSession.NativeToDyn(0));
+        }
+
+        [Fact]
+        public void NoteExpressionsUsePortableHostScalesAndPhysicalInterpolation() {
+            var (project, part) = Project(true);
+            var original = part.notes.First();
+            original.vibrato.period = 200;
+            original.vibrato.depth = 50;
+            var result = Run(project, part, @"
+  VSSeekToBeginNote()
+  local r, n = VSGetNextNoteEx()
+  n.vibratoType = 1 n.vibratoLength = 100
+  assert(VSUpdateNoteEx(n) == 1)
+  assert(VSInsertNoteExpression(n, {type='VR', posNorm=0, value=0}) == 1)
+  assert(VSInsertNoteExpression(n, {type='VR', posNorm=1, value=64}) == 1)
+  assert(VSInsertNoteExpression(n, {type='VD', posNorm=0, value=0}) == 1)
+  assert(VSInsertNoteExpression(n, {type='VD', posNorm=1, value=127}) == 1)
+  local s, rate = VSGetNoteExpressionAt(n, 'VR', 0.5)
+  assert(math.abs(rate - (64 + 64 * math.log(3.75/5)/math.log(2))) < 0.00001)
+  local s2, depth = VSGetNoteExpressionAt(n, 'VD', 0.5)
+  assert(math.abs(depth - 63.5) < 0.00001)
+  return 0");
+            var note = result.Edit!.AddedNotes.Single();
+            Assert.Equal(100, note.vibrato.length);
+            Assert.Equal(2.5f, note.vibrato.SampleRate(0));
+            Assert.Equal(5f, note.vibrato.SampleRate(1));
+            Assert.Equal(3.75f, note.vibrato.SampleRate(0.5f));
+            Assert.Equal(0, note.vibrato.SampleDepth(0));
+            Assert.Equal(127 * 50f / 64, note.vibrato.SampleDepth(1));
+            Assert.Equal(original.pitchAddress!.Degree, note.pitchAddress!.Degree);
+            Assert.Equal(original.pitchAddress.ResidualCents, note.pitchAddress.ResidualCents);
+            Assert.False(original.vibrato.HasCurves);
+        }
+
+        [Fact]
+        public void NoteExpressionQueriesAndRemoveReinsertAreExactNoOps() {
+            var (project, part) = Project(false);
+            var original = part.notes.First();
+            original.vibrato.length = 70;
+            original.vibrato.rateCurve = new List<VibratoPoint> {
+                new VibratoPoint { x = 0.25f, y = 3.3f }, new VibratoPoint { x = 1, y = 7.7f } };
+            original.vibrato.depthCurve = new List<VibratoPoint> {
+                new VibratoPoint { x = 0, y = 40 }, new VibratoPoint { x = 0.75f, y = 80 } };
+            var result = Run(project, part, @"
+  VSSeekToBeginNote()
+  local r, n = VSGetNextNoteEx()
+  for _, kind in ipairs({'VR','VD'}) do
+    assert(VSSeekToBeginNoteExpression(n, kind) == 1)
+    local events = {}
+    local s, e = VSGetNextNoteExpression(n, kind)
+    while s == 1 do
+      table.insert(events, e)
+      assert(VSRemoveNoteExpression(n, e) == 1)
+      s, e = VSGetNextNoteExpression(n, kind)
+    end
+    assert(next(e) == nil)
+    for _, point in ipairs(events) do assert(VSInsertNoteExpression(n, point) == 1) end
+  end
+  return 0");
+            Assert.True(result.Edit!.IsEmpty);
+            Assert.Equal(3.3f, original.vibrato.rateCurve[0].y);
+        }
+
+        [Fact]
+        public void NoteExpressionIteratorSkipsRemovedEventsAndDefersInserts() {
+            var (project, part) = Project(false);
+            var original = part.notes.First();
+            original.vibrato.depthCurve = new List<VibratoPoint> {
+                new VibratoPoint { x = 0, y = 25 }, new VibratoPoint { x = 0.5f, y = 50 } };
+            var result = Run(project, part, @"
+  VSSeekToBeginNote() local r,n=VSGetNextNoteEx()
+  VSSeekToBeginNoteExpression(n,'VD')
+  local s,e=VSGetNextNoteExpression(n,'VD') assert(e.posNorm == 0)
+  assert(VSRemoveNoteExpression(n,e) == 1)
+  assert(VSInsertNoteExpression(n,{type='VD',posNorm=0.25,value=64}) == 1)
+  s,e=VSGetNextNoteExpression(n,'VD') assert(s == 1 and e.posNorm == 0.5)
+  s,e=VSGetNextNoteExpression(n,'VD') assert(s == 0)
+  VSSeekToBeginNoteExpression(n,'VD')
+  s,e=VSGetNextNoteExpression(n,'VD') assert(e.posNorm == 0.25)
+  return 0");
+            Assert.Equal(new[] { 0.25f, 0.5f }, result.Edit!.AddedNotes.Single().vibrato.depthCurve!.Select(p => p.x));
+        }
+
+        [Theory]
+        [InlineData("{type='VR',posNorm=-0.01,value=64}")]
+        [InlineData("{type='VD',posNorm=1.01,value=64}")]
+        [InlineData("{type='VR',posNorm=0.5,value=128}")]
+        [InlineData("{type='VD',posNorm=0.5,value=0/0}")]
+        [InlineData("{type='unknown',posNorm=0.5,value=64}")]
+        public void InvalidNoteExpressionAbortsWithoutChangingSource(string expression) {
+            var (project, part) = Project(false);
+            var source = part.notes.First();
+            Assert.Throws<JobPluginException>(() => Run(project, part, @"
+  VSSeekToBeginNote() local r,n=VSGetNextNoteEx()
+  VSInsertNoteExpression(n,{type='VD',posNorm=0.5,value=90})
+  VSInsertNoteExpression(n," + expression + @")
+  return 0"));
+            Assert.False(source.vibrato.HasCurves);
+        }
+
+        [Fact]
+        public void CopiedNotesKeepScalarVibratoAndAllowNeutralBendReset() {
+            var (project, part) = Project(false);
+            var source = part.notes.First();
+            source.vibrato.period = 180;
+            source.vibrato.depth = 42;
+            source.vibrato.shift = 25;
+            var result = Run(project, part, @"
+  VSSeekToBeginNote() local r,n=VSGetNextNoteEx()
+  n.posTick=960 n.durTick=240 n.vibratoType=1 n.vibratoLength=100 n.bendDepth=0
+  assert(VSInsertNoteEx(n) == 1)
+  return 0");
+            var added = result.Edit!.AddedNotes.Single();
+            Assert.Equal(180, added.vibrato.period);
+            Assert.Equal(42, added.vibrato.depth);
+            Assert.Equal(25, added.vibrato.shift);
+            Assert.Equal(100, added.vibrato.length);
+            Assert.Equal(0, source.vibrato.length);
+        }
+
+        [Fact]
+        public void ReinsertedNoteAtSameTimeKeepsCurvesButMovedCopyDoesNot() {
+            var (project, part) = Project(false);
+            var source = part.notes.First();
+            source.vibrato.length = 80;
+            source.vibrato.rateCurve = new List<VibratoPoint> { new VibratoPoint(0.2f, 4), new VibratoPoint(1, 8) };
+            source.vibrato.depthCurve = new List<VibratoPoint> { new VibratoPoint(0.2f, 20), new VibratoPoint(1, 80) };
+            var result = Run(project, part, @"
+  VSSeekToBeginNote() local r,n=VSGetNextNoteEx()
+  VSInsertNoteExpression(n,{type='VD',posNorm=0.6,value=64})
+  local moved={} for key,value in pairs(n) do moved[key]=value end
+  moved.posTick=1440
+  assert(VSInsertNoteEx(moved)==1)
+  assert(VSRemoveNote(n)==1)
+  n.lyric='か'
+  assert(VSInsertNoteEx(n)==1)
+  return 0");
+            var added = result.Edit!.AddedNotes.OrderBy(n => n.position).ToArray();
+            var same = added.Single(n => n.position == source.position);
+            Assert.Equal("か", same.lyric);
+            Assert.Equal(new[] { 0.2f, 1f }, same.vibrato.rateCurve!.Select(p => p.x));
+            Assert.Equal(new[] { 4f, 8f }, same.vibrato.rateCurve!.Select(p => p.y));
+            Assert.Equal(new[] { 0.2f, 0.6f, 1f }, same.vibrato.depthCurve!.Select(p => p.x));
+            Assert.Equal(50, same.vibrato.SampleDepth(0.6f), 4);
+            var moved = added.Single(n => n.position == 1440);
+            Assert.False(moved.vibrato.HasCurves);
+            Assert.Equal(2, source.vibrato.depthCurve!.Count);
+        }
+
+        [Fact]
+        public void CopiedInsertKeepsExactPitchAndAppliesPhysicalSemitoneDeltas() {
+            var (project, part) = Project(true);
+            var source = part.notes.First();
+            var exact = source.pitchAddress!.Clone();
+            var result = Run(project, part, @"
+  VSSeekToBeginNote() local r,n=VSGetNextNoteEx()
+  local clone={} for key,value in pairs(n) do clone[key]=value end
+  clone.posTick=960 clone.durTick=240
+  assert(VSInsertNoteEx(clone)==1)
+  n.posTick=1200 n.durTick=240 n.noteNum=n.noteNum+2
+  assert(VSRemoveNote(n)==1)
+  assert(VSInsertNoteEx(n)==1)
+  return 0");
+            var copied = result.Edit!.AddedNotes.OrderBy(n => n.position).ToArray();
+            Assert.Equal(2, copied.Length);
+            Assert.Equal(exact.Degree, copied[0].pitchAddress!.Degree);
+            Assert.Equal(exact.ResidualCents, copied[0].pitchAddress.ResidualCents);
+            Assert.Equal(source.ResolvedTone, copied[0].ResolvedTone, 9);
+            Assert.Equal(source.ResolvedTone + 2, copied[1].ResolvedTone, 9);
+            Assert.Same(source, result.Edit.RemovedNotes.Single());
+            Assert.Equal(exact.Degree, source.pitchAddress.Degree);
+            Assert.Equal(exact.ResidualCents, source.pitchAddress.ResidualCents);
+        }
+
+        [Fact]
+        public void NoteExpressionSplitRenormalisesCurvesAndIsOneUndoGroup() {
+            var (project, part) = Project(true);
+            var source = part.notes.First();
+            source.vibrato.length = 100;
+            source.vibrato.period = 200;
+            source.vibrato.depth = 50;
+            source.vibrato.rateCurve = new List<VibratoPoint> {
+                new VibratoPoint { x = 0, y = 5 }, new VibratoPoint { x = 1, y = 7.5f } };
+            source.vibrato.depthCurve = new List<VibratoPoint> {
+                new VibratoPoint { x = 0, y = 25 }, new VibratoPoint { x = 0.5f, y = 50 },
+                new VibratoPoint { x = 1, y = 75 } };
+            var result = Run(project, part, @"
+  VSSeekToBeginNote() local r,n=VSGetNextNoteEx()
+  local saved, boundary = {}, {}
+  for _,kind in ipairs({'VR','VD'}) do
+    saved[kind]={}
+    VSSeekToBeginNoteExpression(n,kind)
+    local s,e=VSGetNextNoteExpression(n,kind)
+    while s==1 do table.insert(saved[kind],e) s,e=VSGetNextNoteExpression(n,kind) end
+    local s2,v=VSGetNoteExpressionAt(n,kind,0.5) boundary[kind]=v
+  end
+  local left={} for key,value in pairs(n) do left[key]=value end
+  left.durTick=240
+  assert(VSInsertNoteEx(left)==1)
+  assert(VSRemoveNote(n)==1)
+  n.posTick=240 n.durTick=240
+  assert(VSInsertNoteEx(n)==1)
+  VSSeekToBeginNote() local s,note=VSGetNextNoteEx()
+  while s==1 do
+    if note.posTick==0 or note.posTick==240 then
+      for _,kind in ipairs({'VR','VD'}) do
+        for _,e in ipairs(saved[kind]) do
+          if note.posTick==0 and e.posNorm<=0.5 then
+            VSInsertNoteExpression(note,{type=kind,posNorm=e.posNorm*2,value=e.value})
+          elseif note.posTick==240 and e.posNorm>=0.5 then
+            VSInsertNoteExpression(note,{type=kind,posNorm=(e.posNorm-0.5)*2,value=e.value})
+          end
+        end
+        VSInsertNoteExpression(note,{type=kind,posNorm=note.posTick==0 and 1 or 0,value=boundary[kind]})
+      end
+    end
+    s,note=VSGetNextNoteEx()
+  end
+  return 0");
+            var split = result.Edit!.AddedNotes.OrderBy(n => n.position).ToArray();
+            Assert.Equal(2, split.Length);
+            Assert.Equal(new[] { 0, 240 }, split.Select(n => n.position));
+            Assert.All(split, n => {
+                Assert.Equal(source.pitchAddress!.Degree, n.pitchAddress!.Degree);
+                Assert.Equal(source.pitchAddress.ResidualCents, n.pitchAddress.ResidualCents);
+                Assert.Equal(source.ResolvedTone, n.ResolvedTone, 9);
+            });
+            for (int i = 0; i <= 20; i++) {
+                float pos = i / 20f;
+                Assert.Equal(source.vibrato.SampleRate(pos * 0.5f), split[0].vibrato.SampleRate(pos), 4);
+                Assert.Equal(source.vibrato.SampleRate(0.5f + pos * 0.5f), split[1].vibrato.SampleRate(pos), 4);
+                Assert.Equal(source.vibrato.SampleDepth(pos * 0.5f), split[0].vibrato.SampleDepth(pos), 4);
+                Assert.Equal(source.vibrato.SampleDepth(0.5f + pos * 0.5f), split[1].vibrato.SampleDepth(pos), 4);
+            }
+            var previousPost = DocManager.Inst.PostOnUIThread ?? (_ => { });
+            DocManager.Inst.Initialize(Thread.CurrentThread, System.Threading.Tasks.TaskScheduler.Default);
+            DocManager.Inst.PostOnUIThread = _ => { };
+            try {
+                DocManager.Inst.ExecuteCmd(new LoadProjectNotification(project));
+                JobPluginRunner.Apply(DocManager.Inst, project, part, result.Edit!, "command.batch.plugin");
+                Assert.Equal(3, part.notes.Count);
+                DocManager.Inst.Undo();
+                Assert.Equal(2, part.notes.Count);
+                Assert.Same(source, part.notes.First());
+                Assert.Equal(75, source.vibrato.SampleDepth(1));
+                DocManager.Inst.Redo();
+                Assert.Equal(3, part.notes.Count);
+                Assert.Equal(6.25f, part.notes.First().vibrato.SampleRate(1));
+            } finally {
+                DocManager.Inst.PostOnUIThread = previousPost;
+            }
         }
 
         [Fact]

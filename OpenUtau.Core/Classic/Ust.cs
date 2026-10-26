@@ -477,8 +477,19 @@ namespace OpenUtau.Classic {
                             // Plugins may return only selected pitch fields, or none at all.
                             // Seed their parser with the same absolute UST offsets that were
                             // exported, so untouched points survive the inverse conversion.
-                            newNote.pitch = new UstNote(project, project.tracks[part.trackNo], part, newNote).pitch;
+                            var nativePitch = newNote.pitch.Clone();
+                            var nativeVibrato = newNote.vibrato.Clone();
+                            var exported = new UstNote(project, project.tracks[part.trackNo], part, newNote);
+                            newNote.pitch = exported.pitch.Clone();
+                            newNote.vibrato = exported.vibrato.Clone();
                                 ParseNote(project, newNote, 0, 0, block.lines, out var _);
+                            bool restoreVariableVibrato = nativeVibrato.HasCurves
+                                && !block.lines.Any(line => line.line.StartsWith("VBR=", StringComparison.Ordinal))
+                                && newNote.pitch.data.Count == exported.pitch.data.Count
+                                && newNote.pitch.data.Zip(exported.pitch.data).All(pair =>
+                                    Math.Abs(pair.First.X - pair.Second.X) < 0.001f
+                                    && Math.Abs(pair.First.Y - pair.Second.Y) < 0.001f
+                                    && pair.First.shape == pair.Second.shape);
                             int parsedTone = newNote.tone;
                             if (hasNativePitch) {
                                 newNote.pitchAddress = Core.Microtonal.PitchResolver.NearestAddress(
@@ -490,7 +501,11 @@ namespace OpenUtau.Classic {
                                 foreach (var point in newNote.pitch.data) point.Y -= exportedOffset;
                             }
                                 newNote.AfterLoad(project, project.tracks[part.trackNo], part);
-                                sequence[index] = newNote;
+                            if (restoreVariableVibrato) {
+                                newNote.pitch = nativePitch;
+                                newNote.vibrato = nativeVibrato;
+                            }
+                            sequence[index] = newNote;
                                 toAdd.Add(newNote);
                                 index++;
                             }

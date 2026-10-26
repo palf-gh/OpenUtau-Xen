@@ -119,12 +119,12 @@ namespace OpenUtau.Test {
             var project = Ustx.Create();
             project.pitchSystem = WithMos(22, 2, 10, 2);
             var text = XenProjectFormat.Serialize(project);
-            Assert.Contains("version: 3", text);
+            Assert.Contains("version: 4", text);
             var read = XenProjectFormat.Parse(text);
             Assert.Equal(2, read.pitchSystem.Keyboard.Mos!.Periods);
-            Assert.Equal(2, XenProjectFormat.Parse(text.Replace("version: 3", "version: 2")).pitchSystem.Keyboard.Mos!.Periods);
+            Assert.Equal(2, XenProjectFormat.Parse(text.Replace("version: 4", "version: 2")).pitchSystem.Keyboard.Mos!.Periods);
             project.pitchSystem = WithMos(22, 13, 7, null);
-            var v2 = XenProjectFormat.Serialize(project).Replace("version: 3", "version: 2");
+            var v2 = XenProjectFormat.Serialize(project).Replace("version: 4", "version: 2");
             Assert.Null(XenProjectFormat.Parse(v2).pitchSystem.Keyboard.Mos!.Periods);
         }
     }

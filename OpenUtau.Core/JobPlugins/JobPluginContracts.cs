@@ -79,7 +79,7 @@ namespace OpenUtau.Core.JobPlugins {
         public const int ResultYes = 6;
         public const int ResultNo = 7;
 
-        public static readonly string[] SupportedNames = {
+        static readonly string[] BaseSupportedNames = {
             "VSSeekToBeginNote", "VSGetNextNote", "VSGetNextNoteEx", "VSInsertNote", "VSInsertNoteEx",
             "VSUpdateNote", "VSUpdateNoteEx", "VSRemoveNote", "VSGetMusicalPart", "VSUpdateMusicalPart",
             "VSGetMusicalPartSinger", "VSSeekToBeginControl", "VSGetNextControl", "VSGetControlAt",
@@ -90,10 +90,12 @@ namespace OpenUtau.Core.JobPlugins {
             "VSDlgGetFloatValue", "VSDlgGetStringValue", "VSMessageBox",
         };
 
-        /// <summary>Observed V4 note-expression calls; they abort the run until a rate/depth mapping exists.</summary>
-        public static readonly string[] UnsupportedNames = {
+        // Supported V4-style note-expression API, with OpenUtau host value scales.
+        static readonly string[] NoteExpressionNames = {
             "VSSeekToBeginNoteExpression", "VSGetNextNoteExpression", "VSGetNoteExpressionAt",
             "VSInsertNoteExpression", "VSRemoveNoteExpression",
         };
+        public static readonly string[] SupportedNames = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(BaseSupportedNames, NoteExpressionNames));
+        public static readonly string[] UnsupportedNames = Array.Empty<string>();
     }
 }

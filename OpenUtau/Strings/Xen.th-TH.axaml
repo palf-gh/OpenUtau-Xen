@@ -200,5 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">เพิ่มโฟลเดอร์…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">นำออก</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">พบปลั๊กอิน {0} รายการ ปัญหา {1} รายการ</system:String>
+  <system:String x:Key="xen.vibrato.curves">เส้นโค้งวิบราโต</system:String>
+  <system:String x:Key="xen.vibrato.depth">ความลึก (เซนต์)</system:String>
+  <system:String x:Key="xen.vibrato.rate">ความเร็ว (Hz)</system:String>
+  <system:String x:Key="xen.vibrato.length">ความยาว (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">ตำแหน่งในโน้ต (%)</system:String>
+  <system:String x:Key="xen.vibrato.addPoint">เพิ่มจุด</system:String>
+  <system:String x:Key="xen.vibrato.removePoint">ลบจุด</system:String>
+  <system:String x:Key="xen.vibrato.resetCurve">รีเซ็ตเส้นโค้ง</system:String>
+  <system:String x:Key="xen.vibrato.applySelected">ใช้กับโน้ตที่เลือก</system:String>
+  <system:String x:Key="xen.vibrato.removeCurves">ลบเส้นโค้ง</system:String>
+  <system:String x:Key="xen.export.vibratoBake">วิบราโตแบบแปรผันจะถูกแปลงเป็นจุดระดับเสียง</system:String>
 </ResourceDictionary>
 

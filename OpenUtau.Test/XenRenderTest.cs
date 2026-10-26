@@ -142,6 +142,25 @@ namespace OpenUtau.Test {
             }
         }
 
+        [Fact]
+        public void VariableVibratoChangesSharedPitchAndRenderCacheIdentity() {
+            var fixture = CreateFixture();
+            var note = fixture.Part.notes.First();
+            note.vibrato.length = 100;
+            note.vibrato.@in = 0;
+            note.vibrato.@out = 0;
+            note.vibrato.rateCurve = new List<VibratoPoint> { new(0, 3), new(1, 7) };
+            note.vibrato.depthCurve = new List<VibratoPoint> { new(0, 10), new(1, 70) };
+            var before = fixture.Build();
+            note.vibrato.rateCurve[1].y = 9;
+            var after = fixture.Build();
+            Assert.NotEqual(before.hash, after.hash);
+            Assert.False(before.pitches.SequenceEqual(after.pitches));
+            // Acoustic score inference is reusable; final synthesis is not.
+            Assert.Equal(before.preEffectHash, after.preEffectHash);
+            Assert.Equal(before.notes[0].adjustedTone, after.notes[0].adjustedTone);
+        }
+
         static Fixture CreateFixture(int noteCount = 1) => new Fixture(noteCount);
 
         sealed class Fixture {

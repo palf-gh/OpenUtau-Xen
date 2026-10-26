@@ -70,6 +70,13 @@ namespace OpenUtau.Core {
         void SplitVibrato(UNote source, UNote left, UNote right) {
             left.vibrato = source.vibrato.Clone();
             right.vibrato = source.vibrato.Clone();
+            if (source.vibrato.HasCurves) {
+                float fraction = (float)(tick - source.position) / source.duration;
+                left.vibrato.rateCurve = VibratoCurve.Slice(source.vibrato.rateCurve, 0, fraction);
+                left.vibrato.depthCurve = VibratoCurve.Slice(source.vibrato.depthCurve, 0, fraction);
+                right.vibrato.rateCurve = VibratoCurve.Slice(source.vibrato.rateCurve, fraction, 1);
+                right.vibrato.depthCurve = VibratoCurve.Slice(source.vibrato.depthCurve, fraction, 1);
+            }
             float length = source.vibrato.length * source.duration / 100;
             if (length <= 0) return;
             float fadeIn = source.vibrato.@in * length / 100;
@@ -88,6 +95,9 @@ namespace OpenUtau.Core {
                 if (source.vibrato.period > 0) {
                     right.vibrato.shift = (float)((source.vibrato.shift
                         + elapsedMs * 100 / source.vibrato.period) % 100);
+                }
+                if (source.vibrato.HasCurves) {
+                    right.vibrato.shift = (float)((source.vibrato.PhaseCyclesAtTick(project, Part, source, tick) * 100) % 100);
                 }
             } else {
                 left.vibrato.length = 0;

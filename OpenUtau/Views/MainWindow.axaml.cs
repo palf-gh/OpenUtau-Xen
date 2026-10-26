@@ -543,7 +543,9 @@ namespace OpenUtau.App.Views {
         async void OnMenuExportCompatibleUstx(object sender, RoutedEventArgs e) {
             var project = DocManager.Inst.Project;
             var report = XenProjectFormat.GetCompatibilityReport(project);
-            if (await MessageBox.Show(this, XenStrings.Get("export.ustxLoss", report.MaximumErrorCents), XenStrings.Get("menu.exportUstx"), MessageBox.MessageBoxButtons.YesNo)
+            string warning = XenStrings.Get("export.ustxLoss", report.MaximumErrorCents);
+            if (report.BakedVibratoNotes > 0) warning += "\n" + XenStrings.Get("export.vibratoBake");
+            if (await MessageBox.Show(this, warning, XenStrings.Get("menu.exportUstx"), MessageBox.MessageBoxButtons.YesNo)
                 != MessageBox.MessageBoxResult.Yes) return;
             var file = await FilePicker.SaveFileAboutProject(this, "menu.file.exportproject", FilePicker.USTX);
             if (string.IsNullOrEmpty(file)) return;

@@ -200,5 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Adaugă foldere…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Elimină</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} pluginuri găsite, {1} probleme</system:String>
+  <system:String x:Key="xen.vibrato.curves">Curbe de vibrato</system:String>
+  <system:String x:Key="xen.vibrato.depth">Adâncime (cenți)</system:String>
+  <system:String x:Key="xen.vibrato.rate">Viteză (Hz)</system:String>
+  <system:String x:Key="xen.vibrato.length">Lungime (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Poziție în notă (%)</system:String>
+  <system:String x:Key="xen.vibrato.addPoint">Adaugă punct</system:String>
+  <system:String x:Key="xen.vibrato.removePoint">Elimină punctul</system:String>
+  <system:String x:Key="xen.vibrato.resetCurve">Resetează curba</system:String>
+  <system:String x:Key="xen.vibrato.applySelected">Aplică notelor selectate</system:String>
+  <system:String x:Key="xen.vibrato.removeCurves">Elimină curbele</system:String>
+  <system:String x:Key="xen.export.vibratoBake">Vibratoul variabil va fi convertit în puncte de înălțime.</system:String>
 </ResourceDictionary>
 

@@ -200,4 +200,15 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Ordner hinzufügen…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Entfernen</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} Plugins gefunden, {1} Probleme</system:String>
+  <system:String x:Key="xen.vibrato.curves">Vibratokurven</system:String>
+  <system:String x:Key="xen.vibrato.depth">Tiefe (Cent)</system:String>
+  <system:String x:Key="xen.vibrato.rate">Geschwindigkeit (Hz)</system:String>
+  <system:String x:Key="xen.vibrato.length">Länge (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Position in der Note (%)</system:String>
+  <system:String x:Key="xen.vibrato.addPoint">Punkt hinzufügen</system:String>
+  <system:String x:Key="xen.vibrato.removePoint">Punkt entfernen</system:String>
+  <system:String x:Key="xen.vibrato.resetCurve">Kurve zurücksetzen</system:String>
+  <system:String x:Key="xen.vibrato.applySelected">Auf ausgewählte Noten anwenden</system:String>
+  <system:String x:Key="xen.vibrato.removeCurves">Kurven entfernen</system:String>
+  <system:String x:Key="xen.export.vibratoBake">Variables Vibrato wird in Tonhöhenpunkte umgewandelt.</system:String>
 </ResourceDictionary>

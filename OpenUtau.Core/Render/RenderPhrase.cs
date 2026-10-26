@@ -291,7 +291,9 @@ namespace OpenUtau.Core.Render {
                 float nPeriod = (float)(note.vibrato.period / note.DurationMs);
                 for (int i = startIndex; i < endIndex; ++i) {
                     float nPos = (float)(pitchStart + i * pitchInterval - note.position) / note.duration;
-                    var point = note.vibrato.Evaluate(nPos, nPeriod, note);
+                    var point = note.vibrato.HasCurves
+                        ? note.vibrato.EvaluateAtTick(project, part, note, pitchStart + i * pitchInterval)
+                        : note.vibrato.Evaluate(nPos, nPeriod, note);
                     pitches[i] = point.Y * 100;
                 }
             }
@@ -494,7 +496,9 @@ namespace OpenUtau.Core.Render {
                 float nPeriod = (float)(note.vibrato.period / note.DurationMs);
                 for (int i = startIndex; i < endIndex; ++i) {
                     float nPos = (float)(pitchStart + i * pitchInterval - note.position) / note.duration;
-                    float ratio = note.vibrato.EvaluateVolume(nPos, nPeriod);
+                    float ratio = note.vibrato.HasCurves
+                        ? note.vibrato.EvaluateVolumeAtTick(project, part, note, pitchStart + i * pitchInterval)
+                        : note.vibrato.EvaluateVolume(nPos, nPeriod);
                     dynamics[i] = dynamics[i] * ratio;
                 }
             }

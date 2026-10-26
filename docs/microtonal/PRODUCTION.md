@@ -1057,3 +1057,45 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   the three images, which were inspected.
 - Trial: the application is unchanged (only tests, documents and images), so the
   trial from `aace0ef` was not rebuilt.
+
+## 2026-10-26 — Editable vibrato curves and JOB VR/VD
+
+- Purpose: user request with three goals: keep the UTAU-style vibrato and its
+  compatibility, add editable depth and rate curves arranged like the VOCALOID4
+  properties screen the user supplied, and let the user's JOB scripts read and
+  write those curves through VR and VD. The user does not want VOCALOID's values
+  or sound copied, so the model and the JOB scale are OpenUtau's own. No vendor
+  binary was examined for this change, and no vendor material is in the repository.
+- Implementation (details in `vibrato-curves.md`): `UVibrato` gains optional
+  `rate_curve` (Hz) and `depth_curve` (cents) over whole-note positions; notes
+  without curves use the unchanged equations. Curve notes integrate frequency over
+  the tempo map, shared by rendering and the piano roll, and native splitting
+  slices the curves and carries the phase. A new Vibrato curves dialogue in the
+  note context menu edits both lanes and applies them as one undo group. Five
+  note-expression calls now support VR and VD with the host scale VR 64 = 5 Hz
+  (one octave per 64) and VD 64 = 50 cents. A note reinserted at the same position
+  and length keeps its curves. `.ustxen` moves to version 4; `.tunxen` stays at 3.
+  UST and compatible USTX bake variable vibrato into pitch points and warn in the
+  USTX export. Eleven new strings are in all 20 Xen overlays; the Japanese strings
+  passed yomiyasu run/verify `20261026T083142Z-1671f54b` unchanged.
+- Verification: serial solution build succeeded with zero errors; full suite passed
+  600 tests. New tests cover the legacy equations, variable-rate phase, tempo
+  changes, splitting, undo, the dialogue, the command, JOB mapping and rollback,
+  copies and reinserts, native version 4 and legacy baking. The capture of the
+  dialogue was inspected. The opt-in corpus run of the user's four folders now
+  finishes 31 of 33 scripts; AutoScoopUpHighNotes no longer stops, while
+  Staccato (selected) and SineVibratoedit3 stop as before. Its new vibrato mode
+  shows that lyric and pitch scripts leave the curves unchanged. SplitNote splits
+  the curves where the script copies them, but restarts the right note's phase
+  and leaves the left half on its last point; scalar vibrato restarts in the same
+  way, so this predates the curves and is recorded as a limitation.
+  `git diff --check` passed.
+- Limitations: VOCALOID factory vibrato types 2 to 16 remain rejected; JOB cannot
+  set phase or fades; baking does not promise the same sound across engines or
+  keep volume-link modulation. Results were not compared with VOCALOID.
+- Trial: no trial was running at preflight. The self-contained Windows x64
+  Release build from the uncommitted working tree on `feature/v4-vibrato` (on top
+  of `0174be9`) replaced `work/OpenUtau-Xen-win-x64/` in place with local data
+  kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
+  DLLs match the ReadyToRun outputs by SHA-256. Native interactive launch was not
+  checked. Nothing was committed or pushed, and the version is unchanged.

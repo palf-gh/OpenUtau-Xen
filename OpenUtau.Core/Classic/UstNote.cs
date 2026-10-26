@@ -45,6 +45,10 @@ namespace OpenUtau.Classic {
                 }
             }
             pitch = note.pitch.Clone();
+            bool bakedVibrato = note.vibrato.HasCurves && note.vibrato.length > 0;
+            if (bakedVibrato) {
+                pitch = VibratoCompatibility.Bake(project, part, note, pitch);
+            }
             // UST has an integer note number. Carry Xen's base/fine offset in
             // the physical pitch curve rather than silently quantising it.
             float offset = (note.AdjustedTone - noteNum) * 10;
@@ -58,6 +62,11 @@ namespace OpenUtau.Classic {
                 pitch.snapFirst = false;
             }
             vibrato = note.vibrato.Clone();
+            if (bakedVibrato) {
+                vibrato.length = 0;
+                vibrato.rateCurve = null;
+                vibrato.depthCurve = null;
+            }
         }
 
         public UstNote Clone() {

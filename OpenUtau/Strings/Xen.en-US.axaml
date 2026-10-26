@@ -200,4 +200,15 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Add folders…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Remove</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} plugins found, {1} problems</system:String>
+  <system:String x:Key="xen.vibrato.curves">Vibrato curves</system:String>
+  <system:String x:Key="xen.vibrato.depth">Depth (cents)</system:String>
+  <system:String x:Key="xen.vibrato.rate">Rate (Hz)</system:String>
+  <system:String x:Key="xen.vibrato.length">Length (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Note position (%)</system:String>
+  <system:String x:Key="xen.vibrato.addPoint">Add point</system:String>
+  <system:String x:Key="xen.vibrato.removePoint">Remove point</system:String>
+  <system:String x:Key="xen.vibrato.resetCurve">Reset curve</system:String>
+  <system:String x:Key="xen.vibrato.applySelected">Apply to selected notes</system:String>
+  <system:String x:Key="xen.vibrato.removeCurves">Remove curves</system:String>
+  <system:String x:Key="xen.export.vibratoBake">Variable vibrato will be baked into pitch points.</system:String>
 </ResourceDictionary>
