@@ -176,5 +176,9 @@
   <system:String x:Key="xen.preset.kirnberger">키른베르거 III</system:String>
   <system:String x:Key="xen.preset.vallotti">발로티</system:String>
   <system:String x:Key="xen.preset.young">영 II</system:String>
+  <system:String x:Key="xen.menu.splitatplayhead">Split notes at playhead</system:String>
+  <system:String x:Key="xen.snap.dotted">점음표</system:String>
+  <system:String x:Key="xen.snap.straight">보통</system:String>
+  <system:String x:Key="xen.snap.tuplet">{0} 잇단음표</system:String>
 </ResourceDictionary>
 

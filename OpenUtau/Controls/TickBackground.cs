@@ -32,6 +32,14 @@ namespace OpenUtau.App.Controls {
                 nameof(TickOrigin),
                 o => o.TickOrigin,
                 (o, v) => o.TickOrigin = v);
+        public static readonly DirectProperty<TickBackground, double> SnapStepProperty =
+            AvaloniaProperty.RegisterDirect<TickBackground, double>(nameof(SnapStep), o => o.SnapStep,
+                (o, v) => o.SnapStep = v);
+        private double snapStep;
+        public double SnapStep {
+            get => snapStep;
+            set => SetAndRaise(SnapStepProperty, ref snapStep, value);
+        }
         public static readonly DirectProperty<TickBackground, int> SnapDivProperty =
             AvaloniaProperty.RegisterDirect<TickBackground, int>(
                 nameof(SnapDiv),
@@ -118,6 +126,7 @@ namespace OpenUtau.App.Controls {
                 change.Property == TickWidthProperty ||
                 change.Property == TickOffsetProperty ||
                 change.Property == SnapDivProperty ||
+                change.Property == SnapStepProperty ||
                 change.Property == ShowBarProperty) {
                 InvalidateVisual();
             }
@@ -128,7 +137,7 @@ namespace OpenUtau.App.Controls {
                 return;
             }
             var project = Core.DocManager.Inst.Project;
-            int snapUnit = project.resolution * 4 / SnapDiv;
+            double snapUnit = SnapStep > 0 ? SnapStep : project.resolution * 4.0 / Math.Max(1, SnapDiv);
             while (snapUnit * TickWidth < ViewConstants.MinTicklineWidth) {
                 snapUnit *= 2; // Avoid drawing too dense.
             }
@@ -158,10 +167,10 @@ namespace OpenUtau.App.Controls {
                 var timeSig = project.timeAxis.TimeSignatureAtBar(bar);
                 int nextBarTick = project.timeAxis.BarBeatToTickPos(bar + 1, 0);
                 int ticksPerBeat = project.resolution * 4 * timeSig.beatPerBar / timeSig.beatUnit;
-                int ticksPerLine = snapUnit;
-                if (ticksPerBeat < snapUnit) {
+                double ticksPerLine = SnapStep > 0 ? SnapStep : snapUnit;
+                if (SnapStep <= 0 && ticksPerBeat < snapUnit) {
                     ticksPerLine = ticksPerBeat;
-                } else if (ticksPerBeat % snapUnit != 0) {
+                } else if (SnapStep <= 0 && ticksPerBeat % snapUnit != 0) {
                     if (ticksPerBeat > minLineTick) {
                         ticksPerLine = ticksPerBeat;
                     } else {
@@ -169,13 +178,18 @@ namespace OpenUtau.App.Controls {
                     }
                 }
                 if (nextBarTick > leftTick) {
-                    for (int tick = barTick + ticksPerLine; tick < nextBarTick; tick += ticksPerLine) {
+                    for (int index = 1; ; index++) {
+                        int tick = barTick + (int)Math.Round(index * ticksPerLine, MidpointRounding.AwayFromZero);
+                        if (tick >= nextBarTick) { break; }
                         SnapTicks?.Add(tick);
                         project.timeAxis.TickPosToBarBeat(tick, out int snapBar, out int snapBeat, out int snapRemainingTicks);
                         var pen = snapRemainingTicks != 0 ? penDanshed : penBeatUnit;
                         x = Math.Round(tick * TickWidth - pixelOffset) + 0.5;
                         y = ShowBar ? 24 : 0;
-                        context.DrawLine(pen, new Point(x, y), new Point(x, Bounds.Height + 0.5f));
+                        int stride = Math.Max(1, (int)Math.Ceiling(minLineTick / ticksPerLine));
+                        if (snapRemainingTicks == 0 || index % stride == 0) {
+                            context.DrawLine(pen, new Point(x, y), new Point(x, Bounds.Height + 0.5f));
+                        }
                     }
                 }
                 barTick = nextBarTick;

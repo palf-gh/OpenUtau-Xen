@@ -176,5 +176,9 @@
   <system:String x:Key="xen.preset.kirnberger">基恩伯格 III</system:String>
   <system:String x:Key="xen.preset.vallotti">瓦洛蒂</system:String>
   <system:String x:Key="xen.preset.young">杨 II</system:String>
+  <system:String x:Key="xen.menu.splitatplayhead">Split notes at playhead</system:String>
+  <system:String x:Key="xen.snap.dotted">附点</system:String>
+  <system:String x:Key="xen.snap.straight">普通</system:String>
+  <system:String x:Key="xen.snap.tuplet">{0}连音</system:String>
 </ResourceDictionary>
 

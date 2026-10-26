@@ -176,5 +176,9 @@
   <system:String x:Key="xen.preset.kirnberger">Kirnberger III</system:String>
   <system:String x:Key="xen.preset.vallotti">Vallotti</system:String>
   <system:String x:Key="xen.preset.young">Young II</system:String>
+  <system:String x:Key="xen.menu.splitatplayhead">Split notes at playhead</system:String>
+  <system:String x:Key="xen.snap.dotted">ประจุด</system:String>
+  <system:String x:Key="xen.snap.straight">ปกติ</system:String>
+  <system:String x:Key="xen.snap.tuplet">{0} กลุ่มโน้ตพิเศษ</system:String>
 </ResourceDictionary>
 

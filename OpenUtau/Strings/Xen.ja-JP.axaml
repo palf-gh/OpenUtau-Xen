@@ -176,5 +176,9 @@
   <system:String x:Key="xen.preset.kirnberger">キルンベルガー III</system:String>
   <system:String x:Key="xen.preset.vallotti">ヴァロッティ</system:String>
   <system:String x:Key="xen.preset.young">ヤング II</system:String>
+  <system:String x:Key="xen.menu.splitatplayhead">現在位置でノートを分割</system:String>
+  <system:String x:Key="xen.snap.dotted">付点</system:String>
+  <system:String x:Key="xen.snap.straight">通常</system:String>
+  <system:String x:Key="xen.snap.tuplet">{0}連符</system:String>
 </ResourceDictionary>
 

@@ -1207,11 +1207,8 @@ namespace OpenUtau.App.Views {
                 } else if (hitPartControl == null) {
                     // Clicked empty canvas — equivalent to old `hitControl == control`
                     viewModel.TracksViewModel.DeselectParts();
-                    var part = viewModel.TracksViewModel.MaybeAddPart(point.Position);
-                    if (part != null) {
-                        partEditState = new PartMoveEditState(control, viewModel, part);
-                        Cursor = ViewConstants.cursorSizeAll;
-                    }
+                    partEditState = new PartDrawEditState(control, viewModel);
+                    Cursor = ViewConstants.cursorCross;
                 } else {
                     // Clicked on a part
                     bool fadein = false;

@@ -39,6 +39,53 @@ namespace OpenUtau.App.Views {
         }
     }
 
+    class PartDrawEditState : PartEditState {
+        private UVoicePart? part;
+
+        public PartDrawEditState(Control control, MainWindowViewModel vm) : base(control, vm) { }
+
+        public override void Begin(IPointer pointer, Point point) {
+            pointer.Capture(control);
+            startPoint = point;
+        }
+
+        public override void Update(IPointer pointer, Point point) {
+            if (part == null && Math.Abs(point.X - startPoint.X) < 4) {
+                return;
+            }
+            var project = DocManager.Inst.Project;
+            var tracksVm = vm.TracksViewModel;
+            tracksVm.PointToLineTick(startPoint, out int startLeft, out int startRight);
+            tracksVm.PointToLineTick(point, out int left, out int right);
+            int position = Math.Max(0, Math.Min(startLeft, left));
+            int duration = Math.Max(startRight, right) - position;
+            if (part == null) {
+                int trackNo = tracksVm.PointToTrackNo(startPoint);
+                if (trackNo < 0 || trackNo >= project.tracks.Count) {
+                    return;
+                }
+                DocManager.Inst.StartUndoGroup("command.part.add");
+                part = new UVoicePart { position = position, trackNo = trackNo, Duration = duration };
+                DocManager.Inst.ExecuteCmd(new AddPartCommand(project, part));
+                tracksVm.SelectPart(part);
+            } else {
+                if (position != part.position) {
+                    DocManager.Inst.ExecuteCmd(new MovePartCommand(project, part, position, part.trackNo));
+                }
+                if (duration != part.Duration) {
+                    DocManager.Inst.ExecuteCmd(new ResizeVoicePartCommand(project, part, duration - part.Duration, false));
+                }
+            }
+        }
+
+        public override void End(IPointer pointer, Point point) {
+            pointer.Capture(null);
+            if (part != null) {
+                DocManager.Inst.EndUndoGroup();
+            }
+        }
+    }
+
     class PartSelectionEditState : PartEditState {
         private int startTick;
         private int startTrack;

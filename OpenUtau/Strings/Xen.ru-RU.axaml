@@ -176,5 +176,9 @@
   <system:String x:Key="xen.preset.kirnberger">Кирнбергер III</system:String>
   <system:String x:Key="xen.preset.vallotti">Валлотти</system:String>
   <system:String x:Key="xen.preset.young">Юнг II</system:String>
+  <system:String x:Key="xen.menu.splitatplayhead">Split notes at playhead</system:String>
+  <system:String x:Key="xen.snap.dotted">С точкой</system:String>
+  <system:String x:Key="xen.snap.straight">Обычная</system:String>
+  <system:String x:Key="xen.snap.tuplet">{0} Особое деление</system:String>
 </ResourceDictionary>
 

@@ -153,7 +153,12 @@ namespace OpenUtau.Core.Editing {
         public virtual string Name => name;
 
         private int quantize;
+        private OpenUtau.Core.Util.RhythmGrid? grid;
         private string name;
+
+        public QuantizeNotes(OpenUtau.Core.Util.RhythmGrid grid) : this(1) {
+            this.grid = grid;
+        }
 
         public QuantizeNotes(int quantize) {
             this.quantize = quantize;
@@ -166,8 +171,18 @@ namespace OpenUtau.Core.Editing {
             foreach (var note in notes) {
                 int pos = note.position;
                 int end = note.End;
-                int newPos = (int)Math.Round(1.0 * pos / quantize) * quantize;
-                int newEnd = (int)Math.Round(1.0 * end / quantize) * quantize;
+                int newPos = grid == null ? (int)Math.Round(1.0 * pos / quantize) * quantize
+                    : grid.Nearest(project.timeAxis, project.resolution, pos + part.position) - part.position;
+                int newEnd = grid == null ? (int)Math.Round(1.0 * end / quantize) * quantize
+                    : grid.Nearest(project.timeAxis, project.resolution, end + part.position) - part.position;
+                newPos = Math.Max(0, newPos);
+                if (newEnd <= newPos) {
+                    if (grid == null) { newEnd = newPos + Math.Max(1, quantize); }
+                    else {
+                        grid.Bounds(project.timeAxis, project.resolution, newPos + part.position, out _, out int next);
+                        newEnd = next - part.position;
+                    }
+                }
                 if (newPos != pos) {
                     docManager.ExecuteCmd(new MoveNoteCommand(part, note, newPos - pos, 0));
                     docManager.ExecuteCmd(new ResizeNoteCommand(part, note, newEnd - newPos - note.duration));

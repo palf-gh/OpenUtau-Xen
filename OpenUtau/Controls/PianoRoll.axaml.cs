@@ -436,6 +436,28 @@ namespace OpenUtau.App.Controls {
         async void OnMenuMidiInput(object sender, RoutedEventArgs args) {
             await new MidiInputDialog(ViewModel.NotesViewModel).ShowDialog(RootWindow);
         }
+        void OnMenuSplitAtPlayhead(object? sender, RoutedEventArgs args) {
+            var notesVm = ViewModel?.NotesViewModel;
+            var part = notesVm?.Part;
+            if (part == null || ViewModel?.PlaybackViewModel == null) {
+                return;
+            }
+            int tick = ViewModel.PlaybackViewModel.PlayPosTick - part.position;
+            var candidates = notesVm!.Selection.Any()
+                ? notesVm.Selection.AsEnumerable() : part.notes.AsEnumerable();
+            var crossing = candidates.Where(note => note.position < tick && tick < note.End).ToArray();
+            if (crossing.Length == 0) {
+                return;
+            }
+            DocManager.Inst.StartUndoGroup("command.note.split");
+            try {
+                DocManager.Inst.ExecuteCmd(new SplitNotesAtTickCommand(DocManager.Inst.Project,
+                    part, crossing, tick, NotePresets.Default.SplittedLyric));
+            } finally {
+                DocManager.Inst.EndUndoGroup();
+            }
+        }
+
         void OnMenuSearchNote(object sender, RoutedEventArgs args) {
             SearchNote();
         }
@@ -601,7 +623,7 @@ namespace OpenUtau.App.Controls {
             if (notesVM.Part == null) {
                 return;
             }
-            var edit = new QuantizeNotes(notesVM.Project.resolution * 4 / notesVM.SnapDiv);
+            var edit = new QuantizeNotes(notesVM.Grid);
             edit.Run(notesVM.Project, notesVM.Part, notesVM.Selection.ToList(), DocManager.Inst);
         }
 
@@ -1614,7 +1636,7 @@ namespace OpenUtau.App.Controls {
                 return false;
             }
             var project = DocManager.Inst.Project;
-            int snapUnit = project.resolution * 4 / notesVm.SnapDiv;
+            int snapUnit = notesVm.SnapUnit;
             int deltaTicks = notesVm.IsSnapOn ? snapUnit : 15;
 
             bool isNone = args.KeyModifiers == KeyModifiers.None;
@@ -1974,7 +1996,7 @@ namespace OpenUtau.App.Controls {
                 case Key.OemOpenBrackets:
                     // move playhead left
                     if (isNone) {
-                        playVm.MovePlayPos(playVm.PlayPosTick - snapUnit);
+                        playVm.MovePlayPos(notesVm.GridStepFrom(playVm.PlayPosTick - notesVm.TickOrigin, -1) + notesVm.TickOrigin);
                         return true;
                     }
                     // to selection start
@@ -1993,7 +2015,7 @@ namespace OpenUtau.App.Controls {
                 case Key.OemCloseBrackets:
                     // move playhead right
                     if (isNone) {
-                        playVm.MovePlayPos(playVm.PlayPosTick + snapUnit);
+                        playVm.MovePlayPos(notesVm.GridStepFrom(playVm.PlayPosTick - notesVm.TickOrigin, 1) + notesVm.TickOrigin);
                         return true;
                     }
                     // to selection end
@@ -2064,6 +2086,10 @@ namespace OpenUtau.App.Controls {
                     if (isShift) {
                         var track = project.tracks[notesVm.Part.trackNo];
                         MessageBus.Current.SendMessage(new TracksSoloEvent(notesVm.Part.trackNo, !track.Solo, false));
+                        return true;
+                    }
+                    if (args.KeyModifiers == KeyModifiers.None) {
+                        OnMenuSplitAtPlayhead(this, new RoutedEventArgs());
                         return true;
                     }
                     break;

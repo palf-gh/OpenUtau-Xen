@@ -114,6 +114,9 @@ namespace OpenUtau.App {
             VerifyTuningPages(dialog);
             dialog.Close();
             VerifyLoneAlt();
+            DrawingGestureTest.Verify();
+            RhythmMenuTest.Verify();
+            GridPreferencesTest.Verify();
         }
 
         // A lone Alt, as left by IME switchers such as alt-ime-ahk whose masking key Avalonia drops,

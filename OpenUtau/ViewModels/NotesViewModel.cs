@@ -122,6 +122,9 @@ namespace OpenUtau.App.ViewModels {
         [Reactive] public partial double TickOffset { get; set; }
         [Reactive] public partial double TrackOffset { get; set; }
         [Reactive] public partial int SnapDiv { get; set; }
+        [Reactive] public partial double SnapStep { get; set; }
+        public int SnapUnit => Math.Max(1, (int)Math.Round(SnapStep));
+        public RhythmGrid Grid => new RhythmGrid(Math.Max(1, SnapDiv), snapDotted, snapTuplet);
         [Reactive] public partial int Key { get; set; }
         public ObservableCollectionExtended<int> SnapTicks { get; } = new ObservableCollectionExtended<int>();
         [Reactive] public partial double PlayPosX { get; set; }
@@ -176,7 +179,7 @@ namespace OpenUtau.App.ViewModels {
         public double HScrollBarMax => Math.Max(0, TickCount - ViewportTicks);
         public double VScrollBarMax => Math.Max(0, TrackCount - ViewportTracks);
         public UProject Project => DocManager.Inst.Project;
-        [Reactive] public partial List<MenuItemViewModel> SnapDivs { get; set; }
+        [Reactive] public partial List<object> SnapDivs { get; set; }
         [Reactive] public partial List<MenuItemViewModel> Keys { get; set; }
 
         public ReactiveCommand<int, RxVoid> SetSnapUnitCommand { get; set; }
@@ -199,15 +202,32 @@ namespace OpenUtau.App.ViewModels {
         private string? portraitSource;
         private readonly object portraitLock = new object();
         private int userSnapDiv = -2;
+        private bool snapDotted;
+        private int snapTuplet = 1;
+        public ReactiveCommand<int, RxVoid> SetSnapModifierCommand { get; set; }
         private int userKey => Project.key;
 
         public NotesViewModel() {
-            SnapDivs = new List<MenuItemViewModel>();
+            int savedDivision = Preferences.Default.XenSnapDivision;
+            userSnapDiv = savedDivision == -2 ||
+                (savedDivision >= 1 && savedDivision <= 128 && (savedDivision & (savedDivision - 1)) == 0)
+                ? savedDivision : -2;
+            snapDotted = userSnapDiv > 0 && Preferences.Default.XenSnapDotted;
+            snapTuplet = Preferences.Default.XenSnapTuplet is 3 or 5 or 7
+                ? Preferences.Default.XenSnapTuplet : 1;
+            SnapDivs = new List<object>();
             SetSnapUnitCommand = ReactiveCommand.Create<int>(div => {
-                userSnapDiv = div;
+                snapDotted = div >= 1000;
+                userSnapDiv = snapDotted ? div - 1000 : div;
+                SaveSnapSettings();
                 UpdateSnapDiv();
             });
 
+            SetSnapModifierCommand = ReactiveCommand.Create<int>(value => {
+                snapTuplet = snapTuplet == value ? 1 : value;
+                SaveSnapSettings();
+                UpdateSnapDiv();
+            });
             Keys = new List<MenuItemViewModel>();
             SetKeyCommand = ReactiveCommand.Create<int>(SetTonic);
 
@@ -271,29 +291,19 @@ namespace OpenUtau.App.ViewModels {
                     if (project == null) {
                         return;
                     }
-                    SnapDivs.Clear();
-                    SnapDivs.Add(new MenuItemViewModel {
-                        Header = ThemeManager.GetString("pianoroll.toggle.snap.auto"),
-                        Command = SetSnapUnitCommand,
-                        CommandParameter = -2,
-                    });
-                    SnapDivs.Add(new MenuItemViewModel {
-                        Header = ThemeManager.GetString("pianoroll.toggle.snap.autotriplet"),
-                        Command = SetSnapUnitCommand,
-                        CommandParameter = -3,
-                    });
-                    SnapDivs.AddRange(MusicMath.GetSnapDivs(project.resolution)
-                        .Select(div => new MenuItemViewModel {
-                            Header = $"1/{div}",
-                            Command = SetSnapUnitCommand,
-                            CommandParameter = div,
-                        }));
-                    UpdateKey();
+                    UpdateSnapMenu();
+                UpdateKey();
                 });
 
             ShowTips = Preferences.Default.ShowTips;
-            IsSnapOn = true;
-            SnapDivText = string.Empty;
+            IsSnapOn = Preferences.Default.XenSnapEnabled;
+            this.WhenAnyValue(x => x.IsSnapOn).Subscribe(enabled => {
+                if (Preferences.Default.XenSnapEnabled != enabled) {
+                    Preferences.Default.XenSnapEnabled = enabled;
+                    Preferences.Save();
+                }
+            });
+            UpdateSnapDiv();
             KeyText = string.Empty;
 
             PlayTone = Preferences.Default.PlayTone;
@@ -416,20 +426,61 @@ namespace OpenUtau.App.ViewModels {
                 });
         }
 
-        private void UpdateSnapDiv() {
-            if (userSnapDiv > 0) {
-                SnapDiv = userSnapDiv;
-                SnapDivText = $"1/{userSnapDiv}";
+        private void SaveSnapSettings() {
+            Preferences.Default.XenSnapDivision = userSnapDiv;
+            Preferences.Default.XenSnapDotted = snapDotted;
+            Preferences.Default.XenSnapTuplet = snapTuplet;
+            Preferences.Save();
+        }
+
+        private void UpdateSnapMenu() {
+            // Piano-roll view models are also constructed by the startup worker.
+            // Re-read current state on the UI thread instead of queuing stale controls.
+            if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess()) {
+                Avalonia.Threading.Dispatcher.UIThread.Post(UpdateSnapMenu);
                 return;
             }
-            MusicMath.GetSnapUnit(
-                Project.resolution,
-                ViewConstants.PianoRollMinTicklineWidth / TickWidth,
-                userSnapDiv % 3 == 0,
-                out int ticks,
-                out int div);
-            SnapDiv = div;
-            SnapDivText = $"(1/{div})";
+            MenuItemViewModel Choice(string header, ReactiveCommand<int, RxVoid> command, int value, bool selected) {
+                return new MenuItemViewModel {
+                    Header = header, Command = command, CommandParameter = value, IsChecked = selected,
+                    Icon = new TextBlock { Text = selected ? "●" : "", FontSize = 10 },
+                };
+            }
+            var items = new List<object> {
+                Choice(ThemeManager.GetString("pianoroll.toggle.snap.auto"), SetSnapUnitCommand, -2, userSnapDiv < 0),
+                new Separator(),
+            };
+            for (int div = 1; div <= 128; div *= 2) {
+                items.Add(Choice($"1/{div}", SetSnapUnitCommand, div, userSnapDiv == div && !snapDotted));
+            }
+            items.Add(new Separator());
+            for (int div = 1; div <= 128; div *= 2) {
+                items.Add(Choice($"1/{div} {XenStrings.Get("snap.dotted")}", SetSnapUnitCommand,
+                    1000 + div, userSnapDiv == div && snapDotted));
+            }
+            items.Add(new Separator());
+            foreach (int count in new[] { 3, 5, 7 }) {
+                items.Add(Choice(string.Format(XenStrings.Get("snap.tuplet"), count), SetSnapModifierCommand,
+                    count, snapTuplet == count));
+            }
+            SnapDivs = items;
+        }
+
+        private void UpdateSnapDiv() {
+            if (Project == null) { return; }
+            if (userSnapDiv > 0) {
+                SnapDiv = userSnapDiv;
+            } else {
+                MusicMath.GetSnapUnit(Project.resolution,
+                    ViewConstants.PianoRollMinTicklineWidth / TickWidth, false, out _, out int div);
+                SnapDiv = div;
+            }
+            SnapStep = Grid.Step(Project.resolution);
+            this.RaisePropertyChanged(nameof(SnapUnit));
+            string modifiers = (snapDotted ? " " + XenStrings.Get("snap.dotted") : "") +
+                (snapTuplet > 1 ? $" {snapTuplet}:{(snapTuplet == 2 || snapTuplet == 4 ? 3 : snapTuplet == 3 ? 2 : 4)}" : "");
+            SnapDivText = userSnapDiv > 0 ? $"1/{SnapDiv}{modifiers}" : $"(1/{SnapDiv}{modifiers})";
+            UpdateSnapMenu();
         }
 
         /// <summary>
@@ -515,22 +566,19 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public void TickToLineTick(int tick, out int left, out int right) {
-            if (SnapTicks.Count == 0) {
-                left = 0;
-                right = Project.resolution;
-                return;
-            }
-            int index = SnapTicks.BinarySearch(tick + TickOrigin);
-            if (index < 0) {
-                index = ~index - 1;
-            }
-            if (0 >= SnapTicks.Count - 2) {
-                left = right = tick;
-                return;
-            }
-            index = Math.Clamp(index, 0, SnapTicks.Count - 2);
-            left = SnapTicks[index] - TickOrigin;
-            right = SnapTicks[index + 1] - TickOrigin;
+            Grid.Bounds(Project.timeAxis, Project.resolution, tick + TickOrigin, out left, out right);
+            left -= TickOrigin;
+            right -= TickOrigin;
+        }
+
+        public int GridStepFrom(int position, int direction) {
+            TickToLineTick(direction < 0 ? position - 1 : position, out int left, out int right);
+            return direction < 0 ? left : right;
+        }
+
+        public int GetSnapDuration(int position) {
+            TickToLineTick(position, out int left, out int right);
+            return Math.Max(1, right - left);
         }
 
         public void PointToLineTick(Point point, out int left, out int right) {
@@ -565,11 +613,13 @@ namespace OpenUtau.App.ViewModels {
             if (tone >= ViewConstants.MaxTone || tone < 0) {
                 return null;
             }
-            int snapUnit = project.resolution * 4 / SnapDiv;
+            int snapUnit = SnapUnit;
             int tick = PointToTick(point);
-            int snappedTick = (int)Math.Floor((double)tick / snapUnit) * snapUnit;
+            TickToLineTick(tick, out int snappedTick, out _);
+            if (!IsSnapOn) { snappedTick = tick; }
+            snappedTick = Math.Max(0, snappedTick);
             UNote note = project.CreateNote(tone, snappedTick,
-                useLastLength ? _lastNoteLength : IsSnapOn ? snapUnit : 15);
+                useLastLength ? _lastNoteLength : IsSnapOn ? GetSnapDuration(snappedTick) : 15);
             note.pitchAddress = PointToPitchAddress(point);
             note.RefreshPitch(project, project.tracks[Part.trackNo]);
             DocManager.Inst.ExecuteCmd(new AddNoteCommand(Part, note));
@@ -909,7 +959,7 @@ namespace OpenUtau.App.ViewModels {
             }
 
             var project = DocManager.Inst.Project;
-            int snapUnit = project.resolution * 4 / SnapDiv;
+            int snapUnit = SnapUnit;
 
             var fromNote = Selection.LastOrDefault();
             int DEFAULT_TONE = 12 * 5; // C4
@@ -947,6 +997,11 @@ namespace OpenUtau.App.ViewModels {
                 return;
             }
             var selectedNotes = Selection.ToList();
+            if (IsSnapOn) {
+                int anchor = selectedNotes.Min(n => n.position);
+                deltaTicks = GridStepFrom(anchor, Math.Sign(deltaTicks)) - anchor;
+            }
+            deltaTicks = Math.Max(deltaTicks, -selectedNotes.Min(n => n.position));
             // TODO REVIEW should the end be clamped to end of part? or allow to go over?
             //var delta = Math.Clamp(deltaTicks, -1 * selectedNotes.First().position, Part.End - selectedNotes.Last().position);
             var delta = Math.Max(deltaTicks, -1 * selectedNotes.First().position);
@@ -962,14 +1017,18 @@ namespace OpenUtau.App.ViewModels {
             }
 
             var selectedNotes = Selection.ToList();
+            if (IsSnapOn) {
+                int anchor = selectedNotes.Min(n => n.End);
+                deltaTicks = GridStepFrom(anchor, Math.Sign(deltaTicks)) - anchor;
+            }
 
             // ignore if change would make a note smaller than minimal size
             if (deltaTicks < 0) {
                 int smallestDuration = selectedNotes.Select(n => n.duration).Min();
 
                 var project = DocManager.Inst.Project;
-                int snapUnit = project.resolution * 4 / SnapDiv;
-                int minNoteTicks = IsSnapOn ? snapUnit : 15;
+                int snapUnit = SnapUnit;
+                int minNoteTicks = IsSnapOn ? 1 : 15;
 
                 if (smallestDuration + deltaTicks < minNoteTicks) {
                     return;

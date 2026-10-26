@@ -162,6 +162,10 @@ namespace OpenUtau.Core.Util {
             public int? PlaybackDeviceIndex;
             public bool ShowPrefs = true;
             public bool ShowTips = true;
+            public int XenSnapDivision = -2;
+            public bool XenSnapDotted = false;
+            public int XenSnapTuplet = 1;
+            public bool XenSnapEnabled = true;
             /// <summary>Xen piano-roll rows: 0 all pitches, 1 highlight scale, 2 compact scale.</summary>
             public int XenPitchRows = 0;
             /// <summary>Xen key labels: "auto", a notation id, or for the secondary label "none".</summary>

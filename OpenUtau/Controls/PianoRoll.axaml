@@ -264,6 +264,7 @@
                         TickOrigin="{Binding NotesViewModel.TickOrigin}"
                         TickOffset="{Binding NotesViewModel.TickOffset}"
                         SnapDiv="{Binding NotesViewModel.SnapDiv, Mode=OneWay}"
+                        SnapStep="{Binding NotesViewModel.SnapStep, Mode=OneWay}"
                         SnapTicks="{Binding NotesViewModel.SnapTicks}"
                         ShowBar="True"/>
       <!-- Notes backgrounds end -->
@@ -281,6 +282,7 @@
                         TickOrigin="{Binding NotesViewModel.TickOrigin}"
                         TickOffset="{Binding NotesViewModel.TickOffset}"
                         SnapDiv="{Binding NotesViewModel.SnapDiv, Mode=OneWay}"
+                        SnapStep="{Binding NotesViewModel.SnapStep, Mode=OneWay}"
                         ShowBar="False"/>
       <!-- Expression backgrounds end -->
       <!--Portrait spans the notes and expression cards (from OpenUtau Lunai); each card clips its own layer-->
@@ -406,7 +408,8 @@
               <MenuItem Header="{DynamicResource menu.edit.pasteplainnotes}" InputGesture="Ctrl+Shift+V" Command="{Binding PastePlain}"/>
               <MenuItem Header="{DynamicResource menu.edit.delete}" InputGesture="Delete" Command="{Binding Delete}"/>
               <MenuItem Header="-" Height="1"/>
-              <MenuItem Header="{DynamicResource pianoroll.menu.searchnote}" InputGesture="Ctrl+F" Click="OnMenuSearchNote"/>
+          <MenuItem Header="{DynamicResource xen.menu.splitatplayhead}" InputGesture="S" Click="OnMenuSplitAtPlayhead"/>
+          <MenuItem Header="{DynamicResource pianoroll.menu.searchnote}" InputGesture="Ctrl+F" Click="OnMenuSearchNote"/>
               <MenuItem Header="{DynamicResource menu.edit.selectall}" InputGesture="Ctrl+A" Command="{Binding SelectAll}"/>
               <MenuItem Header="-" Height="1"/>
               <MenuItem Header="{DynamicResource pianoroll.menu.part.singer}" Click="OnMenuSingers"/>
@@ -579,14 +582,20 @@
                 <Path Classes="stroked" Data="M 4.5 13.5 L 7.5 13.5 L 7.5 9.5 A 1,1 0 1 1 10.5,9.5 L 10.5 13.5 L 13.5 13.5 L 13.5 8.5 A 1,1 0 1 0 4.5,8.5 Z"/>
               </Border>
             </ToggleButton>
-            <Button Margin="0" Padding="0,1" Height="20" Width="40" Background="Transparent" Click="OnSnapDivMenuButton"
+            <Button Margin="0" Padding="4,1" Height="20" MinWidth="40" Background="Transparent" Click="OnSnapDivMenuButton"
               ToolTip.Tip="{DynamicResource pianoroll.snapdiv}">
               <TextBlock Grid.Column="0" Text="{Binding NotesViewModel.SnapDivText}"
                          TextAlignment="Right" FontSize="10" FontFamily="monospace"
                          Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
               <Button.ContextMenu>
                 <ContextMenu Name="SnapDivMenu" Classes="WithCommand" Placement="BottomEdgeAlignedLeft"
-                             ItemsSource="{Binding NotesViewModel.SnapDivs}" KeyDown="OnSnapDivKeyDown"/>
+                             ItemsSource="{Binding NotesViewModel.SnapDivs}" KeyDown="OnSnapDivKeyDown">
+                  <ContextMenu.Styles>
+                    <Style Selector="MenuItem">
+                      <Setter Property="Icon" Value="{Binding Icon}"/>
+                    </Style>
+                  </ContextMenu.Styles>
+                </ContextMenu>
               </Button.ContextMenu>
             </Button>
             <Button Margin="0" Padding="4,1" Height="20" MinWidth="40" Background="Transparent" Click="OnKeyMenuButton"
@@ -673,7 +682,8 @@
                         TickWidth="{Binding NotesViewModel.TickWidth}"
                         TickOrigin="{Binding NotesViewModel.TickOrigin}"
                         TickOffset="{Binding NotesViewModel.TickOffset}"
-                        SnapDiv="{Binding NotesViewModel.SnapDiv, Mode=OneWay}"/>
+                        SnapDiv="{Binding NotesViewModel.SnapDiv, Mode=OneWay}"
+                        SnapStep="{Binding NotesViewModel.SnapStep, Mode=OneWay}"/>
       <c:ExpressionCanvas Grid.Row="5" Grid.Column="1" Opacity="0.2"
                           IsVisible="{Binding NotesViewModel.ShowExpressions}"
                           TickWidth="{Binding NotesViewModel.TickWidth}"
