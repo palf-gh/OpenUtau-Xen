@@ -965,3 +965,15 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   propriety in 12-EDO, the improper 53-EDO diatonic and a 4096-step scale.
   AppTest checks the filtered list for either preference value and the
   "not proper" status on the 53-EDO keyboard, which stays available.
+
+## 2026-10-26 — Local merge of the MOS list into develop
+
+- `feature/mos-choices` (`74b813b`) was merged into `develop` (`870b3ff`) without
+  conflicts. Nothing was pushed.
+- Verification: serial solution build succeeded with zero errors. Full suite:
+  569 passed, one opt-in external-voice test skipped.
+- Trial: no trial was running, so the self-contained Windows x64 Release build
+  from `870b3ff` replaced `work/OpenUtau-Xen-win-x64/` in place with local data
+  kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and
+  core DLLs match the ReadyToRun outputs by SHA-256; the version string names
+  `870b3ff`. Native interactive launch was not checked.
