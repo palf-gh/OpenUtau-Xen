@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">曲線を削除</system:String>
   <system:String x:Key="xen.vibrato.preset">ビブラートの種類</system:String>
   <system:String x:Key="xen.vibrato.presetNone">なし</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">標準</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">深め</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">速め</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">浅め</system:String>
   <system:String x:Key="xen.export.vibratoBake">可変ビブラートをピッチ点に変換して書き出します。</system:String>
 </ResourceDictionary>
 

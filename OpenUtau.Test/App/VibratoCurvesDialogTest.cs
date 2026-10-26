@@ -66,9 +66,9 @@ namespace OpenUtau.App {
                 // [Extreme] Type 4 over the vibrato section: hold, fade from 60% to 90%.
                 Assert.Equal(new[] { 0f, 0.6f, 0.9f }, depth.Points.Select(point => point.x).ToArray(),
                     (a, b) => Math.Abs(a - b) < 1e-5);
-                Assert.Equal(300, depth.Sample(0.3f), 3);
-                Assert.Equal(300f, depth.BaseLine);
-                Assert.Equal(3.9f, rate.BaseLine);
+                Assert.Equal(VibratoPresets.Get(8)!.BaseDepth, depth.Sample(0.3f), 3);
+                Assert.Equal(VibratoPresets.Get(8)!.BaseDepth, depth.BaseLine);
+                Assert.Equal(VibratoPresets.Get(8)!.BaseRate, rate.BaseLine);
                 length.Value = 100;
                 Dispatcher.UIThread.RunJobs();
                 Assert.Equal(480, depth.VibratoTicks);
@@ -112,7 +112,7 @@ namespace OpenUtau.App {
                 preset.SelectedIndex = 5;
                 Dispatcher.UIThread.RunJobs();
                 Assert.Equal(5, note.vibrato.preset);
-                Assert.Equal(300, note.vibrato.SampleDepth(0.75f), 3);
+                Assert.Equal(VibratoPresets.Get(5)!.BaseDepth, note.vibrato.SampleDepth(0.75f), 3);
                 depth.AddPoint(0.5f, 150);
                 Assert.Equal(150, note.vibrato.SampleDepth(0.75f), 3);
                 dialog.Close();

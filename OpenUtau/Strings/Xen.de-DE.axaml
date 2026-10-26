@@ -211,5 +211,9 @@
   <system:String x:Key="xen.vibrato.removeCurves">Kurven entfernen</system:String>
   <system:String x:Key="xen.vibrato.preset">Vibratotyp</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Keine</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Standard</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Weit</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Schnell</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Dezent</system:String>
   <system:String x:Key="xen.export.vibratoBake">Variables Vibrato wird in Tonhöhenpunkte umgewandelt.</system:String>
 </ResourceDictionary>

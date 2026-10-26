@@ -302,7 +302,7 @@ namespace OpenUtau.Core {
         readonly UNote note;
         readonly float newLength;
         readonly float oldLength;
-        // Variable curves keep their place within the vibrato, as in VOCALOID's vibrato graphs.
+        // Variable curves keep their place within the vibrato, as in V4-style vibrato graphs.
         readonly List<VibratoPoint>? oldRate, oldDepth, newRate, newDepth;
         public VibratoLengthCommand(UVoicePart part, UNote note, float length) : base(part, note) {
             this.note = note;

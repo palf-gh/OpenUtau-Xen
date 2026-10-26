@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">Xóa đường cong</system:String>
   <system:String x:Key="xen.vibrato.preset">Kiểu rung giọng</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Không</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Tiêu chuẩn</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Rộng</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Nhanh</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Nhẹ</system:String>
   <system:String x:Key="xen.export.vibratoBake">Rung giọng biến thiên sẽ được chuyển thành các điểm cao độ.</system:String>
 </ResourceDictionary>
 

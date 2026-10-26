@@ -311,7 +311,7 @@ namespace OpenUtau.Core.Ustx {
         public const float MaxDepthCents = 1200f;
         public List<VibratoPoint>? rateCurve;
         public List<VibratoPoint>? depthCurve;
-        // VOCALOID-style type 1-16 the curves came from; it also sets the JOB VR/VD scale.
+        // V4-style type 1-16 the curves came from; it also sets the JOB VR/VD scale.
         public int? preset;
         [YamlIgnore] public bool HasCurves => (rateCurve?.Count ?? 0) > 0 || (depthCurve?.Count ?? 0) > 0;
 

@@ -211,5 +211,9 @@
   <system:String x:Key="xen.vibrato.removeCurves">Remover curvas</system:String>
   <system:String x:Key="xen.vibrato.preset">Tipo de vibrato</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Nenhuma</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Padrão</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Amplo</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Rápido</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Sutil</system:String>
   <system:String x:Key="xen.export.vibratoBake">O vibrato variável será convertido em pontos de afinação.</system:String>
 </ResourceDictionary>

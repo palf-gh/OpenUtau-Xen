@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">Usuń krzywe</system:String>
   <system:String x:Key="xen.vibrato.preset">Typ vibrato</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Brak</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Standardowe</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Szerokie</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Szybkie</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Subtelne</system:String>
   <system:String x:Key="xen.export.vibratoBake">Zmienne vibrato zostanie przekształcone w punkty wysokości dźwięku.</system:String>
 </ResourceDictionary>
 

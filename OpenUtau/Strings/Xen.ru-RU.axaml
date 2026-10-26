@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">Удалить кривые</system:String>
   <system:String x:Key="xen.vibrato.preset">Тип вибрато</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Нет</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Стандартное</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Широкое</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Быстрое</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Лёгкое</system:String>
   <system:String x:Key="xen.export.vibratoBake">Переменное вибрато будет преобразовано в точки высоты тона.</system:String>
 </ResourceDictionary>
 

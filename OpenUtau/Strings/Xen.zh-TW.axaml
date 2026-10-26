@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">刪除曲線</system:String>
   <system:String x:Key="xen.vibrato.preset">顫音類型</system:String>
   <system:String x:Key="xen.vibrato.presetNone">無</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">標準</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">深</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">快</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">淺</system:String>
   <system:String x:Key="xen.export.vibratoBake">可變顫音將轉換為音高點後匯出。</system:String>
 </ResourceDictionary>
 

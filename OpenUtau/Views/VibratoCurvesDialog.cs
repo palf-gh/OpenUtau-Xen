@@ -13,7 +13,7 @@ using OpenUtau.Core.Ustx;
 
 namespace OpenUtau.App.Views {
     /// <summary>
-    /// Vibrato properties laid out like VOCALOID4's: length, type, and depth and rate graphs over the
+    /// Vibrato properties laid out like V4's: length, type, and depth and rate graphs over the
     /// vibrato section. Edits are previewed on the notes inside one undo group until OK or Cancel.
     /// </summary>
     public sealed class VibratoCurvesDialog : Window {
@@ -47,7 +47,7 @@ namespace OpenUtau.App.Views {
             preset = new ComboBox { Name = "VibratoPreset", MinWidth = 190 };
             preset.Items.Add(XenStrings.Get("vibrato.presetNone"));
             foreach (var item in VibratoPresets.All) {
-                preset.Items.Add(item.Name);
+                preset.Items.Add(XenStrings.Get($"vibrato.family.{item.Family}") + " " + item.Number);
             }
             preset.SelectedIndex = VibratoPresets.Get(seed.preset)?.Id ?? 0;
             depth = new VibratoCurvePanel("vibrato.depth", ToVibrato(seed.depthCurve, seed),
@@ -112,7 +112,7 @@ namespace OpenUtau.App.Views {
             return grid;
         }
 
-        /// <summary>VOCALOID-style type of the curves; null keeps the note's own scales.</summary>
+        /// <summary>V4-style type of the curves; null keeps the note's own scales.</summary>
         int? SelectedPreset => preset.SelectedIndex > 0 ? preset.SelectedIndex : null;
         float Length => (float)(length.Value ?? 0);
 
@@ -301,7 +301,7 @@ namespace OpenUtau.App.Views {
 
     /// <summary>
     /// One vibrato lane over the vibrato section: a tick ruler on top, values on the left and the
-    /// curve filled down to the minimum, as VOCALOID4's property graphs show it.
+    /// curve filled down to the minimum, as V4's property graphs show it.
     /// </summary>
     public sealed class VibratoCurveGraph : Control {
         const double Pad = 6;

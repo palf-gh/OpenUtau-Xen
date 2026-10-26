@@ -454,9 +454,10 @@ end
   assert(VSInsertNoteExpression(n, {type='VD', posNorm=0, value=0}) == 1)
   assert(VSInsertNoteExpression(n, {type='VD', posNorm=1, value=127}) == 1)
   local s, rate = VSGetNoteExpressionAt(n, 'VR', 0.5)
-  assert(math.abs(rate - (64 + 64 * math.log(3.75/5)/math.log(2))) < 0.00001)
+  assert(math.abs(rate - 32) < 0.00001)
   local s2, depth = VSGetNoteExpressionAt(n, 'VD', 0.5)
-  assert(math.abs(depth - 63.5) < 0.00001)
+  -- The top value 127 counts as 128, so halfway is 64.
+  assert(math.abs(depth - 64) < 0.00001)
   return 0");
             var note = result.Edit!.AddedNotes.Single();
             Assert.Equal(100, note.vibrato.length);
@@ -464,7 +465,7 @@ end
             Assert.Equal(5f, note.vibrato.SampleRate(1));
             Assert.Equal(3.75f, note.vibrato.SampleRate(0.5f));
             Assert.Equal(0, note.vibrato.SampleDepth(0));
-            Assert.Equal(127 * 50f / 64, note.vibrato.SampleDepth(1));
+            Assert.Equal(100, note.vibrato.SampleDepth(1));
             Assert.Equal(original.pitchAddress!.Degree, note.pitchAddress!.Degree);
             Assert.Equal(original.pitchAddress.ResidualCents, note.pitchAddress.ResidualCents);
             Assert.False(original.vibrato.HasCurves);
@@ -498,6 +499,11 @@ end
             Assert.Equal(extreme.BaseDepth, note.vibrato.SampleDepth(0.8f), 3);
             Assert.Equal(0, note.vibrato.SampleDepth(0.95f), 4);
             Assert.Equal(extreme.BaseRate / 2, note.vibrato.SampleRate(0.95f), 4);
+            // The type's start phase and onset reach the note as its shift and fades.
+            Assert.Equal(extreme.StartPhase * 100, note.vibrato.shift, 4);
+            double seconds = project.timeAxis.MsBetweenTickPos(240, 480) / 1000;
+            Assert.Equal(Math.Min(100, VibratoPresets.OnsetSeconds / seconds * 100), note.vibrato.@in, 3);
+            Assert.Equal(0, note.vibrato.@out);
             Assert.Null(source.vibrato.preset);
         }
 
@@ -609,11 +615,16 @@ end
             var added = result.Edit!.AddedNotes.Single();
             Assert.Equal(180, added.vibrato.period);
             Assert.Equal(42, added.vibrato.depth);
-            Assert.Equal(25, added.vibrato.shift);
             Assert.Equal(100, added.vibrato.length);
             Assert.Equal(0, source.vibrato.length);
-            // Switching a vibrato on with type 1 chooses [Normal] Type 1.
+            // Switching a vibrato on with type 1 chooses Standard 1, whose start phase becomes the
+            // shift and whose onset becomes the fade-in.
             Assert.Equal(1, added.vibrato.preset);
+            Assert.Equal(VibratoPresets.Get(1)!.StartPhase * 100, added.vibrato.shift, 4);
+            Assert.Equal(25, source.vibrato.shift);
+            Assert.Equal(0, added.vibrato.@out);
+            double seconds = project.timeAxis.MsBetweenTickPos(960, 1200) / 1000;
+            Assert.Equal(Math.Min(100, VibratoPresets.OnsetSeconds / seconds * 100), added.vibrato.@in, 3);
             var normal = VibratoPresets.Get(1)!;
             Assert.Equal(normal.RateHz(50), added.vibrato.SampleRate(0.5f), 4);
             Assert.Equal(normal.BaseDepth, added.vibrato.SampleDepth(0.5f), 4);

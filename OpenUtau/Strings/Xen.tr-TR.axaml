@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">Eğrileri kaldır</system:String>
   <system:String x:Key="xen.vibrato.preset">Vibrato türü</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Yok</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Standart</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Geniş</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Hızlı</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Hafif</system:String>
   <system:String x:Key="xen.export.vibratoBake">Değişken vibrato perde noktalarına dönüştürülecek.</system:String>
 </ResourceDictionary>
 

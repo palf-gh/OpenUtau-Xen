@@ -211,5 +211,9 @@
   <system:String x:Key="xen.vibrato.removeCurves">Rimuovi curve</system:String>
   <system:String x:Key="xen.vibrato.preset">Tipo di vibrato</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Nessuna</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Standard</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Ampio</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Rapido</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Leggero</system:String>
   <system:String x:Key="xen.export.vibratoBake">Il vibrato variabile verrà convertito in punti di intonazione.</system:String>
 </ResourceDictionary>

@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">ลบเส้นโค้ง</system:String>
   <system:String x:Key="xen.vibrato.preset">ชนิดวิบราโต</system:String>
   <system:String x:Key="xen.vibrato.presetNone">ไม่มี</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">มาตรฐาน</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">กว้าง</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">เร็ว</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">เบา</system:String>
   <system:String x:Key="xen.export.vibratoBake">วิบราโตแบบแปรผันจะถูกแปลงเป็นจุดระดับเสียง</system:String>
 </ResourceDictionary>
 

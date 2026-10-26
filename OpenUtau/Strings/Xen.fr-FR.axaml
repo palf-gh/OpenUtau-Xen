@@ -211,5 +211,9 @@
   <system:String x:Key="xen.vibrato.removeCurves">Supprimer les courbes</system:String>
   <system:String x:Key="xen.vibrato.preset">Type de vibrato</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Aucun</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Standard</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Large</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Rapide</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Subtil</system:String>
   <system:String x:Key="xen.export.vibratoBake">Le vibrato variable sera converti en points de hauteur.</system:String>
 </ResourceDictionary>

@@ -211,5 +211,9 @@
   <system:String x:Key="xen.vibrato.removeCurves">Remove curves</system:String>
   <system:String x:Key="xen.vibrato.preset">Vibrato type</system:String>
   <system:String x:Key="xen.vibrato.presetNone">None</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Standard</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Wide</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Quick</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Subtle</system:String>
   <system:String x:Key="xen.export.vibratoBake">Variable vibrato will be baked into pitch points.</system:String>
 </ResourceDictionary>

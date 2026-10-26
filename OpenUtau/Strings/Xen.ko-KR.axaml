@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">곡선 삭제</system:String>
   <system:String x:Key="xen.vibrato.preset">비브라토 종류</system:String>
   <system:String x:Key="xen.vibrato.presetNone">없음</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">표준</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">깊게</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">빠르게</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">얕게</system:String>
   <system:String x:Key="xen.export.vibratoBake">가변 비브라토를 피치 포인트로 변환하여 내보냅니다.</system:String>
 </ResourceDictionary>
 

@@ -1211,7 +1211,7 @@ namespace OpenUtau.App.Controls {
                 editState = null;
                 Cursor = null;
             }
-            // As in VOCALOID4, double-clicking a note's vibrato opens its vibrato properties.
+            // As in V4, double-clicking a note's vibrato opens its vibrato properties.
             var vibratoNote = ViewModel.NotesViewModel.HitTest.HitTestVibratoArea(point);
             if (vibratoNote != null && ViewModel.NotesViewModel.Part != null) {
                 var selection = ViewModel.NotesViewModel.Selection;

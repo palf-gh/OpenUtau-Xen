@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">Hapus kurva</system:String>
   <system:String x:Key="xen.vibrato.preset">Jenis vibrato</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Tidak ada</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Standar</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Lebar</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Cepat</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Halus</system:String>
   <system:String x:Key="xen.export.vibratoBake">Vibrato variabel akan dikonversi menjadi titik nada.</system:String>
 </ResourceDictionary>
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenUtau.Core.Ustx;
@@ -11,14 +12,23 @@ namespace OpenUtau.Core {
             IEnumerable<VibratoPoint>? rateCurve, IEnumerable<VibratoPoint>? depthCurve,
             float? length = null, int? preset = null) : base(part, notes.ToArray()) {
             oldVibratos = Notes.Select(note => note.vibrato.Clone()).ToArray();
-            newVibratos = oldVibratos.Select(vibrato => {
+            newVibratos = oldVibratos.Select((vibrato, index) => {
                 var result = vibrato.Clone();
                 result.rateCurve = Copy(rateCurve);
                 result.depthCurve = Copy(depthCurve);
-                result.preset = preset;
                 if (length.HasValue) {
                     result.length = length.Value;
                 }
+                if (preset is int id && preset != vibrato.preset && VibratoPresets.Get(id) is VibratoPreset chosen) {
+                    // A newly chosen type sets its start phase and onset through the shift and fades.
+                    result.shift = chosen.StartPhase * 100;
+                    result.@out = 0;
+                    double seconds = Notes[index].DurationMs * result.length / 100 / 1000;
+                    if (seconds > 0) {
+                        result.@in = (float)Math.Min(100, VibratoPresets.OnsetSeconds / seconds * 100);
+                    }
+                }
+                result.preset = preset;
                 result.ValidateCurves();
                 return result;
             }).ToArray();

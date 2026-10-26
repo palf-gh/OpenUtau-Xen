@@ -211,6 +211,10 @@
   <system:String x:Key="xen.vibrato.removeCurves">Curven verwijderen</system:String>
   <system:String x:Key="xen.vibrato.preset">Vibratotype</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Geen</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Standaard</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Breed</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Snel</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Subtiel</system:String>
   <system:String x:Key="xen.export.vibratoBake">Variabel vibrato wordt omgezet in toonhoogtepunten.</system:String>
 </ResourceDictionary>
 

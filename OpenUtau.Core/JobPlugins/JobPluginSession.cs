@@ -481,7 +481,7 @@ namespace OpenUtau.Core.JobPlugins {
                 vibrato.preset = null;
                 if (fields.VibratoType > 0) {
                     vibrato.length = fields.VibratoLength;
-                    VibratoPresets.Apply(vibrato, fields.VibratoType);
+                    VibratoPresets.Apply(vibrato, fields.VibratoType, VibratoSeconds(fields));
                 }
             } else if (fields.Pos == copied!.Current.Pos && fields.Dur == copied.Current.Dur) {
                 foreach (var pair in copied.Expressions) {
@@ -494,13 +494,18 @@ namespace OpenUtau.Core.JobPlugins {
                 }
             } else if (vibrato.preset != null) {
                 vibrato.length = fields.VibratoLength;
-                VibratoPresets.Apply(vibrato, vibrato.preset.Value);
+                VibratoPresets.Apply(vibrato, vibrato.preset.Value, VibratoSeconds(fields));
             } else {
                 vibrato.rateCurve = null;
                 vibrato.depthCurve = null;
             }
             notes.Add(state);
             return Ok;
+        }
+
+        double VibratoSeconds(NoteFields fields) {
+            double end = partPosition + fields.Pos + fields.Dur;
+            return project.timeAxis.MsBetweenTickPos(end - fields.Dur * fields.VibratoLength / 100.0, end) / 1000;
         }
 
         NoteState? FindNote(Table t) {
@@ -518,7 +523,7 @@ namespace OpenUtau.Core.JobPlugins {
             if (fields.VibratoType != state.Current.VibratoType && fields.VibratoType > 0) {
                 // Choosing a type replaces the note's curves with the preset's, as the type list does.
                 state.Vibrato.length = fields.VibratoLength;
-                VibratoPresets.Apply(state.Vibrato, fields.VibratoType);
+                VibratoPresets.Apply(state.Vibrato, fields.VibratoType, VibratoSeconds(fields));
                 state.Expressions.Clear();
                 state.VibratoReset = true;
             }
@@ -1187,6 +1192,9 @@ namespace OpenUtau.Core.JobPlugins {
                 note.vibrato = state.Vibrato.Clone();
             } else if (state.VibratoReset) {
                 note.vibrato.preset = state.Vibrato.preset;
+                note.vibrato.shift = state.Vibrato.shift;
+                note.vibrato.@in = state.Vibrato.@in;
+                note.vibrato.@out = state.Vibrato.@out;
                 note.vibrato.rateCurve = state.Vibrato.rateCurve?.Select(point => point.Clone()).ToList();
                 note.vibrato.depthCurve = state.Vibrato.depthCurve?.Select(point => point.Clone()).ToList();
             }

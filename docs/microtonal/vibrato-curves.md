@@ -1,11 +1,12 @@
-# Editable vibrato curves
+# V4-style vibrato
 
 ## Scope
 
 Xen retains the existing UTAU vibrato model and adds optional per-note depth and
-rate curves, and 16 presets that approximate VOCALOID4's vibrato types. The
-curves are an OpenUtau design, not a reproduction of VOCALOID's synthesis: a
-preset is a sinusoidal vibrato with the type's rate and depth curves. The
+rate curves, and 16 presets that approximate V4's vibrato types. The
+curves are an OpenUtau design, a blend of UTAU's vibrato and V4's types
+rather than a reproduction of V4's synthesis: a preset gives OpenUtau's sine
+vibrato the type's measured rate and depth, and sets its shift and fades. The
 supplied V4 properties screen informed the length/depth/rate arrangement. No
 vendor binary, resource, plug-in body or reverse-engineering extract is in the
 repository; how the presets were derived is described below.
@@ -14,7 +15,7 @@ repository; how the presets were derived is described below.
 
 **Vibrato properties** opens from the note context menu, or by double-clicking a
 note's vibrato handles or lines in the piano roll, and follows the layout of
-VOCALOID4's vibrato properties: vibrato length (%), vibrato type, and a depth
+V4's vibrato properties: vibrato length (%), vibrato type, and a depth
 (cents) and a rate (Hz) graph. The graphs span the vibrato section, from its start
 to the note end, with a tick ruler above and the values on the left; the curve is
 filled down to the minimum. When a type is chosen, a dashed line marks its value
@@ -36,7 +37,7 @@ curve's peak and scales the whole curve; the period handle shows the first
 cycle, from the rate at the vibrato start, and scales the whole rate curve; the
 shift handle uses that period. Dragging the length handle, or changing the
 length in the note properties, moves the curve points with the vibrato, as
-VOCALOID's graphs do. Switching the vibrato off and on leaves the points where
+V4's graphs do. Switching the vibrato off and on leaves the points where
 they were, and a JOB plugin's `vibratoLength` change does not move them. Fade-in,
 fade-out and shift do not change the curves. Notes without curves behave as before.
 
@@ -57,30 +58,45 @@ playhead splitting slices the curves and carries the accumulated phase.
 
 ## Presets
 
-The 16 types follow VOCALOID4's list: 1–4 Normal, 5–8 Extreme, 9–12 Fast and 13–16
-Slight, with the names `[Normal] Type 1` and so on, which are not translated.
-Each type has a rate value and a depth value on VOCALOID's 0–127 scale, taken from
-the installed editor's preset parameter files. Types 1–3 hold their values over
-the whole vibrato. Type 4 holds them for 60% of the vibrato and then lowers both
-values to 0 by 90%; the editor's 57-point fade is reduced to that straight line.
+The 16 types keep V4's numbers and order, under Xen's own family names:
+1–4 Standard (V4's Normal), 5–8 Wide (Extreme), 9–12 Quick (Fast) and 13–16
+Subtle (Slight), shown as "Standard 1" and so on. The family names are translated;
+the numbers are the `vibratoType` values JOB plugins use. Each type has a rate
+value and a depth value on V4's 0–127 scale, taken from the installed
+editor's preset parameter files. Types 1–3 hold their values over the whole
+vibrato. Type 4 holds them for 60% of the vibrato and then lowers both values to 0
+by 90%; the editor's 57-point fade is reduced to that straight line.
 
-Value 64 stands for the family's base rate and depth. VOCALOID takes the
-character of each family from a recorded vibrato, so the bases were measured from
-the sustained part of the installed editor's four recordings and rounded:
+Value 64 stands for the family's base rate and depth. V4 takes the
+character of each family from a recorded vibrato, so the bases, the value laws, the
+start phase and the onset were measured from V4's own output: user-supplied
+projects with all 16 types, flat test values, several note and vibrato lengths and
+two tempos, rendered with one voicebank and converted to PIT by the editor. The
+research material stays outside the repository.
 
-| Family | Rate at 64 | Depth at 64 |
-| --- | --- | --- |
-| Normal | 4.85 Hz | 75 cents |
-| Extreme | 3.9 Hz | 300 cents |
-| Fast | 5.2 Hz | 110 cents |
-| Slight | 4.85 Hz | 35 cents |
+| Family | Rate at 64 | Depth at 64 | Start phase |
+| --- | --- | --- | --- |
+| Standard | 4.6685 Hz | 60.86 cents | 27.1% |
+| Wide | 3.5407 Hz | 212.77 cents | 25.4% |
+| Quick | 5.0798 Hz | 101.69 cents | 28.5% |
+| Subtle | 4.6677 Hz | 34.93 cents | 25.7% |
 
-Depth is the amplitude, half the peak-to-peak swing. The rate doubles every 64
-values and the depth is linear in the value, the same laws as the JOB scale. Fast
-is deeper than Normal but only about 7% faster; the numbers follow the
-recordings rather than the names. VOCALOID's exact value laws, the recorded
-waveform shape and the recordings' attack and release are not reproduced; the note's fade-in and fade-out still
-shape the onset and end. The research material stays outside the repository.
+Depth is linear in the value from 0. Rate is linear on each side of 64: the top
+value doubles it and value 0 halves it, with the slope below 64 half the slope
+above. As in V4, the top value 127 counts as 128. The same laws apply to the
+JOB scale. Depth here is the amplitude of the vibrato's fundamental.
+
+The vibrato stays OpenUtau's sine. V4's recorded vibratos are not pure
+sines (they lean below the note and carry harmonics); that shape is deliberately
+not copied, so a type's swing is a few per cent narrower than V4's and its
+pitch differs by about 15% of the depth. The rest of a type's character is
+expressed through the UTAU-style settings, which stay visible and editable:
+choosing a type sets the shift to its start phase (V4 starts about a quarter
+of a cycle in), the fade-in to V4's onset of 0.34 seconds (a linear build-up
+whatever the tempo, note length or vibrato length; it covers the whole vibrato on
+short notes) and the fade-out to 0. The fade-in is worked out from the note's
+duration when the type is chosen. A flat rate of 0 produced no vibrato in
+V4, while here it halves the rate. Nothing was compared by ear.
 
 A preset is stored as `preset` (1–16) next to the curves it produced, which are
 laid out over the vibrato section. Editing points keeps
@@ -111,7 +127,8 @@ editable data. A failure still discards the complete JOB transaction.
 Value 64 is the base of the note's preset (see the table above), or 5 Hz and
 50 cents for a note without one:
 
-- `VR`: frequency in Hz = `base rate × 2^((value − 64) / 64)`.
+- `VR`: frequency in Hz = `base rate × (1 + (value − 64) / 64)` from 64 upwards and
+  `base rate × (1 + (value − 64) / 128)` below 64.
 - `VD`: depth in cents = `value × base depth / 64`.
 
 New JOB values must be between 0 and 127. Existing native values beyond this
@@ -122,7 +139,7 @@ preset, and 0 when vibrato is off. Writing back the same type changes nothing.
 Choosing another type from 1 to 16 replaces the note's curves with that preset,
 laid out with the `vibratoLength` written at the same time; type 0 switches
 vibrato off. Types outside 0–16 are rejected. Because a note without a preset
-already reports 1, a script choosing `[Normal] Type 1` leaves such a note as it
+already reports 1, a script choosing type 1 (Standard 1) leaves such a note as it
 is; the Preset list in the dialogue applies that type to it.
 A neutral `bendDepth = 0` reset is accepted without deleting native pitch points.
 
