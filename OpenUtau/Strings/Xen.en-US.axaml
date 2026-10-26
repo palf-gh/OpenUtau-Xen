@@ -180,4 +180,16 @@
   <system:String x:Key="xen.snap.dotted">Dotted</system:String>
   <system:String x:Key="xen.snap.straight">Straight</system:String>
   <system:String x:Key="xen.snap.tuplet">{0} Tuplet</system:String>
+  <system:String x:Key="xen.jobplugin.menu">JOB Plugins</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">Rescan</system:String>
+  <system:String x:Key="xen.jobplugin.none">No JOB plugins found</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0} (limited)</system:String>
+  <system:String x:Key="xen.jobplugin.undo">JOB plugin</system:String>
+  <system:String x:Key="xen.jobplugin.failed">JOB plugin "{0}" failed: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">The part changed while "{0}" was running, so its changes were discarded.</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">Some values are not valid numbers.</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">JOB plugin folders</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">Add folders…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">Remove</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">{0} plugins found, {1} problems</system:String>
 </ResourceDictionary>

@@ -86,6 +86,8 @@ namespace OpenUtau.App.ViewModels {
 
         public ObservableCollectionExtended<MenuItemViewModel> LegacyPlugins { get; private set; }
             = new ObservableCollectionExtended<MenuItemViewModel>();
+        public ObservableCollectionExtended<MenuItemViewModel> JobPlugins { get; private set; }
+            = new ObservableCollectionExtended<MenuItemViewModel>();
         public ObservableCollectionExtended<MenuItemViewModel> NoteBatchEdits { get; private set; }
             = new ObservableCollectionExtended<MenuItemViewModel>();
         public ObservableCollectionExtended<MenuItemViewModel> LyricBatchEdits { get; private set; }
@@ -215,6 +217,7 @@ namespace OpenUtau.App.ViewModels {
                 }
             });
             LoadLegacyPlugins();
+            InitJobPlugins();
             DocManager.Inst.AddSubscriber(this);
         }
 

@@ -166,6 +166,7 @@ namespace OpenUtau.Core.Util {
             public bool XenSnapDotted = false;
             public int XenSnapTuplet = 1;
             public bool XenSnapEnabled = true;
+            public List<string> JobPluginSearchPaths = new List<string>();
             /// <summary>Xen piano-roll rows: 0 all pitches, 1 highlight scale, 2 compact scale.</summary>
             public int XenPitchRows = 0;
             /// <summary>Xen key labels: "auto", a notation id, or for the secondary label "none".</summary>

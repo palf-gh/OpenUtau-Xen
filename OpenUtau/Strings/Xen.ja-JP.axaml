@@ -180,5 +180,17 @@
   <system:String x:Key="xen.snap.dotted">付点</system:String>
   <system:String x:Key="xen.snap.straight">通常</system:String>
   <system:String x:Key="xen.snap.tuplet">{0}連符</system:String>
+  <system:String x:Key="xen.jobplugin.menu">JOBプラグイン</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">再読み込み</system:String>
+  <system:String x:Key="xen.jobplugin.none">JOBプラグインが見つかりません</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0}（制限あり）</system:String>
+  <system:String x:Key="xen.jobplugin.undo">JOBプラグイン</system:String>
+  <system:String x:Key="xen.jobplugin.failed">JOBプラグイン「{0}」を実行できませんでした: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">「{0}」の実行中にパートが変更されたため、プラグインによる変更は反映していません。</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">数値として正しくない値があります。</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">JOBプラグインのフォルダー</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">フォルダーを追加…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">削除</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">プラグイン {0} 件、問題 {1} 件</system:String>
 </ResourceDictionary>
 

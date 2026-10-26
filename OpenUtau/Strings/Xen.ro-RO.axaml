@@ -180,5 +180,17 @@
   <system:String x:Key="xen.snap.dotted">Cu punct</system:String>
   <system:String x:Key="xen.snap.straight">Normal</system:String>
   <system:String x:Key="xen.snap.tuplet">{0} Diviziune excepțională</system:String>
+  <system:String x:Key="xen.jobplugin.menu">Pluginuri JOB</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">Caută din nou</system:String>
+  <system:String x:Key="xen.jobplugin.none">Nu s-au găsit pluginuri JOB</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0} (limitat)</system:String>
+  <system:String x:Key="xen.jobplugin.undo">Plugin JOB</system:String>
+  <system:String x:Key="xen.jobplugin.failed">Pluginul JOB „{0}” a eșuat: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">Partea s-a modificat în timpul rulării „{0}”, așa că modificările au fost anulate.</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">Unele valori nu sunt numere valide.</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">Foldere pentru pluginuri JOB</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">Adaugă foldere…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">Elimină</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">{0} pluginuri găsite, {1} probleme</system:String>
 </ResourceDictionary>
 

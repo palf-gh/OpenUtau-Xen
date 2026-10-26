@@ -180,5 +180,17 @@
   <system:String x:Key="xen.snap.dotted">Pisteellinen</system:String>
   <system:String x:Key="xen.snap.straight">Suora</system:String>
   <system:String x:Key="xen.snap.tuplet">{0} Trioli ja muut jaot</system:String>
+  <system:String x:Key="xen.jobplugin.menu">JOB-laajennukset</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">Etsi uudelleen</system:String>
+  <system:String x:Key="xen.jobplugin.none">JOB-laajennuksia ei löytynyt</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0} (rajoitettu)</system:String>
+  <system:String x:Key="xen.jobplugin.undo">JOB-laajennus</system:String>
+  <system:String x:Key="xen.jobplugin.failed">JOB-laajennus ”{0}” epäonnistui: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">Osa muuttui, kun ”{0}” oli käynnissä, joten sen muutokset hylättiin.</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">Jotkin arvot eivät ole kelvollisia lukuja.</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">JOB-laajennusten kansiot</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">Lisää kansioita…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">Poista</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">{0} laajennusta löytyi, {1} ongelmaa</system:String>
 </ResourceDictionary>
 

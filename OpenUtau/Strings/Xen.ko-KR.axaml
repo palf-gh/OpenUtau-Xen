@@ -180,5 +180,17 @@
   <system:String x:Key="xen.snap.dotted">점음표</system:String>
   <system:String x:Key="xen.snap.straight">보통</system:String>
   <system:String x:Key="xen.snap.tuplet">{0} 잇단음표</system:String>
+  <system:String x:Key="xen.jobplugin.menu">JOB 플러그인</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">다시 검색</system:String>
+  <system:String x:Key="xen.jobplugin.none">JOB 플러그인이 없습니다</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0} (제한됨)</system:String>
+  <system:String x:Key="xen.jobplugin.undo">JOB 플러그인</system:String>
+  <system:String x:Key="xen.jobplugin.failed">JOB 플러그인 "{0}" 실행 실패: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">"{0}" 실행 중에 파트가 바뀌어 변경 사항을 적용하지 않았습니다.</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">올바른 숫자가 아닌 값이 있습니다.</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">JOB 플러그인 폴더</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">폴더 추가…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">제거</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">플러그인 {0}개, 문제 {1}개</system:String>
 </ResourceDictionary>
 

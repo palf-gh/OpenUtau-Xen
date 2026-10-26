@@ -222,6 +222,15 @@ namespace OpenUtau.App {
                 ?.FirstOrDefault();
         }
 
+        public async static Task<string[]> OpenFolders(Window window, string titleKey) {
+            var dirs = await window.StorageProvider.OpenFolderPickerAsync(
+                new FolderPickerOpenOptions {
+                    Title = ThemeManager.GetString(titleKey),
+                    AllowMultiple = true,
+                });
+            return dirs?.Select(f => f.TryGetLocalPath()).OfType<string>().ToArray() ?? Array.Empty<string>();
+        }
+
         public async static Task<string?> SaveFile
             (Window window, string titleKey, params FilePickerFileType[] types) {
             return await SaveFile(window, titleKey, null, null, types);

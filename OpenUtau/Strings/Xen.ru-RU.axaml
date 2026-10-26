@@ -180,5 +180,17 @@
   <system:String x:Key="xen.snap.dotted">С точкой</system:String>
   <system:String x:Key="xen.snap.straight">Обычная</system:String>
   <system:String x:Key="xen.snap.tuplet">{0} Особое деление</system:String>
+  <system:String x:Key="xen.jobplugin.menu">Плагины JOB</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">Обновить список</system:String>
+  <system:String x:Key="xen.jobplugin.none">Плагины JOB не найдены</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0} (ограниченно)</system:String>
+  <system:String x:Key="xen.jobplugin.undo">Плагин JOB</system:String>
+  <system:String x:Key="xen.jobplugin.failed">Плагин JOB «{0}» завершился ошибкой: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">Партия изменилась во время работы «{0}», поэтому его изменения отменены.</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">Некоторые значения не являются допустимыми числами.</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">Папки плагинов JOB</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">Добавить папки…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">Удалить</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">Найдено плагинов: {0}, проблем: {1}</system:String>
 </ResourceDictionary>
 

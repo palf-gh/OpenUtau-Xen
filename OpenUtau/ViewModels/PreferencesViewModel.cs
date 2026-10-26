@@ -68,6 +68,11 @@ namespace OpenUtau.App.ViewModels {
         public string SingerPath => PathManager.Inst.SingersPath;
         public string AdditionalSingersPath => !string.IsNullOrWhiteSpace(PathManager.Inst.AdditionalSingersPath) ? PathManager.Inst.AdditionalSingersPath : "(None)";
         [Reactive] public partial bool InstallToAdditionalSingersPath { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<string> JobPluginPaths { get; }
+            = new System.Collections.ObjectModel.ObservableCollection<string>(Preferences.Default.JobPluginSearchPaths);
+        [Reactive] public partial string? SelectedJobPluginPath { get; set; }
+        public string JobPluginStatus => OpenUtau.App.XenStrings.Get("prefs.jobplugins.count",
+            Core.JobPlugins.JobPluginManager.Inst.Catalog.Plugins.Count, Core.JobPlugins.JobPluginManager.Inst.Catalog.Diagnostics.Count);
         [Reactive] public partial bool LoadDeepFolders { get; set; }
 
         // Editing
@@ -499,6 +504,31 @@ namespace OpenUtau.App.ViewModels {
             } catch (Exception e) {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
             }
+        }
+
+        public void AddJobPluginFolders(IEnumerable<string> folders) {
+            Core.JobPlugins.JobPluginManager.Inst.AddFolders(folders);
+            RefreshJobPlugins();
+        }
+
+        public void RemoveJobPluginFolder() {
+            if (SelectedJobPluginPath != null) {
+                Core.JobPlugins.JobPluginManager.Inst.RemoveFolder(SelectedJobPluginPath);
+                RefreshJobPlugins();
+            }
+        }
+
+        public void RescanJobPlugins() {
+            Core.JobPlugins.JobPluginManager.Inst.Rescan();
+            RefreshJobPlugins();
+        }
+
+        void RefreshJobPlugins() {
+            JobPluginPaths.Clear();
+            foreach (var path in Preferences.Default.JobPluginSearchPaths) {
+                JobPluginPaths.Add(path);
+            }
+            this.RaisePropertyChanged(nameof(JobPluginStatus));
         }
 
         public void SetAddlSingersPath(string path) {

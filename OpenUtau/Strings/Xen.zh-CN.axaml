@@ -180,5 +180,17 @@
   <system:String x:Key="xen.snap.dotted">附点</system:String>
   <system:String x:Key="xen.snap.straight">普通</system:String>
   <system:String x:Key="xen.snap.tuplet">{0}连音</system:String>
+  <system:String x:Key="xen.jobplugin.menu">JOB 插件</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">重新扫描</system:String>
+  <system:String x:Key="xen.jobplugin.none">未找到 JOB 插件</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0}（受限）</system:String>
+  <system:String x:Key="xen.jobplugin.undo">JOB 插件</system:String>
+  <system:String x:Key="xen.jobplugin.failed">JOB 插件“{0}”运行失败：{1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">“{0}”运行期间分段已更改，因此已放弃其修改。</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">部分数值无效。</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">JOB 插件文件夹</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">添加文件夹…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">移除</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">找到 {0} 个插件，{1} 个问题</system:String>
 </ResourceDictionary>
 

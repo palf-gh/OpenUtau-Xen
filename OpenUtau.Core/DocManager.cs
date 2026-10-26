@@ -53,6 +53,11 @@ namespace OpenUtau.Core {
             });
             SearchAllPlugins();
             SearchAllLegacyPlugins();
+            try {
+                JobPlugins.JobPluginManager.Inst.Rescan();
+            } catch (Exception e) {
+                Log.Error(e, "Failed to search JOB plugins.");
+            }
             this.mainThread = mainThread;
             this.mainScheduler = mainScheduler;
             PhonemizerRunner = new PhonemizerRunner(mainScheduler);

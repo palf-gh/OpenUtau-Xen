@@ -180,5 +180,17 @@
   <system:String x:Key="xen.snap.dotted">ประจุด</system:String>
   <system:String x:Key="xen.snap.straight">ปกติ</system:String>
   <system:String x:Key="xen.snap.tuplet">{0} กลุ่มโน้ตพิเศษ</system:String>
+  <system:String x:Key="xen.jobplugin.menu">ปลั๊กอิน JOB</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">สแกนใหม่</system:String>
+  <system:String x:Key="xen.jobplugin.none">ไม่พบปลั๊กอิน JOB</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0} (จำกัด)</system:String>
+  <system:String x:Key="xen.jobplugin.undo">ปลั๊กอิน JOB</system:String>
+  <system:String x:Key="xen.jobplugin.failed">ปลั๊กอิน JOB "{0}" ทำงานล้มเหลว: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">พาร์ตถูกแก้ไขระหว่างที่ "{0}" ทำงาน จึงไม่ได้นำการเปลี่ยนแปลงไปใช้</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">มีค่าที่ไม่ใช่ตัวเลขที่ถูกต้อง</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">โฟลเดอร์ปลั๊กอิน JOB</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">เพิ่มโฟลเดอร์…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">นำออก</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">พบปลั๊กอิน {0} รายการ ปัญหา {1} รายการ</system:String>
 </ResourceDictionary>
 

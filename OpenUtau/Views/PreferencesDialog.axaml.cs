@@ -36,6 +36,15 @@ namespace OpenUtau.App.Views {
             }
         }
 
+        async void AddJobPluginFolders(object sender, RoutedEventArgs e) {
+            var folders = await FilePicker.OpenFolders(this, "xen.prefs.jobplugins");
+            viewModel!.AddJobPluginFolders(folders.Where(Directory.Exists));
+        }
+
+        void RemoveJobPluginFolder(object sender, RoutedEventArgs e) => viewModel!.RemoveJobPluginFolder();
+
+        void RescanJobPlugins(object sender, RoutedEventArgs e) => viewModel!.RescanJobPlugins();
+
         void ResetAddlSingersPath(object sender, RoutedEventArgs e) {
             viewModel!.SetAddlSingersPath(string.Empty);
         }

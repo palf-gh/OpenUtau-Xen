@@ -1,12 +1,12 @@
 # JOB plugin compatibility specification
 
-Date: 2026-10-26. Revision 1, written before implementation.
+Date: 2026-10-26. Revision 2, corrected against the installed scripts during implementation. Revision 1 was written before implementation; the corrections are listed in the last section and the implementation record is `job-plugin-implementation.md`.
 
 ## Objective and evidence
 
 Load user-installed Lua JOB plugins from several configurable directories and execute supported editing operations against the current OpenUtau Xen voice part. This is an independently implemented editing API adapter, not a VOCALOID synthesiser or binary compatibility layer. The existing UTAU plugin system remains separate.
 
-The source-contract inventory is `job-plugin-api-inventory.md`; the native-model investigation is `job-plugin-model-mapping.md`. They identify 30 user-installed scripts and 38 API names, with file/line evidence and remaining unknowns. No local SDK reference was found. Observed calls establish a bounded compatibility target, not every undocumented behaviour of the original editor.
+The source-contract inventory is `job-plugin-api-inventory.md`; the native-model investigation is `job-plugin-model-mapping.md`. They identified 30 user-installed scripts and 38 API names; recursive discovery later found 33 scripts (see Revision 2), with file/line evidence and remaining unknowns. No local SDK reference was found. Observed calls establish a bounded compatibility target, not every undocumented behaviour of the original editor.
 
 Primary references:
 
@@ -20,7 +20,7 @@ No editor executable, DLL, voicebank, plugin source body or vendor asset is copi
 
 - Preferences expose a list of JOB plugin folders with Add, Remove and Rescan actions. Folder selection accepts more than one directory. Saved paths are local preferences, never project tuning or hard-coded personal defaults.
 - The four user-supplied directories are added to the local trial preferences without replacing existing entries. The repository does not contain their scripts.
-- Enumerate `.lua` files deterministically, case-insensitively on Windows. Normalise paths, deduplicate the same physical pathname, skip directory links and isolate inaccessible paths or malformed files as diagnostics.
+- Enumerate `.lua` files recursively and deterministically, case-insensitively on Windows. Normalise paths, deduplicate the same physical pathname, skip directory links and isolate inaccessible paths or malformed files as diagnostics.
 - Discovery never executes script top-level code or `manifest()`. Extract literal manifest fields from source, with filename fallback for computed metadata. A processing entry point must be present. Preserve separate files with the same pluginID; identify entries by canonical path and distinguish duplicate names by path.
 - Read strict UTF-8, accepting a BOM; reject malformed encoding explicitly. Bound source size. A manifest API version is descriptive metadata, not evidence that every operation is supported.
 - Record statically observed `VS*` calls and restricted external facilities. Unsupported calls remain visible in diagnostics. Runtime checks remain authoritative; static scanning is not a proof about computed function names.
@@ -28,7 +28,7 @@ No editor executable, DLL, voicebank, plugin source body or vendor asset is copi
 ## Execution and isolation
 
 - Use a fresh MoonSharp interpreter for every execution, with only basic language, string, table, iterator and mathematics facilities plus time queries. Provide Lua 5.1 compatibility aliases such as `table.getn`, `unpack`, `math.pow` and `math.log10` where absent.
-- Do not expose CLR objects, automatic type registration, shell execution, arbitrary file I/O, network access, native modules or unrestricted file loaders. Scripts requiring these facilities fail explicitly; the known settings-file variant is not advertised as fully compatible.
+- Do not expose CLR objects, automatic type registration, shell execution, arbitrary file I/O, network access, native modules or unrestricted file loaders. Scripts requiring these facilities fail explicitly; the known settings-file variant is not advertised as fully compatible. The one scoped replacement is a read-only `io.open` limited to files inside the script's own folder, which the NudgeL/NudgeR settings file needs; write modes raise an error.
 - Top-level initialisation and `main` both execute through instruction-limited coroutines. Check cancellation and a finite instruction/time budget between slices. A plain Task timeout without terminating execution is insufficient.
 - Invoke `main(processParam, envParam)`. Its integer result must be zero to commit; a nonzero result, exception, unsupported operation, timeout or cancellation discards all staged edits. Cancellation of a plugin input dialog also prevents commit, even if the script returns zero.
 - `processParam` contains part-local `beginPosTick`, `endPosTick` and `songPosTick`. A selected note range supplies its enclosing interval; otherwise use the whole part. Iterators still expose the whole part, as scripts implement their own filtering. `envParam` identifies the original script directory/name and a per-run temporary directory; exposing these strings does not grant file access.
@@ -37,18 +37,18 @@ No editor executable, DLL, voicebank, plugin source body or vendor asset is copi
 ## Data and time contracts
 
 - The host uses native 480 PPQ, matching the supplied scripts. Note/control positions are part-local; part position and tempo/time-signature lookup positions are song-global. Nonzero part origins must be tested explicitly.
-- Success flags are numerical 1/0, not Lua booleans. `VSGetNext*` returns `0, nil` at exhaustion. Queries returning control defaults or values return a scalar as their second result.
+- Success flags are numerical 1/0, not Lua booleans. `VSGetNext*` returns `0` and an empty table at exhaustion, because a shipped script assigns fields to the returned value after its loop. Queries returning control defaults or values return a scalar as their second result.
 - Each note exposes a stable `objID` for its transaction. Move, resize or pitch changes do not change identity. Newly inserted notes receive new identities. Returned tables are detached values; changes only take effect through an update call.
 - Iteration uses stable snapshots of identities at seek time. Removed objects are skipped; inserts become visible after another seek. Control iteration is independent for each control type. This is an explicit host policy where original undocumented mutation semantics have not been established.
-- Validate finite numbers, integer fields, positive durations, nonnegative note positions and supported pitch ranges. Reject invalid data without partial project changes. Updating a note's position must remove/reinsert it in sorted storage.
+- Validate finite numbers, positive durations (at least OpenUtau's ten-tick minimum), nonnegative note positions and supported pitch ranges. Non-integral numbers for integer fields round to nearest, ties to even, as Lua 5.1's `lua_tointeger` does in 32-bit Windows builds; this is a declared host policy because shipped scripts pass computed ticks and values. Reject invalid data without partial project changes. Updating a note's position must remove/reinsert it in sorted storage.
 
 ## Note and part mapping
 
 - `VSSeekToBeginNote`, `VSGetNextNote`, `VSGetNextNoteEx`, `VSInsertNote`, `VSInsertNoteEx`, `VSUpdateNote`, `VSUpdateNoteEx` and `VSRemoveNote` operate on the detached note transaction.
 - `posTick`, `durTick` and `lyric` map to note position, duration and lyric. `noteNum` is an integer MIDI adapter. If a plugin leaves it unchanged, retain the original `PitchAddress` and tuning exactly. If it changes by an integer delta, preserve the original residual frequency offset by applying that physical semitone delta through `PitchResolver`; do not reinterpret MIDI integers as tuning degrees. Inserted notes resolve MIDI pitch through the effective tuning.
-- VOCALOID velocity is not OpenUtau's phoneme-consonant stretch. Return a stable default adapter value and reject changes unless a separately documented mapping is implemented; never silently turn it into volume or consonant timing.
-- Phoneme strings, phLock, accent, decay, portamento and vibrato type are not automatically equivalent to native phonemiser data. Preserve unchanged fields. Unsupported changes fail explicitly. Extended fields may be read as declared adapter defaults; writes are not silently discarded.
-- `VSGetMusicalPart` returns its global position, duration, name and comment. `VSUpdateMusicalPart` supports validated position/duration/name/comment changes, with note and curve bounds checked before commit. `VSGetMusicalPartSinger` reports the actual track singer identity; unsupported language-bank enumerations do not masquerade as a VOCALOID bank.
+- VOCALOID velocity and OpenUtau's `vel` expression both shorten consonants as they increase, so velocity uses a documented approximation: VS 64 is native 100, and each half of the 0–127 range scales linearly to 0–100 and 100–200. Every VS value round-trips. A note whose phonemes carry different velocities rejects changes, and a renderer without `vel` rejects them. It is never turned into volume.
+- Phoneme strings, phLock, accent, decay, bend, portamento and opening are not equivalent to native phonemiser data. They are read as declared adapter defaults (empty phonemes, phLock 0, bendDepth 8, bendLength 0, risePort 0, fallPort 0, decay 50, accent 50, opening 127). Phonemes and phLock written while the note's lyric also changes (or on an inserted note with a lyric) describe that lyric's reading, so they are accepted and not applied: OpenUtau's phonemiser derives the reading from the lyric. A phoneme or phLock change without a lyric change still fails, as do changes to the other fields. The VOCALOID melisma lyric `-` maps to OpenUtau's extender `+` in both directions. `vibratoType` reads 1 when the native vibrato is on and 0 when it is off; setting it to 0 turns the native vibrato off, and other preset numbers fail. `vibratoLength` maps to the native vibrato length percentage.
+- `VSGetMusicalPart` returns its global position, duration (as both `playTime` and `durTick`), name and comment. `VSUpdateMusicalPart` supports validated position/duration/name/comment changes, with note and curve bounds checked before commit. `VSGetMusicalPartSinger` reports the actual track singer identity; unsupported language-bank enumerations do not masquerade as a VOCALOID bank.
 
 ## Controls and pitch
 
@@ -60,7 +60,7 @@ No editor executable, DLL, voicebank, plugin source body or vendor asset is copi
 
 ## Tempo, metre and V4 expressions
 
-- `VSSeekToBeginTempo`, `VSGetNextTempo`, `VSGetTempoAt`, `VSSeekToBeginTimeSig`, `VSGetNextTimeSig` and `VSGetTimeSigAt` are read-only views of `TimeAxis`. Return BPM multiplied by 100 for tempo values. Tempo/metre events use global song ticks; time signatures additionally expose their measure location. No plugin API changes the project tempo map in this initial implementation.
+- `VSSeekToBeginTempo`, `VSGetNextTempo`, `VSGetTempoAt`, `VSSeekToBeginTimeSig`, `VSGetNextTimeSig` and `VSGetTimeSigAt` are read-only views of `TimeAxis`. Return tempo values in BPM: AutoVibrato converts ticks to milliseconds with `125 / tempo`, which only holds for BPM at 480 PPQ. `VSGetTempoAt` takes song-global ticks, like the other time queries. Tempo/metre events use global song ticks; time signatures additionally expose their measure location. No plugin API changes the project tempo map in this initial implementation.
 - The observed V4 extension comprises `VSSeekToBeginNoteExpression`, `VSGetNextNoteExpression`, `VSGetNoteExpressionAt`, `VSInsertNoteExpression` and `VSRemoveNoteExpression`, with normalised note-relative positions and types `VR`/`VD`.
 - Native vibrato is parameterised differently, and the precise vendor rate/depth value domains are not established by the available primary evidence. These extension calls are initially explicit unsupported operations. Scripts depending on them must be identified as requiring unsupported APIs, not claimed compatible merely because their manifest declares 4.2.0.1. Implementing and validating a physical rate/depth conversion is a later extension, not an arbitrary numeric pass-through.
 
@@ -69,7 +69,7 @@ No editor executable, DLL, voicebank, plugin source body or vendor asset is copi
 - `VSDlgSetDialogTitle` and `VSDlgAddField` build detached dialog data. Copy each field when added because scripts reuse their table.
 - Field type 0 is integer, 1 is numeric boolean, 2 is floating point, 3 is text and 4 is a choice list. The observed comma-separated `initialVal` supplies choices; after acceptance the getters return the selected text, not its index. Bounds and duplicate field names are validated.
 - `VSDlgDoModal` returns 1 for acceptance and 2 for cancellation. The typed getters return `status, value`; boolean values are 0/1. Text is displayed as plain text, not interpreted as markup.
-- `VSMessageBox` displays text with a mapped supported button set. Only flag/result combinations with an explicit mapping are accepted; unsupported flags fail rather than guessing a Yes response.
+- `VSMessageBox` displays text with a mapped supported button set. The scripts use Win32 flags 0 (OK, returning 1) and 4 (Yes/No, returning 6 or 7, which they compare with `IDNO`). Other flags fail rather than guessing a Yes response.
 
 ## Commit, undo and errors
 
@@ -86,3 +86,18 @@ No editor executable, DLL, voicebank, plugin source body or vendor asset is copi
 5. Run serial solution build/full tests, inspect actual supplied metadata in place without redistributing source, record per-feature limitations, and refresh the self-contained Windows x64 trial. Do not report all 30 scripts as verified without executing and checking each one.
 
 The first implementation may support only the explicitly mapped subset above. Its catalogue and completion record must disclose the remaining API/resource limitations. This specification does not authorise changes to installed plugins, voicebanks or editor files, nor remote publication.
+
+## Revision 2 corrections
+
+Running the 33 installed scripts against the implementation contradicted parts of Revision 1 and the inventory. The evidence decided each correction:
+
+- Discovery recurses into subfolders. `JOBPLUGINA/LyricOnmei/LyricOnmei.lua`, `JOBPLUGINC/NudgeLR/NudgeL.lua` and `NudgeR.lua` were missing from the inventory, so the corpus has 33 scripts. All three decode as strict UTF-8.
+- The part table carries `durTick` as well as `playTime`. ShiftLyricsL/R and NudgeL/R read `musicalPart.durTick` in active code.
+- Tempo is plain BPM, not BPM × 100 (see above).
+- Message-box flags and results follow Win32 (`MB_OK`, `MB_YESNO`, `IDOK`, `IDYES`, `IDNO`).
+- Exhausted iterators return an empty table, not `nil`. InterpPIT assigns `control.type` after its removal loop.
+- Integer fields accept computed numbers and round them. PitchRandomize, AutoVibrato, IdolStyle, SineVibrato and V3KeroPitch pass non-integral ticks or values.
+- Velocity has a documented approximation instead of rejecting every change.
+- NudgeL/NudgeR need read access to a settings file next to the script. A read-only, folder-confined `io.open` provides it.
+- LyricOnmei, MetronomeJPNPiPo, NyanNote and ShiftLyricsR write phonemes only together with lyrics, so lyric-driven phonemes are accepted and left to the phonemiser (decided with the user on 2026-10-26), and `-` maps to `+`.
+- Expected stops (unsupported operations, sandbox denials, script errors, limits, conflicts) appear in the main window's status bar and the log rather than in an error dialog; the project is unchanged in every such case.

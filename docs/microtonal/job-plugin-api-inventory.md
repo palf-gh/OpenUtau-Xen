@@ -1,6 +1,6 @@
 # JOB plugin source-contract inventory
 
-Date: 2026-10-26. This is a read-only inventory for compatibility design, before implementation. It records interface names and observed calling conventions, not plugin implementations. No external script body, editor binary or licence text has been copied into this repository.
+Date: 2026-10-26. This is a read-only inventory for compatibility design, before implementation. Implementation corrected several observations here, including the script count (33, with three in subfolders), the part `durTick` field, the tempo unit and iterator exhaustion; `job-plugin-compatibility.md` Revision 2 lists them. It records interface names and observed calling conventions, not plugin implementations. No external script body, editor binary or licence text has been copied into this repository.
 
 ## Evidence boundary
 

@@ -180,5 +180,17 @@
   <system:String x:Key="xen.snap.dotted">Z kropką</system:String>
   <system:String x:Key="xen.snap.straight">Zwykły</system:String>
   <system:String x:Key="xen.snap.tuplet">{0} Grupa niemiarowa</system:String>
+  <system:String x:Key="xen.jobplugin.menu">Wtyczki JOB</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">Wyszukaj ponownie</system:String>
+  <system:String x:Key="xen.jobplugin.none">Nie znaleziono wtyczek JOB</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0} (ograniczona)</system:String>
+  <system:String x:Key="xen.jobplugin.undo">Wtyczka JOB</system:String>
+  <system:String x:Key="xen.jobplugin.failed">Wtyczka JOB „{0}” nie powiodła się: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">Partia zmieniła się podczas działania „{0}”, więc jej zmiany odrzucono.</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">Niektóre wartości nie są prawidłowymi liczbami.</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">Foldery wtyczek JOB</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">Dodaj foldery…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">Usuń</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">Znaleziono wtyczki: {0}, problemy: {1}</system:String>
 </ResourceDictionary>
 

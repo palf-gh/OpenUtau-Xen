@@ -180,4 +180,16 @@
   <system:String x:Key="xen.snap.dotted">Puntillo</system:String>
   <system:String x:Key="xen.snap.straight">Normal</system:String>
   <system:String x:Key="xen.snap.tuplet">{0} Grupo irregular</system:String>
+  <system:String x:Key="xen.jobplugin.menu">Plugins JOB</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">Volver a buscar</system:String>
+  <system:String x:Key="xen.jobplugin.none">No se encontraron plugins JOB</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0} (limitado)</system:String>
+  <system:String x:Key="xen.jobplugin.undo">Plugin JOB</system:String>
+  <system:String x:Key="xen.jobplugin.failed">El plugin JOB «{0}» falló: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">La parte cambió mientras se ejecutaba «{0}», así que se descartaron sus cambios.</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">Algunos valores no son números válidos.</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">Carpetas de plugins JOB</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">Agregar carpetas…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">Quitar</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">{0} plugins encontrados, {1} problemas</system:String>
 </ResourceDictionary>

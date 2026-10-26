@@ -180,5 +180,17 @@
   <system:String x:Key="xen.snap.dotted">Bertitik</system:String>
   <system:String x:Key="xen.snap.straight">Normal</system:String>
   <system:String x:Key="xen.snap.tuplet">{0} Tuplet</system:String>
+  <system:String x:Key="xen.jobplugin.menu">Plugin JOB</system:String>
+  <system:String x:Key="xen.jobplugin.rescan">Pindai ulang</system:String>
+  <system:String x:Key="xen.jobplugin.none">Tidak ada plugin JOB</system:String>
+  <system:String x:Key="xen.jobplugin.limited">{0} (terbatas)</system:String>
+  <system:String x:Key="xen.jobplugin.undo">Plugin JOB</system:String>
+  <system:String x:Key="xen.jobplugin.failed">Plugin JOB "{0}" gagal: {1}</system:String>
+  <system:String x:Key="xen.jobplugin.conflict">Bagian berubah saat "{0}" berjalan, sehingga perubahannya dibuang.</system:String>
+  <system:String x:Key="xen.jobplugin.invalid">Beberapa nilai bukan angka yang valid.</system:String>
+  <system:String x:Key="xen.prefs.jobplugins">Folder plugin JOB</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.add">Tambah folder…</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.remove">Hapus</system:String>
+  <system:String x:Key="xen.prefs.jobplugins.count">{0} plugin ditemukan, {1} masalah</system:String>
 </ResourceDictionary>
 
