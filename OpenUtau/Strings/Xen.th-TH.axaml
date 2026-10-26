@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">รีเซ็ตเส้นโค้ง</system:String>
   <system:String x:Key="xen.vibrato.applySelected">ใช้กับโน้ตที่เลือก</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">ลบเส้นโค้ง</system:String>
+  <system:String x:Key="xen.vibrato.preset">ค่าที่ตั้งไว้</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">ไม่มี</system:String>
   <system:String x:Key="xen.export.vibratoBake">วิบราโตแบบแปรผันจะถูกแปลงเป็นจุดระดับเสียง</system:String>
 </ResourceDictionary>
 

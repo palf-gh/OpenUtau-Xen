@@ -210,5 +210,7 @@
   <system:String x:Key="xen.vibrato.resetCurve">Kurve zurücksetzen</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Auf ausgewählte Noten anwenden</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Kurven entfernen</system:String>
+  <system:String x:Key="xen.vibrato.preset">Voreinstellung</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Keine</system:String>
   <system:String x:Key="xen.export.vibratoBake">Variables Vibrato wird in Tonhöhenpunkte umgewandelt.</system:String>
 </ResourceDictionary>

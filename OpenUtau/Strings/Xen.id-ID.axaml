@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">Atur ulang kurva</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Terapkan ke not terpilih</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Hapus kurva</system:String>
+  <system:String x:Key="xen.vibrato.preset">Prasetel</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Tidak ada</system:String>
   <system:String x:Key="xen.export.vibratoBake">Vibrato variabel akan dikonversi menjadi titik nada.</system:String>
 </ResourceDictionary>
 

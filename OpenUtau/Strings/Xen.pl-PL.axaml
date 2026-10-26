@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">Zresetuj krzywą</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Zastosuj do wybranych nut</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Usuń krzywe</system:String>
+  <system:String x:Key="xen.vibrato.preset">Ustawienie wstępne</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Brak</system:String>
   <system:String x:Key="xen.export.vibratoBake">Zmienne vibrato zostanie przekształcone w punkty wysokości dźwięku.</system:String>
 </ResourceDictionary>
 

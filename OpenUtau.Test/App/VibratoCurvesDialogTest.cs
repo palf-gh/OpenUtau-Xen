@@ -47,6 +47,27 @@ namespace OpenUtau.App {
                     using var frame = dialog.CaptureRenderedFrame();
                     frame?.Save(Path.Combine(directory, "vibrato-curves.png"));
                 }
+                var preset = dialog.GetVisualDescendants().OfType<ComboBox>().Single(box => box.Name == "VibratoPreset");
+                var length = dialog.GetVisualDescendants().OfType<NumericUpDown>().Single(box => box.Name == "VibratoLength");
+                Assert.Equal(17, preset.ItemCount);
+                Assert.Equal(0, preset.SelectedIndex);
+                preset.SelectedIndex = 8;
+                Dispatcher.UIThread.RunJobs();
+                // [Extreme] Type 4 holds its depth for 60% of a 65% vibrato, then fades by 90%.
+                Assert.Equal(new[] { 0.35f, 0.35f + 0.65f * 0.6f, 0.35f + 0.65f * 0.9f },
+                    depth.Points.Select(point => point.x).ToArray(), (a, b) => Math.Abs(a - b) < 1e-5);
+                Assert.Equal(300, depth.Sample(0.5f), 3);
+                length.Value = 100;
+                Dispatcher.UIThread.RunJobs();
+                Assert.Equal(0.6f, depth.Points[1].x, 5);
+                rate.AddPoint(0.5f, 6);
+                length.Value = 80;
+                Dispatcher.UIThread.RunJobs();
+                Assert.Equal(6, rate.Sample(0.5f), 4);
+                if (!string.IsNullOrEmpty(directory)) {
+                    using var frame = dialog.CaptureRenderedFrame();
+                    frame?.Save(Path.Combine(directory, "vibrato-preset.png"));
+                }
             } finally {
                 dialog.Close();
             }

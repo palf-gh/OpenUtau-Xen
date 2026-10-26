@@ -86,6 +86,7 @@ namespace OpenUtau.Core.Format {
                         note.vibrato.rateCurve = null;
                         note.vibrato.depthCurve = null;
                     }
+                    note.vibrato.preset = null;
                     double midi = note.pitchAddress == null ? note.tone : PitchResolver.ResolveMidi(tuning, note.pitchAddress);
                     note.tone = checked((int)Math.Ceiling(midi - 0.5));
                     note.tuning += checked((int)Math.Round((midi - note.tone) * 100, MidpointRounding.AwayFromZero));

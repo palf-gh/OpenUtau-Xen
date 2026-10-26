@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">Resetează curba</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Aplică notelor selectate</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Elimină curbele</system:String>
+  <system:String x:Key="xen.vibrato.preset">Presetare</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Niciuna</system:String>
   <system:String x:Key="xen.export.vibratoBake">Vibratoul variabil va fi convertit în puncte de înălțime.</system:String>
 </ResourceDictionary>
 

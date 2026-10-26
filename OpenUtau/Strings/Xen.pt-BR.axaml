@@ -210,5 +210,7 @@
   <system:String x:Key="xen.vibrato.resetCurve">Redefinir curva</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Aplicar às notas selecionadas</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Remover curvas</system:String>
+  <system:String x:Key="xen.vibrato.preset">Predefinição</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Nenhuma</system:String>
   <system:String x:Key="xen.export.vibratoBake">O vibrato variável será convertido em pontos de afinação.</system:String>
 </ResourceDictionary>

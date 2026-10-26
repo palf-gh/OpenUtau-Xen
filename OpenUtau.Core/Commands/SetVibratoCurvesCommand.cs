@@ -9,12 +9,13 @@ namespace OpenUtau.Core {
 
         public SetVibratoCurvesCommand(UVoicePart part, IEnumerable<UNote> notes,
             IEnumerable<VibratoPoint>? rateCurve, IEnumerable<VibratoPoint>? depthCurve,
-            float? length = null) : base(part, notes.ToArray()) {
+            float? length = null, int? preset = null) : base(part, notes.ToArray()) {
             oldVibratos = Notes.Select(note => note.vibrato.Clone()).ToArray();
             newVibratos = oldVibratos.Select(vibrato => {
                 var result = vibrato.Clone();
                 result.rateCurve = Copy(rateCurve);
                 result.depthCurve = Copy(depthCurve);
+                result.preset = preset;
                 if (length.HasValue) {
                     result.length = length.Value;
                 }

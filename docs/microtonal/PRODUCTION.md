@@ -1099,3 +1099,51 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
   DLLs match the ReadyToRun outputs by SHA-256. Native interactive launch was not
   checked. Nothing was committed or pushed, and the version is unchanged.
+
+## 2026-10-26 — VOCALOID4 vibrato types as presets
+
+- Purpose: user request to support VOCALOID's vibrato types 2 to 16, which the
+  previous entry left rejected. The user chose to approximate VOCALOID's values,
+  to make type 1 a preset as well, and to offer the presets in the curve dialogue.
+- Research (kept outside the repository, with no extract, path or vendor file
+  committed): the installed editor's preset parameter files give each type a rate
+  and a depth value (0–127, with 64 as the centre) and, for type 4, a fade. The
+  manual places the vibrato graph over the vibrato section. These values hardly
+  differ between families, so the base rate and depth of each family were measured
+  from the sustained part of the editor's four recorded vibratos and rounded:
+  Normal 4.85 Hz/75 cents, Extreme 3.9/300, Fast 5.2/110, Slight 4.85/35. Fast is
+  deeper than Normal but only about 7% faster.
+- Implementation (details in `vibrato-curves.md`): `VibratoPresets` lays each type
+  out as rate and depth curves over the vibrato; types 1–3 hold their values and
+  type 4 fades both to 0 between 60% and 90%. `UVibrato` stores the type as
+  optional `preset` in `.ustxen` version 4, which exists only on
+  `feature/v4-vibrato` and has not been merged or released, so the version does not
+  change again; UST and compatible USTX drop it with the curves. The dialogue
+  gains a Preset list. In JOB, value 64 is now the base of the note's preset (5 Hz
+  and 50 cents without one), notes report their preset as `vibratoType`, and
+  choosing another type replaces the curves with that preset. A scalar note still
+  reports 1 and keeps its vibrato when 1 is written back, so a script choosing
+  `[Normal] Type 1` changes only notes whose vibrato was off; the Preset list applies
+  it to the others. Two new strings are in
+  all 20 Xen overlays; the Japanese strings passed yomiyasu run/verify
+  `20261026T091219Z-ffb1a4d5` unchanged.
+- Verification: serial solution build succeeded with zero errors; full suite passed
+  604 tests. New tests cover the type 4 layout and JOB scale, preset reporting and
+  moved copies, the switch from off to type 1, the dialogue's preset list and
+  relayout, the command, the native round trip and the legacy export. The capture of
+  the dialogue with `[Extreme] Type 4` was inspected. The corpus run still finishes
+  31 of 33 scripts, and its vibrato mode gives the same results as before apart
+  from the random scripts, with no scalar note gaining a preset.
+  VibratoTypeConversion with `[Extreme] Type 4` chosen gives all notes type 8, and
+  lyric scripts, AutoScoopUpHighNotes and SplitNote keep a preset note's type.
+  `git diff --check` passed.
+- Limitations: a preset is a sinusoidal vibrato. The recorded waveform shape, the
+  recordings' attack and release, and VOCALOID's exact value laws are not
+  reproduced, and results were not compared by ear with VOCALOID. Curves are laid
+  out when the type is chosen and do not follow a later length change.
+- Trial: no trial was running at preflight. The self-contained Windows x64
+  Release build from the uncommitted working tree on `feature/v4-vibrato` (on top
+  of `b44d557`) replaced `work/OpenUtau-Xen-win-x64/` in place with local data
+  kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
+  DLLs match the ReadyToRun outputs by SHA-256. Native interactive launch was not
+  checked. Nothing was pushed, and the version is unchanged.

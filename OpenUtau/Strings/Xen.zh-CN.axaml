@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">重置曲线</system:String>
   <system:String x:Key="xen.vibrato.applySelected">应用到所选音符</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">删除曲线</system:String>
+  <system:String x:Key="xen.vibrato.preset">预设</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">无</system:String>
   <system:String x:Key="xen.export.vibratoBake">可变颤音将转换为音高点后导出。</system:String>
 </ResourceDictionary>
 

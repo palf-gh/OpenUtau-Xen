@@ -210,5 +210,7 @@
   <system:String x:Key="xen.vibrato.resetCurve">Reset curve</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Apply to selected notes</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Remove curves</system:String>
+  <system:String x:Key="xen.vibrato.preset">Preset</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">None</system:String>
   <system:String x:Key="xen.export.vibratoBake">Variable vibrato will be baked into pitch points.</system:String>
 </ResourceDictionary>

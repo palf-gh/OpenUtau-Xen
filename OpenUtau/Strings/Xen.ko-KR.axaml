@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">곡선 초기화</system:String>
   <system:String x:Key="xen.vibrato.applySelected">선택한 노트에 적용</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">곡선 삭제</system:String>
+  <system:String x:Key="xen.vibrato.preset">프리셋</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">없음</system:String>
   <system:String x:Key="xen.export.vibratoBake">가변 비브라토를 피치 포인트로 변환하여 내보냅니다.</system:String>
 </ResourceDictionary>
 

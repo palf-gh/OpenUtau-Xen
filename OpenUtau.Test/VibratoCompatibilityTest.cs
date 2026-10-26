@@ -50,6 +50,26 @@ namespace OpenUtau.Test {
             Assert.Equal(note.vibrato.length, actual.vibrato.length);
             Assert.Equal(new[] { (0f, 2f), (1f, 6f) }, actual.vibrato.rateCurve!.Select(point => (point.x, point.y)));
             Assert.Equal(new[] { (0f, 20f), (1f, 60f) }, actual.vibrato.depthCurve!.Select(point => (point.x, point.y)));
+            Assert.Null(actual.vibrato.preset);
+        }
+
+        [Fact]
+        public void NativeRoundTripKeepsPresetAndLegacyExportDropsIt() {
+            var (project, _, note) = Create();
+            VibratoPresets.Apply(note.vibrato, 6);
+            var read = XenProjectFormat.Parse(XenProjectFormat.Serialize(project));
+            var actual = Assert.Single(Assert.IsType<UVoicePart>(Assert.Single(read.parts)).notes);
+            Assert.Equal(6, actual.vibrato.preset);
+            string path = Path.Combine(Path.GetTempPath(), "vibrato-" + Guid.NewGuid().ToString("N") + ".ustx");
+            try {
+                XenProjectFormat.ExportUstx(path, project);
+                Assert.DoesNotContain("preset", File.ReadAllText(path));
+                Assert.Equal(6, note.vibrato.preset);
+            } finally {
+                File.Delete(path);
+            }
+            Assert.Throws<InvalidDataException>(() => XenProjectFormat.Parse(
+                XenProjectFormat.Serialize(project).Replace("preset: 6", "preset: 17")));
         }
 
         [Fact]

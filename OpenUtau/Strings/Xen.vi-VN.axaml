@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">Đặt lại đường cong</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Áp dụng cho các nốt đã chọn</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Xóa đường cong</system:String>
+  <system:String x:Key="xen.vibrato.preset">Cài đặt sẵn</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Không</system:String>
   <system:String x:Key="xen.export.vibratoBake">Rung giọng biến thiên sẽ được chuyển thành các điểm cao độ.</system:String>
 </ResourceDictionary>
 

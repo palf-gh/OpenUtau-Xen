@@ -306,7 +306,7 @@ end
         [InlineData("VSUpdateControlAt('BRE', 0, 10)")]
         [InlineData("VSSeekToBeginNote() local r, n = VSGetNextNote() n.phonemes = 'a' VSUpdateNote(n)")]
         [InlineData("VSInsertNote({ posTick = 960, durTick = 240, noteNum = 60, phonemes = 'a' })")]
-        [InlineData("VSSeekToBeginNote() local r, n = VSGetNextNoteEx() n.vibratoType = 3 VSUpdateNoteEx(n)")]
+        [InlineData("VSSeekToBeginNote() local r, n = VSGetNextNoteEx() n.vibratoType = 17 VSUpdateNoteEx(n)")]
         [InlineData("VSInsertNote({ posTick = 0, durTick = 5, noteNum = 60 })")]
         [InlineData("VSMessageBox('x', 1)")]
         [InlineData("VSSeekToBeginNoteExpression({}, 'VR')")]
@@ -442,10 +442,12 @@ end
             var original = part.notes.First();
             original.vibrato.period = 200;
             original.vibrato.depth = 50;
+            original.vibrato.length = 40;
             var result = Run(project, part, @"
   VSSeekToBeginNote()
   local r, n = VSGetNextNoteEx()
-  n.vibratoType = 1 n.vibratoLength = 100
+  assert(n.vibratoType == 1)
+  n.vibratoLength = 100
   assert(VSUpdateNoteEx(n) == 1)
   assert(VSInsertNoteExpression(n, {type='VR', posNorm=0, value=0}) == 1)
   assert(VSInsertNoteExpression(n, {type='VR', posNorm=1, value=64}) == 1)
@@ -466,6 +468,64 @@ end
             Assert.Equal(original.pitchAddress!.Degree, note.pitchAddress!.Degree);
             Assert.Equal(original.pitchAddress.ResidualCents, note.pitchAddress.ResidualCents);
             Assert.False(original.vibrato.HasCurves);
+            Assert.Null(note.vibrato.preset);
+        }
+
+        [Fact]
+        public void ChoosingAVibratoTypeLaysOutItsPresetAndScale() {
+            var (project, part) = Project(false);
+            var source = part.notes.First();
+            var result = Run(project, part, @"
+  VSSeekToBeginNote() local r,n=VSGetNextNoteEx()
+  assert(n.vibratoType == 0)
+  n.vibratoType = 8 n.vibratoLength = 50
+  assert(VSUpdateNoteEx(n) == 1)
+  VSSeekToBeginNoteExpression(n, 'VD')
+  local s, e = VSGetNextNoteExpression(n, 'VD')
+  assert(math.abs(e.posNorm - 0.5) < 1e-6 and math.abs(e.value - 64) < 1e-4)
+  local s2, rate = VSGetNoteExpressionAt(n, 'VR', 0.6)
+  assert(math.abs(rate - 64) < 1e-4)
+  local s3, faded = VSGetNoteExpressionAt(n, 'VD', 0.95)
+  assert(math.abs(faded) < 1e-4)
+  assert(VSInsertNoteExpression(n, {type='VD', posNorm=0.5, value=32}) == 1)
+  return 0");
+            var note = result.Edit!.AddedNotes.Single();
+            Assert.Equal(8, note.vibrato.preset);
+            Assert.Equal(50, note.vibrato.length);
+            var extreme = VibratoPresets.Get(8)!;
+            Assert.Equal(extreme.BaseRate, note.vibrato.SampleRate(0.7f), 4);
+            Assert.Equal(extreme.BaseDepth / 2, note.vibrato.SampleDepth(0.5f), 3);
+            Assert.Equal(extreme.BaseDepth, note.vibrato.SampleDepth(0.8f), 3);
+            Assert.Equal(0, note.vibrato.SampleDepth(0.95f), 4);
+            Assert.Equal(extreme.BaseRate / 2, note.vibrato.SampleRate(0.95f), 4);
+            Assert.Null(source.vibrato.preset);
+        }
+
+        [Fact]
+        public void PresetNotesReportTheirTypeAndMovedCopiesLayItOutAgain() {
+            var (project, part) = Project(false);
+            var source = part.notes.First();
+            source.vibrato.length = 50;
+            VibratoPresets.Apply(source.vibrato, 12);
+            var result = Run(project, part, @"
+  VSSeekToBeginNote() local r,n=VSGetNextNoteEx()
+  assert(n.vibratoType == 12)
+  local left={} for key,value in pairs(n) do left[key]=value end
+  left.durTick=n.durTick/2 left.vibratoLength=0
+  assert(VSInsertNoteEx(left)==1)
+  assert(VSRemoveNote(n)==1)
+  n.posTick=n.posTick+n.durTick/2 n.durTick=n.durTick/2 n.vibratoLength=100
+  assert(VSInsertNoteEx(n)==1)
+  return 0");
+            var added = result.Edit!.AddedNotes.OrderBy(n => n.position).ToArray();
+            Assert.Equal(new int?[] { 12, 12 }, added.Select(n => n.vibrato.preset));
+            Assert.Equal(0, added[0].vibrato.length);
+            var right = added[1];
+            Assert.Equal(100, right.vibrato.length);
+            Assert.Equal(0f, right.vibrato.depthCurve![0].x);
+            Assert.Equal(0.6f, right.vibrato.depthCurve[1].x, 5);
+            Assert.Equal(0.9f, right.vibrato.depthCurve[2].x, 5);
+            Assert.Equal(12, source.vibrato.preset);
         }
 
         [Fact]
@@ -552,6 +612,12 @@ end
             Assert.Equal(25, added.vibrato.shift);
             Assert.Equal(100, added.vibrato.length);
             Assert.Equal(0, source.vibrato.length);
+            // Switching a vibrato on with type 1 chooses [Normal] Type 1.
+            Assert.Equal(1, added.vibrato.preset);
+            var normal = VibratoPresets.Get(1)!;
+            Assert.Equal(normal.RateHz(50), added.vibrato.SampleRate(0.5f), 4);
+            Assert.Equal(normal.BaseDepth, added.vibrato.SampleDepth(0.5f), 4);
+            Assert.Null(source.vibrato.preset);
         }
 
         [Fact]

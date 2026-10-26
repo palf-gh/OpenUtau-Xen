@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">曲線をリセット</system:String>
   <system:String x:Key="xen.vibrato.applySelected">選択ノートに適用</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">曲線を削除</system:String>
+  <system:String x:Key="xen.vibrato.preset">プリセット</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">なし</system:String>
   <system:String x:Key="xen.export.vibratoBake">可変ビブラートをピッチ点に変換して書き出します。</system:String>
 </ResourceDictionary>
 

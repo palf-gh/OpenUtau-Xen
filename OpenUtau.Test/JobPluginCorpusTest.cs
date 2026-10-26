@@ -17,10 +17,22 @@ namespace OpenUtau.Test {
     /// '|'-separated parts. OPENUTAU_XEN_JOB_VIBRATO=1 gives the first note vibrato curves and the
     /// third scalar vibrato, puts the playhead inside the first note and reports how far the
     /// resulting vibrato departs from the original. OPENUTAU_XEN_JOB_SONG_TICK moves the playhead.
+    /// OPENUTAU_XEN_JOB_PRESET gives the first note that vibrato type instead of custom curves.
+    /// OPENUTAU_XEN_JOB_DIALOG sets text or choice fields by name, as name=value pairs separated by ';'.
     /// </summary>
     public class JobPluginCorpusTest {
         sealed class AutoAccept : IJobPluginInteraction {
-            public bool ShowDialog(JobPluginDialog dialog) => true;
+            readonly Dictionary<string, string> values = (Environment.GetEnvironmentVariable("OPENUTAU_XEN_JOB_DIALOG") ?? "")
+                .Split(';', StringSplitOptions.RemoveEmptyEntries).Select(pair => pair.Split('=', 2))
+                .Where(pair => pair.Length == 2).ToDictionary(pair => pair[0], pair => pair[1]);
+            public bool ShowDialog(JobPluginDialog dialog) {
+                foreach (var field in dialog.Fields) {
+                    if ((field.Type == 3 || field.Type == 4) && values.TryGetValue(field.Name, out var value)) {
+                        field.Value = value;
+                    }
+                }
+                return true;
+            }
             public int ShowMessage(string message, int flags) => flags == 0 ? JobPluginApi.ResultOk : JobPluginApi.ResultYes;
         }
 
@@ -40,6 +52,9 @@ namespace OpenUtau.Test {
                 curved.length = 80;
                 curved.rateCurve = new List<VibratoPoint> { new VibratoPoint(0.2f, 4), new VibratoPoint(1, 8) };
                 curved.depthCurve = new List<VibratoPoint> { new VibratoPoint(0.2f, 20), new VibratoPoint(1, 80) };
+                if (int.TryParse(Environment.GetEnvironmentVariable("OPENUTAU_XEN_JOB_PRESET"), out int preset)) {
+                    VibratoPresets.Apply(curved, preset);
+                }
                 var scalar = part.notes.ElementAt(2).vibrato;
                 scalar.length = 60;
                 scalar.period = 180;
@@ -145,7 +160,7 @@ namespace OpenUtau.Test {
                 }
             }
             var notes = after.Where(n => n.position < 1440).Select(n =>
-                $"{n.position}+{n.duration} len {n.vibrato.length:0.#} in {n.vibrato.@in:0.#} out {n.vibrato.@out:0.#} shift {n.vibrato.shift:0.#} rate {Points(n.vibrato.rateCurve)} depth {Points(n.vibrato.depthCurve)}");
+                $"{n.position}+{n.duration} preset {n.vibrato.preset?.ToString() ?? "-"} len {n.vibrato.length:0.#} in {n.vibrato.@in:0.#} out {n.vibrato.@out:0.#} shift {n.vibrato.shift:0.#} rate {Points(n.vibrato.rateCurve)} depth {Points(n.vibrato.depthCurve)}");
             string Points(List<VibratoPoint>? points) => points == null ? "-" : string.Join(" ", points.Select(p => $"{p.x:0.###}:{p.y:0.##}"));
             return $"vibrato max Δ {maxCents:0.###} cents over {compared} ticks, active rate Δ {maxRate:0.###} Hz, depth Δ {maxDepth:0.###} cents [{string.Join(", ", notes)}]";
         }

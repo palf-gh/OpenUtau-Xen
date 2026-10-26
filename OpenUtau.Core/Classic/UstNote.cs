@@ -66,6 +66,7 @@ namespace OpenUtau.Classic {
                 vibrato.length = 0;
                 vibrato.rateCurve = null;
                 vibrato.depthCurve = null;
+                vibrato.preset = null;
             }
         }
 

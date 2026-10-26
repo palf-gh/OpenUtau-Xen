@@ -62,6 +62,8 @@ namespace OpenUtau.Core.JobPlugins {
             /// <summary>Phonemes carry different native velocities; a scalar cannot represent them.</summary>
             public bool VelocityLocked;
             public UVibrato Vibrato = new UVibrato();
+            /// <summary>A vibrato type change replaced the preset and curves of <see cref="Vibrato"/>.</summary>
+            public bool VibratoReset;
             public Dictionary<string, NoteExpressionLane> Expressions = new Dictionary<string, NoteExpressionLane>();
         }
 
@@ -178,7 +180,7 @@ namespace OpenUtau.Core.JobPlugins {
                 NoteNum = note.tone,
                 Velocity = NativeToVelocity(native),
                 Lyric = note.lyric == Extender ? Melisma : note.lyric,
-                VibratoType = vibrato ? 1 : 0,
+                VibratoType = vibrato ? note.vibrato.preset ?? 1 : 0,
                 VibratoLength = vibrato ? (int)Math.Round(note.vibrato.length) : 0,
             };
         }
@@ -446,8 +448,8 @@ namespace OpenUtau.Core.JobPlugins {
             Check(before.Decay == after.Decay, "decay", noEquivalent);
             Check(before.Accent == after.Accent, "accent", noEquivalent);
             Check(before.Opening == after.Opening, "opening", noEquivalent);
-            Check(before.VibratoType == after.VibratoType || after.VibratoType == 0 || after.VibratoType == 1,
-                "vibratoType", "only 0 (off) and 1 (generic OpenUtau vibrato) are supported; vendor presets are not");
+            Check(after.VibratoType >= 0 && after.VibratoType <= VibratoPresets.All.Count,
+                "vibratoType", "only 0 (off) and the vibrato types 1-16 exist");
             if (before.Velocity != after.Velocity) {
                 Check(!velocityLocked, "velocity", "the note's phonemes have different velocities");
                 Check(velSupported, "velocity", "the track's renderer has no velocity expression");
@@ -469,9 +471,19 @@ namespace OpenUtau.Core.JobPlugins {
             var vibrato = copied?.Vibrato.Clone() ?? new UVibrato();
             var state = new NoteState { Id = nextId++, Current = fields, Vibrato = vibrato,
                 Template = template, TemplateFields = copied?.Current.Clone() };
-            // Curve positions span the whole note, so they only stay valid for a copy at the same
-            // time, such as a note removed and reinserted to change its lyric.
-            if (copied != null && fields.Pos == copied.Current.Pos && fields.Dur == copied.Current.Dur) {
+            // A copy that keeps the source's vibrato type keeps its vibrato. Curve positions span the
+            // whole note, so they only stay valid for a copy at the same time, such as a note removed
+            // and reinserted to change its lyric; a moved preset note gets the preset laid out again.
+            bool sameType = copied != null && fields.VibratoType == copied.Current.VibratoType;
+            if (!sameType) {
+                vibrato.rateCurve = null;
+                vibrato.depthCurve = null;
+                vibrato.preset = null;
+                if (fields.VibratoType > 0) {
+                    vibrato.length = fields.VibratoLength;
+                    VibratoPresets.Apply(vibrato, fields.VibratoType);
+                }
+            } else if (fields.Pos == copied!.Current.Pos && fields.Dur == copied.Current.Dur) {
                 foreach (var pair in copied.Expressions) {
                     state.Expressions[pair.Key] = new NoteExpressionLane {
                         Events = pair.Value.Events.Select(e => new NoteExpressionEvent {
@@ -480,6 +492,9 @@ namespace OpenUtau.Core.JobPlugins {
                             Id = e.Id, Pos = e.Pos, Value = e.Value }).ToList(),
                     };
                 }
+            } else if (vibrato.preset != null) {
+                vibrato.length = fields.VibratoLength;
+                VibratoPresets.Apply(vibrato, vibrato.preset.Value);
             } else {
                 vibrato.rateCurve = null;
                 vibrato.depthCurve = null;
@@ -500,6 +515,13 @@ namespace OpenUtau.Core.JobPlugins {
             }
             var fields = ReadFields(t, state.Current, api);
             CheckUnsupported(state.Current, fields, api, state.VelocityLocked, LyricDriven(state, fields));
+            if (fields.VibratoType != state.Current.VibratoType && fields.VibratoType > 0) {
+                // Choosing a type replaces the note's curves with the preset's, as the type list does.
+                state.Vibrato.length = fields.VibratoLength;
+                VibratoPresets.Apply(state.Vibrato, fields.VibratoType);
+                state.Expressions.Clear();
+                state.VibratoReset = true;
+            }
             state.Current = fields;
             return Ok;
         }
@@ -528,12 +550,14 @@ namespace OpenUtau.Core.JobPlugins {
             return Ok;
         }
 
-        // JOB values use an OpenUtau host scale, not a calibration of VOCALOID's engine:
-        // VR 64 = 5 Hz, one octave per 64 units; VD 64 = 50 cents, linear.
-        public static double NoteExpressionToNative(string type, double value) => type == "VR"
-            ? 5 * Math.Pow(2, (value - 64) / 64) : value * 50 / 64;
-        public static double NativeToNoteExpression(string type, double value) => type == "VR"
-            ? 64 + 64 * Math.Log(value / 5, 2) : value * 64 / 50;
+        // JOB value 64 is the base rate and depth of the note's vibrato type (5 Hz and 50 cents
+        // without one). VR doubles every 64 units; VD is linear.
+        public static double NoteExpressionToNative(string type, double value, int? preset = null) => type == "VR"
+            ? VibratoPreset.RateHz(VibratoPresets.BaseRate(preset), value)
+            : VibratoPreset.DepthCents(VibratoPresets.BaseDepth(preset), value);
+        public static double NativeToNoteExpression(string type, double value, int? preset = null) => type == "VR"
+            ? VibratoPreset.RateValue(VibratoPresets.BaseRate(preset), value)
+            : VibratoPreset.DepthValue(VibratoPresets.BaseDepth(preset), value);
 
         static double Number(DynValue value, string api) {
             double? number = value.CastToNumber();
@@ -566,12 +590,12 @@ namespace OpenUtau.Core.JobPlugins {
                 if (curve != null && curve.Count > 0) {
                     foreach (var point in curve) {
                         lane.Events.Add(new NoteExpressionEvent { Id = nextId++, Pos = point.x,
-                            Value = NativeToNoteExpression(type, point.y) });
+                            Value = NativeToNoteExpression(type, point.y, state.Vibrato.preset) });
                     }
                 } else {
                     double value = type == "VR" ? 1000.0 / state.Vibrato.period : state.Vibrato.depth;
                     lane.Events.Add(new NoteExpressionEvent { Id = nextId++, Pos = 0,
-                        Value = NativeToNoteExpression(type, value) });
+                        Value = NativeToNoteExpression(type, value, state.Vibrato.preset) });
                 }
                 lane.Original = lane.Events.Select(e => new NoteExpressionEvent {
                     Id = e.Id, Pos = e.Pos, Value = e.Value }).ToList();
@@ -625,10 +649,10 @@ namespace OpenUtau.Core.JobPlugins {
             var right = events.FirstOrDefault(e => e.Pos > pos);
             if (right == null) return Pair(Ok, DynValue.NewNumber(left.Value));
             // Interpolate physical Hz/cents, matching the native curve evaluator.
-            double a = NoteExpressionToNative(type, left.Value);
-            double b = NoteExpressionToNative(type, right.Value);
+            double a = NoteExpressionToNative(type, left.Value, state.Vibrato.preset);
+            double b = NoteExpressionToNative(type, right.Value, state.Vibrato.preset);
             double value = a + (b - a) * (pos - left.Pos) / (right.Pos - left.Pos);
-            return Pair(Ok, DynValue.NewNumber(NativeToNoteExpression(type, value)));
+            return Pair(Ok, DynValue.NewNumber(NativeToNoteExpression(type, value, state.Vibrato.preset)));
         }
 
         DynValue InsertNoteExpression(CallbackArguments args) {
@@ -1159,16 +1183,22 @@ namespace OpenUtau.Core.JobPlugins {
             var source = state.Source ?? state.Template;
             var original = state.Original ?? state.TemplateFields;
             var note = source?.Clone() ?? project.CreateNote();
-            if (state.Source == null) note.vibrato = state.Vibrato.Clone();
+            if (state.Source == null) {
+                note.vibrato = state.Vibrato.Clone();
+            } else if (state.VibratoReset) {
+                note.vibrato.preset = state.Vibrato.preset;
+                note.vibrato.rateCurve = state.Vibrato.rateCurve?.Select(point => point.Clone()).ToList();
+                note.vibrato.depthCurve = state.Vibrato.depthCurve?.Select(point => point.Clone()).ToList();
+            }
             note = Apply(note, source, original, state.Current);
             // An inserted copy has no previous native length, even when its other fields have
             // a template for exact pitch and expression preservation.
             if (state.Source == null) note.vibrato.length = state.Current.VibratoType == 0 ? 0 : state.Current.VibratoLength;
             foreach (var pair in state.Expressions.Where(pair => ExpressionChanged(pair.Value))) {
                 var points = pair.Value.Events.OrderBy(e => e.Pos).Select(e => new VibratoPoint {
-                    x = (float)e.Pos, y = (float)NoteExpressionToNative(pair.Key, e.Value) }).ToList();
+                    x = (float)e.Pos, y = (float)NoteExpressionToNative(pair.Key, e.Value, state.Vibrato.preset) }).ToList();
                 if (points.Count == 0) points.Add(new VibratoPoint {
-                    x = 0, y = (float)NoteExpressionToNative(pair.Key, 64) });
+                    x = 0, y = (float)NoteExpressionToNative(pair.Key, 64, state.Vibrato.preset) });
                 if (pair.Key == "VR") note.vibrato.rateCurve = points;
                 else note.vibrato.depthCurve = points;
             }

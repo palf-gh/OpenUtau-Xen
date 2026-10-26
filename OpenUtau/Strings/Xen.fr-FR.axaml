@@ -210,5 +210,7 @@
   <system:String x:Key="xen.vibrato.resetCurve">Réinitialiser la courbe</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Appliquer aux notes sélectionnées</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Supprimer les courbes</system:String>
+  <system:String x:Key="xen.vibrato.preset">Préréglage</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Aucun</system:String>
   <system:String x:Key="xen.export.vibratoBake">Le vibrato variable sera converti en points de hauteur.</system:String>
 </ResourceDictionary>

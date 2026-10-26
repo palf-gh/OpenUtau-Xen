@@ -51,5 +51,20 @@ namespace OpenUtau.Test {
             Assert.True(note.vibrato.HasCurves);
             Assert.Equal(6, note.vibrato.rateCurve[0].y);
         }
+
+        [Fact]
+        public void PresetIsSetWithItsCurvesAndClearedWithThem() {
+            var part = new UVoicePart();
+            var note = new UNote { vibrato = new UVibrato { length = 50 } };
+            var (rate, depth) = VibratoPresets.Get(5)!.Curves(50);
+            var apply = new SetVibratoCurvesCommand(part, new[] { note }, rate, depth, 50, 5);
+            apply.Execute();
+            Assert.Equal(5, note.vibrato.preset);
+            var remove = new SetVibratoCurvesCommand(part, new[] { note }, null, null);
+            remove.Execute();
+            Assert.Null(note.vibrato.preset);
+            remove.Unexecute();
+            Assert.Equal(5, note.vibrato.preset);
+        }
     }
 }

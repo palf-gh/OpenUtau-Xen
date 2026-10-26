@@ -17,6 +17,10 @@ namespace OpenUtau.App.Views {
         readonly NumericUpDown length;
         readonly VibratoCurvePanel depth;
         readonly VibratoCurvePanel rate;
+        readonly ComboBox preset;
+        // The graphs still hold the selected preset's curves, so a length change lays them out again.
+        bool presetCurves;
+        bool laying;
 
         public VibratoCurvesDialog(UVoicePart part, IEnumerable<UNote> selectedNotes) {
             this.part = part;
@@ -39,7 +43,19 @@ namespace OpenUtau.App.Views {
                 seed.depth, 0, UVibrato.MaxDepthCents, 100);
             rate = new VibratoCurvePanel("vibrato.rate", seed.rateCurve,
                 1000f / seed.period, UVibrato.MinRateHz, UVibrato.MaxRateHz, 10);
-            length.ValueChanged += (_, _) => UpdateStart();
+            preset = new ComboBox { Name = "VibratoPreset", MinWidth = 180 };
+            preset.Items.Add(XenStrings.Get("vibrato.presetNone"));
+            foreach (var item in VibratoPresets.All) {
+                preset.Items.Add(item.Name);
+            }
+            preset.SelectedIndex = VibratoPresets.Get(seed.preset)?.Id ?? 0;
+            preset.SelectionChanged += (_, _) => LayOutPreset();
+            depth.Graph.Changed += () => presetCurves &= laying;
+            rate.Graph.Changed += () => presetCurves &= laying;
+            length.ValueChanged += (_, _) => {
+                UpdateStart();
+                if (presetCurves) LayOutPreset();
+            };
             UpdateStart();
             var apply = new Button { Content = XenStrings.Get("vibrato.applySelected") };
             apply.Click += (_, _) => Apply(false);
@@ -61,6 +77,12 @@ namespace OpenUtau.App.Views {
                                     VerticalAlignment = VerticalAlignment.Center,
                                 },
                                 length,
+                                new TextBlock {
+                                    Text = XenStrings.Get("vibrato.preset"),
+                                    VerticalAlignment = VerticalAlignment.Center,
+                                    Margin = new Thickness(12, 0, 0, 0),
+                                },
+                                preset,
                             },
                         },
                         depth,
@@ -74,6 +96,23 @@ namespace OpenUtau.App.Views {
                     },
                 },
             };
+        }
+
+        /// <summary>VOCALOID-style type of the curves to apply; null keeps scalar scales.</summary>
+        int? SelectedPreset => preset.SelectedIndex > 0 ? preset.SelectedIndex : null;
+
+        void LayOutPreset() {
+            var selected = VibratoPresets.Get(SelectedPreset);
+            if (selected == null) {
+                presetCurves = false;
+                return;
+            }
+            var (rateCurve, depthCurve) = selected.Curves((float)(length.Value ?? 0));
+            laying = true;
+            rate.Graph.SetPoints(rateCurve);
+            depth.Graph.SetPoints(depthCurve);
+            laying = false;
+            presetCurves = true;
         }
 
         void UpdateStart() {
@@ -92,7 +131,8 @@ namespace OpenUtau.App.Views {
             DocManager.Inst.ExecuteCmd(new SetVibratoCurvesCommand(part, notes,
                 remove ? null : rate.Graph.Points,
                 remove ? null : depth.Graph.Points,
-                remove ? null : (float?)(length.Value ?? 0)));
+                remove ? null : (float?)(length.Value ?? 0),
+                remove ? null : SelectedPreset));
             DocManager.Inst.EndUndoGroup();
             Close();
         }
@@ -287,6 +327,14 @@ namespace OpenUtau.App.Views {
 
         public void RemoveSelected() {
             if (Selected != null) Points.Remove(Selected);
+            Selected = null;
+            InvalidateVisual();
+            Changed?.Invoke();
+        }
+
+        public void SetPoints(IEnumerable<VibratoPoint> points) {
+            Points.Clear();
+            Points.AddRange(points.Select(point => new VibratoPoint { x = point.x, y = point.y }));
             Selected = null;
             InvalidateVisual();
             Changed?.Invoke();

@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">Palauta käyrä</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Käytä valittuihin nuotteihin</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Poista käyrät</system:String>
+  <system:String x:Key="xen.vibrato.preset">Esiasetus</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Ei mitään</system:String>
   <system:String x:Key="xen.export.vibratoBake">Muuttuva vibrato muunnetaan sävelkorkeuspisteiksi.</system:String>
 </ResourceDictionary>
 

@@ -210,6 +210,8 @@
   <system:String x:Key="xen.vibrato.resetCurve">Сбросить кривую</system:String>
   <system:String x:Key="xen.vibrato.applySelected">Применить к выбранным нотам</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Удалить кривые</system:String>
+  <system:String x:Key="xen.vibrato.preset">Пресет</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Нет</system:String>
   <system:String x:Key="xen.export.vibratoBake">Переменное вибрато будет преобразовано в точки высоты тона.</system:String>
 </ResourceDictionary>
 
