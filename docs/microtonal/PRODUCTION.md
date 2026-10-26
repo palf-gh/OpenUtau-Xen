@@ -1002,3 +1002,17 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   `ae9e492`, so its version string names `ae9e492`. `OpenUtau-Xen.exe` matches
   the generated apphost; the application and core DLLs match the ReadyToRun
   outputs by SHA-256. Native interactive launch was not checked.
+
+## 2026-10-26 — Local merge of dark-mode white keys into develop
+
+- `fix/dark-white-keys` (`86251cf`) was merged into `develop` (`aace0ef`) without
+  conflicts. Nothing was pushed.
+- Verification: serial solution build succeeded with zero errors. Full suite:
+  570 passed, one opt-in external-voice test skipped.
+- Trial: the regular trial was running as process 151832 at preflight, so its
+  folder was not replaced and no user session was terminated. The build from
+  `aace0ef` was published to `work/OpenUtau-Xen-staged-win-x64/`. Its
+  `OpenUtau-Xen.exe` matches the generated apphost; the application and core
+  DLLs match the ReadyToRun outputs by SHA-256; the version string names
+  `aace0ef`. Replacement of the regular trial remains pending. Native
+  interactive launch was not checked.
