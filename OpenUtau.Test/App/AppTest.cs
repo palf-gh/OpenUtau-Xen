@@ -526,6 +526,9 @@ namespace OpenUtau.App {
                         window.Close();
                     }
                 }
+                OpenUtau.Core.Util.Preferences.Default.ThemeName = "Light";
+                App.SetTheme();
+                ReadmeCaptures.Capture(directory);
             } finally {
                 OpenUtau.Core.Util.Preferences.Default.ThemeName = previousTheme;
                 App.SetTheme();

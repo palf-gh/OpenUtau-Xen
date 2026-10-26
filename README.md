@@ -7,54 +7,95 @@
 
 ## English
 
-OpenUtau Xen is a local derivative of [OpenUtau](https://github.com/stakira/OpenUtau)
-for microtonal and multi-tuning singing synthesis. It is initially based on upstream
-commit `3eb9dd26459fa51dc2c5bf46693a9492d817c130`. This is a development build; the
-full first-release acceptance plan is tracked in
-[`docs/microtonal/PLAN.md`](docs/microtonal/PLAN.md).
+OpenUtau Xen is a fork of [OpenUtau](https://github.com/stakira/OpenUtau) for
+microtonal and multi-tuning singing synthesis. Notes keep their exact pitch in any
+tuning, from 12-EDO to 31-EDO, just intonation or non-octave scales, and every
+renderer receives that pitch. Xen is still on `0.x`; the plan for the first release
+is in [`docs/microtonal/PLAN.md`](docs/microtonal/PLAN.md).
+
+![31-EDO piano roll](docs/images/piano-roll-31edo.png)
 
 Download the latest version for Windows, macOS or Linux from
-[Releases](https://github.com/palf-gh/OpenUtau-Xen/releases/latest). Every version
-is released there; what each one contains is recorded in
-[`PRODUCTION.md`](docs/microtonal/PRODUCTION.md).
+[Releases](https://github.com/palf-gh/OpenUtau-Xen/releases/latest). What each
+version contains is recorded in [`PRODUCTION.md`](docs/microtonal/PRODUCTION.md).
+For general use of the editor (voicebanks, phonemisers, resamplers), see the
+[OpenUtau wiki](https://github.com/stakira/OpenUtau/wiki/Getting-Started).
 
-### Editing and files
+### What Xen adds to OpenUtau
 
-- Use **Project → Project tuning** for the project default, or the piano-roll
-  tuning menu for a track override. References, including the A4 frequency, are editable.
-- **Apply tuning** snaps existing notes to the new tuning. **Change reference**
-  keeps degrees. **Apply display** changes only the active scale. The option
-  to retain existing frequencies converts notes into a degree plus residual cents.
-- `.ustxen` stores complete projects with embedded definitions. `.tunxen` stores
-  reusable tuning, scale, notation and keyboard presets.
-- Import upstream `.ustx`, Scala `.scl` and `.kbm`. Export compatible USTX as a
-  separate file. MIDI export quantises to semitones; UST carries converted pitch
-  offsets in its curves. Interchange formats cannot preserve all Xen metadata.
-- The piano roll's **View** menu sets the row layout (all pitches, highlighted scale
-  or compact scale) and the primary and secondary key labels. These are editor
-  settings and do not change the tuning or the project. Every layout retains continuous
-  physical pitch; the compact layout adds rows for existing off-scale notes.
-- Key labels default to Stein–Zimmermann–Gould where a verified table exists (12, 24,
-  31 and 53-EDO and the twelve-note presets), Bohlen–Pierce Lambda names (C D E F G H J
-  A B) for equal divisions of the tritave, and Ups and Downs for other equal divisions.
-- Keys have three colours: white for naturals, black for sharps and flats, and blue
-  for the microtones between them, following the 31-tone Fokker organ. The layout is
-  derived from each tuning's own generator and scales with the number of divisions
-  ([keyboard specification](docs/microtonal_keyboard_algorithm_spec.md)).
-- The note property **Tone** field accepts a natural plus or minus tuning steps
-  (53-EDO: `C4`, `C4+1` … `C4+4`, `D4-4` … `D4-1`, `D4`), spelled names such as
-  `C#4` or `Db4`, and relative steps such as `+3`.
-- Tuning and MIDI controls, warnings and preset labels are localised in all
-  20 registered languages. The source locale identifier en-US uses British English.
+#### Tunings
+
+![Tuning settings](docs/images/tuning-settings-en-US.png)
+
+- Any equal division of any period (EDO, equal divisions of the tritave and other
+  periods), and explicit tunings written as exact ratios or cents.
+- Presets include equal divisions from 5- to 72-EDO; Pythagorean; 5- and 7-limit just intonation; quarter-,
+  third-, sixth- and two-sevenths-comma meantone; Werckmeister III, Kirnberger III,
+  Vallotti and Young II; 13-EDT and just Bohlen–Pierce; harmonic series 8–16;
+  22 śruti; Partch 43; Carlos Alpha, Beta and Gamma; and sourced regional examples
+  (maqam Rast, Turkish AEU, slendro and pelog).
+- A reference degree and frequency, such as A4 at 440, 442, 432 or 415 Hz.
+- Set the project tuning in **Project → Project tuning** or from the top bar, and a
+  track's own tuning in the piano roll's **Edit → Tuning**. Changes stay in the
+  dialog until you apply them, and one undo reverts them.
+- Applying a new tuning moves each note to its nearest degree. Changing only the
+  reference keeps the degrees. An option keeps the old frequencies instead, as a
+  degree plus residual cents.
+
+#### Keyboard, scales and note names
+
+- The keyboard is built from a MOS (moment of symmetry) scale of the tuning: its
+  notes are white keys, their sharps and flats are black keys, and the steps between
+  them are in-between keys. A MOS can repeat within the period (12-EDO diminished
+  4L4s, 22-EDO pajara 2L8s). Keys can also be set one by one.
+- The **MOS scale** list offers every MOS that holds in the tuning, grouped by note
+  count. Only Rothenberg-proper MOS are listed unless **Preferences → Editing →
+  Show improper MOS in the tuning MOS list** is on.
+- The scale (a tonic and its notes) is set separately from the keyboard. Presets
+  include the church modes, Japanese scales such as miyako-bushi and ritsu, Arabic
+  maqamat and the Lambda mode of Bohlen–Pierce. The piano roll can show all pitches,
+  highlight the scale or show only the scale rows.
+- Key labels use Stein–Zimmermann–Gould accidentals where a verified table exists,
+  Ups and Downs for other octave equal divisions, Bohlen–Pierce Lambda names for
+  equal divisions of the tritave and letters for other MOS keyboards. The piano
+  roll's **View** menu chooses the primary and secondary labels.
+- The note **Tone** field accepts a natural plus or minus steps (53-EDO `C4+4`,
+  `D4-4`), spelled names such as `C#4` or `Db4`, and relative steps such as `+3`.
+
+#### Pitch, rendering and files
+
+- A note stores its degree, residual cents and spelling. The integer MIDI number
+  is kept only for phonemisers and sample selection.
+- Classic resamplers, WORLDLINE-R, DiffSinger, VOICEVOX, ENUNU and Vogen receive
+  the continuous pitch once, and render caches take it into account.
+- `.ustxen` projects embed their complete tunings; `.tunxen` stores reusable
+  tunings with their keyboard, scale and names. Scala `.scl` and `.kbm` can be
+  imported and exported. Upstream `.ustx` files open, and by default saving them
+  creates a separate `.ustxen` project. **File → Export Project → Export
+  compatible USTX** writes a separate `.ustx` and reports what is lost or rounded.
+- On Windows, **Edit → MIDI input** in the piano roll records from a MIDI keyboard
+  through the tuning's key mapping, with preview and sustain.
+
+#### Editing
+
+- The workspace layout follows [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai):
+  a welcome screen, a docked piano roll, a top bar and a side toolbar.
+- The snap menu separates note values from dotted notes and triplets, quintuplets
+  and septuplets.
+- Parts and notes are created by dragging, so a stray click adds nothing. `S` splits
+  notes at the playhead.
+- **Batch Edits → JOB Plugins** runs VOCALOID JOB plugins (Lua scripts) from folders
+  added in **Preferences**, in a restricted sandbox.
+- Xen's interface is translated into all 20 languages that upstream registers.
 
 ### Build and tests
 
 Requires .NET 10 and the existing upstream native runtime dependencies.
 
 ```powershell
-dotnet build OpenUtau
-dotnet test OpenUtau.Test
-dotnet publish OpenUtau -c Release -r win-x64 --self-contained true
+dotnet build OpenUtau.sln -m:1
+dotnet test OpenUtau.Test -m:1
+dotnet publish OpenUtau/OpenUtau.csproj -c Release -r win-x64 --self-contained true -m:1
 ```
 
 External voice tests are opt-in and need the documented local voicebanks. Run them
@@ -70,15 +111,12 @@ without redistributing or modifying their original banks. See
 
 ### Verification status
 
-At the recorded checkpoint, 363 automated cases pass. The ordinary run explicitly
-skips the external-voice theory; its separate Classic, Worldline-R and DiffSinger
-run passes all three cases with an empty render cache. Their nine generated tones
-are within 0.75 cent of the requested stable pitches under the documented method.
-
-Actual ENUNU, Vogen and VOICEVOX synthesis, real MIDI hardware, broader UI and
-high-DPI coverage, and DiffSinger automatic-pitch/retake combinations remain open.
-See the [production record](docs/microtonal/PRODUCTION.md) for details. The first
-release is not declared complete while these checks remain open.
+The automated tests cover the tuning model, formats, keyboards, renderer pitch
+input and the main dialogs. Classic, WORLDLINE-R and DiffSinger have been checked
+with real voices: rendered tones are within 0.75 cent of the requested pitch.
+ENUNU, Vogen and VOICEVOX synthesis, real MIDI hardware, and broader interface and
+high-DPI review are still open. See the
+[production record](docs/microtonal/PRODUCTION.md) for details.
 
 ### Contributing
 
@@ -107,144 +145,100 @@ resamplers and their licences remain separate from this repository and package.
 Xen's app data, installer identity and `.ustxen` association are distinct from
 upstream OpenUtau; automatic upstream updates are disabled for this derivative.
 
-### About upstream OpenUtau
-
-OpenUtau is a free, open-source editor made for the UTAU community. The links
-below belong to the upstream project; its downloads do not include Xen features.
-
-[![Build](https://img.shields.io/github/actions/workflow/status/stakira/OpenUtau/build.yml?style=for-the-badge)](https://github.com/stakira/OpenUtau/actions/workflows/build.yml)
-[![Discord](https://img.shields.io/discord/551606189386104834?style=for-the-badge&label=discord&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/UfpMnqMmEM)
-[![QQ Qroup](https://img.shields.io/badge/QQ-485658015-blue?style=for-the-badge)](https://qm.qq.com/cgi-bin/qm/qr?k=8EtEpehB1a-nfTNAnngTVqX3o9xoIxmT&jump_from=webapi)
-[![Trello](https://img.shields.io/badge/trello-go-blue?style=for-the-badge&logo=trello)](https://trello.com/b/93ANoCIV/openutau)
-
-#### Getting started
-
-[![Download](https://img.shields.io/static/v1?style=for-the-badge&logo=github&label=download&message=windows-x64&labelColor=FF347C&color=4ea6ea)](https://github.com/stakira/OpenUtau/releases/latest/download/OpenUtau-win-x64.zip)</br>
-[![Download](https://img.shields.io/static/v1?style=for-the-badge&logo=github&label=download&message=linux-x64&labelColor=FF347C&color=4ea6ea)](https://github.com/stakira/OpenUtau/releases/latest/download/OpenUtau-linux-x64.zip)
-
-It is **strongly recommended** that you read these GitHub wiki pages before using the software.
-- [Getting-Started](https://github.com/stakira/OpenUtau/wiki/Getting-Started)
-- [Resamplers](https://github.com/stakira/OpenUtau/wiki/Resamplers-and-Wavtools)
-- [Phonemizers](https://github.com/stakira/OpenUtau/wiki/Phonemizers)
-- [FAQ](https://github.com/stakira/OpenUtau/wiki/FAQ)
-
-- [中文使用说明](https://opensynth.miraheze.org/wiki/OpenUTAU/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95)
-
-#### How to contribute
-
-Tried OpenUtau and not satisfied? Don't just walk away! You can help:
-- Report issues on the [Discord server](https://discord.gg/UfpMnqMmEM) or GitHub.
-- Suggest features on Discord or GitHub.
-- Add or update translations for your language on [Crowdin](https://crowdin.com/project/oxygen-dioxideopenutau).
-
-Know how to code? Got an idea for an improvement? Don't keep it to yourself!
-- Contribute fixes via pull requests.
-- Check out the development roadmap on [Trello](https://trello.com/b/93ANoCIV/openutau) and discuss it on Discord.
-
-#### Plugin development
-
-Want to contribute plugins to help other users? Check out the API documentation:
-- [Editing Macros API Document](OpenUtau.Core/Editing/README.md)
-- [Phonemizers API Document](OpenUtau.Core/Api/README.md)
-
-#### Main features
-
-Navigate the interface naturally and fluently using the mouse and scroll wheel. Keyboard shortcuts are also available.
-
-![Editor](Misc/GIFs/editor.gif)
-
-Easily create songs and covers using the feature-rich MIDI editor.
-
-![Editor](Misc/GIFs/editor2.gif)
-
-Create expressive vibratos with the easy-to-use vibrato editor.
-
-![Vibrato](Misc/GIFs/vibrato.gif)
-
-Pre-rendering and built-in resamplers let you quickly preview your work.
-
-![Playback](Misc/GIFs/playback.gif)
-
-See the [Getting-Started wiki page](https://github.com/stakira/OpenUtau/wiki/Getting-Started) for more.
-
-#### All features
-- Modern user experience.
-- Easy navigation using the mouse and keyboard.
-- Feature-rich MIDI editor.
-  - Support for importing VSQX (Vocaloid 4) tracks.
-- Selective backward compatibility with UTAU.
-  - OpenUtau aims to solve problems with fewer steps. It is not designed to replicate UTAU features exactly.
-- Extensible real-time phonetic editing.
-  - Includes phonemisers for different phonetic systems (VCV, CVVC, Arpasing, etc.) in many different languages (English, Japanese, Chinese, Korean, Russian and more).
-- Expressions replace the standard UTAU "flags" for tuning.
-  - The built-in WORLDLINE-R resampler supports curve tuning, similar to many vocal synth editors.
-- Internationalisation, including UI translation and file system encoding support.
-  - Unlike UTAU, there is no need to change your system locale to use OpenUtau.
-- Smooth preview/rendering experience.
-  - Pre-rendering allows OpenUtau to render vocals before playback, saving time during editing and tuning.
-- Supports ENUNU AI singers. See the [ENUNU wiki page](https://github.com/stakira/OpenUtau/wiki/ENUNU-NNSVS-Support) for more info.
-- Easy-to-use plugin system.
-- Versatile resampling engine interface.
-  - Compatible with most UTAU resamplers.
-- Runs on Windows (32/64 bit), macOS, and Linux.
-
-##### What it doesn't do
-- While OpenUtau can do very minimal mixing, it will not replace your digital audio workstation of choice.
-- OpenUtau does not aim for Vocaloid compatibility, except for some limited features.
-
 <a id="japanese"></a>
 
 ## 日本語
 
 **[English](#english)** | **[日本語](#japanese)**
 
-OpenUtau Xen は [OpenUtau](https://github.com/stakira/OpenUtau) を基にした
-ローカル派生版で、微分音と多様な音律による歌声合成を扱います。基点は本家のコミット
-`3eb9dd26459fa51dc2c5bf46693a9492d817c130` です。現在は開発版で、初版の受入計画は
-[`docs/microtonal/PLAN.md`](docs/microtonal/PLAN.md) で管理しています。
+OpenUtau Xen は [OpenUtau](https://github.com/stakira/OpenUtau) から派生した、
+微分音と多様な音律で歌声合成をするためのエディターです。12 平均律から 31 平均律、
+純正律、オクターブで繰り返さない音律まで、どの音律でもノートは正確な音高を保ち、
+どのレンダラーにもその音高が渡ります。Xen はまだ `0.x` で、初版までの計画は
+[`docs/microtonal/PLAN.md`](docs/microtonal/PLAN.md) にあります。
+
+![31 平均律のピアノロール](docs/images/piano-roll-31edo.png)
 
 Windows・macOS・Linux 向けの最新版は
 [Releases](https://github.com/palf-gh/OpenUtau-Xen/releases/latest) からダウンロードできます。
-バージョンを上げるたびに Releases で公開し、各バージョンの内容は
-[`PRODUCTION.md`](docs/microtonal/PRODUCTION.md) に記録しています。
+各バージョンの内容は [`PRODUCTION.md`](docs/microtonal/PRODUCTION.md) に記録しています。
+音源、フォニマイザ、リサンプラーなど、エディターの一般的な使い方は
+[OpenUtau の Wiki](https://github.com/stakira/OpenUtau/wiki/Getting-Started) を見てください。
 
-### 編集とファイル
+### OpenUtau に追加した機能
 
-- プロジェクト全体の既定音律は **Project → Project tuning** で、トラックごとの上書きは
-  ピアノロールの音律メニューで設定します。A4 の周波数を含む基準音も変更できます。
-- **Apply tuning** は既存ノートを新しい音律の最寄りの degree へ合わせます。
-  **Change reference** は degree を保ったまま基準を変えます。**Apply display** は
-  使用するスケールだけを変えます。既存の周波数を保つ選択肢では、ノートを
-  degree と残差セントで表します。
-- `.ustxen` は音律定義を埋め込んだプロジェクト全体を保存します。`.tunxen` は
-  再利用できる音律・スケール・記法・鍵盤設定のプリセットを保存します。
-- 本家の `.ustx`、Scala の `.scl`・`.kbm` を読み込めます。互換 USTX は別ファイルとして
-  書き出します。MIDI 書出しは半音単位に量子化され、UST は変換後の音高差をピッチ曲線に
-  含めます。交換形式では Xen 固有の情報をすべては保持できません。
-- 行の表示方式（すべての音・スケールを強調・スケールを圧縮表示）と、鍵盤の主表記・副表記は、
-  ピアノロールの **View** メニューで選びます。これらはエディターの設定で、音律と
-  プロジェクトは変わりません。どの表示方式でも連続した実際の音高を保ち、圧縮表示では
-  スケール外にある既存ノート用の行を加えます。
-- 鍵盤の表記は、検証済みの対応表がある音律（12・24・31・53 平均律と 12 音のプリセット）では
-  Stein–Zimmermann–Gould、トリターブの等分平均律では Bohlen–Pierce の Lambda 音名
-  （C D E F G H J A B）、ほかの平均律では Ups and Downs を既定にしています。
-- 鍵盤は 3 色で表示します。幹音は白、シャープとフラットは黒、その間の微分音は青で、
-  31 音の Fokker オルガンにならっています。配置は音律ごとの生成音程から計算し、
-  分割数に応じて広がります（[鍵盤の仕様書](docs/microtonal_keyboard_algorithm_spec.md)）。
-- ノートのプロパティの **Tone** 欄には幹音に音律の段数を足し引きした形
-  （53 平均律なら `C4`、`C4+1` … `C4+4`、`D4-4` … `D4-1`、`D4`）を入力できます。
-  `C#4`・`Db4` のような音名や、`+3` のような相対的な段数も使えます。
-- 音律と MIDI の操作部、警告、プリセット名は、登録済みの 20 言語すべてに翻訳しています。
-  元言語の識別子 en-US の文言はイギリス英語です。
+#### 音律
+
+![音律設定](docs/images/tuning-settings-ja-JP.png)
+
+- 任意の周期を任意の数で等分した音律（平均律、トリターブの等分など）と、正確な比率や
+  セントで書いた音律を使えます。
+- プリセットには5〜72 平均律の中のいくつかの平均律、ピタゴラス音律、5 リミットと 7 リミットの純正律、
+  1/4・1/3・1/6・2/7 コンマのミーントーン、ヴェルクマイスター III、キルンベルガー III、
+  ヴァロッティ、ヤング II、13 等分トリターブと純正のボーレン＝ピアース、倍音列 8〜16、
+  22 シュルティ、パーチの 43 音、カルロスのアルファ・ベータ・ガンマ、出典を確かめた
+  各地の例（マカーム・ラスト、トルコの AEU、スレンドロ、ペロッグ）があります。
+- 基準の音度と周波数を決められます。たとえば A4 を 440・442・432・415 Hz にできます。
+- プロジェクトの音律は **プロジェクト → プロジェクトの音律設定** か上部バーから、
+  トラックごとの音律はピアノロールの **編集 → 音律設定** から設定します。変更は
+  適用するまでダイアログの中だけにとどまり、適用したあとも 1 回の取り消しで戻せます。
+- 新しい音律を適用すると、各ノートを最も近い音度に移します。基準だけを変えるときは
+  音度を保ちます。元の周波数を保つ選択肢では、音度と残差セントで表します。
+
+#### 鍵盤、音階、音名
+
+- 鍵盤はその音律の MOS（moment of symmetry）音階から作ります。MOS の音を白鍵、
+  そのシャープとフラットを黒鍵、その間の音を中間鍵にします。周期の中で繰り返す MOS
+  （12 平均律の 4L4s、22 平均律の 2L8s など）も使えます。鍵を 1 つずつ設定することも
+  できます。
+- **MOS スケール** の一覧にはその音律で成り立つ MOS を音の数ごとに並べます。
+  **設定 → 編集** で真正でない MOS の表示をオンにしない限り、Rothenberg の意味で
+  真正な MOS だけを出します。
+- 音階（主音とその音）は鍵盤とは別に設定します。教会旋法、都節や律などの日本の音階、
+  アラブのマカーム、ボーレン＝ピアースの Lambda などのプリセットがあります。
+  ピアノロールではすべての音を表示するか、音階を強調するか、音階の行だけを表示するかを
+  選べます。
+- 鍵の音名には、検証済みの対応表がある音律では Stein–Zimmermann–Gould の変化記号を、
+  ほかのオクターブ平均律では Ups and Downs を、トリターブの等分では Bohlen–Pierce の
+  Lambda 音名を、それ以外の MOS 鍵盤では文字の音名を使います。主表記と副表記は
+  ピアノロールの **表示** メニューで選びます。
+- ノートの **Tone** 欄には幹音に段数を足し引きした形（53 平均律の `C4+4`、`D4-4`）、
+  `C#4` や `Db4` のような音名、`+3` のような相対的な段数を入力できます。
+
+#### 音高、レンダリング、ファイル
+
+- ノートは音度、残差セント、綴りを保存します。整数の MIDI ノート番号は
+  フォニマイザと音素の選択のためにだけ使います。
+- Classic のリサンプラー、WORLDLINE-R、DiffSinger、VOICEVOX、ENUNU、Vogen には、
+  連続した音高を 1 回だけ渡します。レンダーキャッシュもこの音高を区別します。
+- `.ustxen` のプロジェクトは音律の定義をすべて埋め込みます。`.tunxen` は、鍵盤・音階・
+  音名を含めた音律を再利用するためのファイルです。Scala の `.scl` と `.kbm` を
+  読み込み、書き出せます。本家の `.ustx` も開けます。保存するときは、既定では別の
+  `.ustxen` プロジェクトにします。**ファイル → プロジェクトファイルをエクスポート →
+  互換USTXを書き出す** は別の `.ustx` に書き出し、失われる情報と丸めた量を知らせます。
+- Windows ではピアノロールの **編集 → MIDI入力** で、音律の鍵盤の割り当てに従って
+  MIDI 鍵盤から録音できます。試聴とサステインにも対応しています。
+
+#### 編集
+
+- ワークスペースの画面は [OpenUtau Lunai](https://github.com/keirokeer/OpenUtau-lunai)
+  にならい、ウェルカム画面、組み込みのピアノロール、上部バー、縦ツールバーで
+  構成しています。
+- スナップのメニューでは音価を、付点や 3 連符・5 連符・7 連符とは別に選べます。
+- パートとノートはドラッグで作るので、うっかりクリックしても何も追加されません。
+  `S` キーで再生位置のノートを分割します。
+- **一括編集 → JOBプラグイン** で、**設定** で追加したフォルダーの VOCALOID 用
+  JOB プラグイン（Lua スクリプト）を、機能を制限した環境で実行します。
+- Xen の画面は、本家が登録している 20 言語すべてに翻訳しています。
 
 ### ビルドとテスト
 
 .NET 10 と、本家と同じネイティブ実行時依存が必要です。
 
 ```powershell
-dotnet build OpenUtau
-dotnet test OpenUtau.Test
-dotnet publish OpenUtau -c Release -r win-x64 --self-contained true
+dotnet build OpenUtau.sln -m:1
+dotnet test OpenUtau.Test -m:1
+dotnet publish OpenUtau/OpenUtau.csproj -c Release -r win-x64 --self-contained true -m:1
 ```
 
 外部音源を使うテストは任意実行で、記録済みのローカル音源が必要です。通常のテストの後に、
@@ -260,15 +254,11 @@ pwsh -NoProfile -File tools/verify-xen-voices.ps1 -ClassicBank '<UTAU voicebank>
 
 ### 検証状況
 
-記録時点で、自動テスト 363 件が成功しています。通常の実行では外部音源のテストを明示的に
-スキップします。別途 Classic・Worldline-R・DiffSinger を実行し、レンダーキャッシュが
-空の状態で 3 件とも成功しました。生成した 9 音は記録した手法で測ると、いずれも
-指定した安定音高との差が 0.75 セント以内でした。
-
-ENUNU・Vogen・VOICEVOX での実際の合成、実機 MIDI 鍵盤、より広い UI と高 DPI の確認、
-DiffSinger の自動ピッチとリテイクの組合せは未検証です。詳細は
-[制作記録](docs/microtonal/PRODUCTION.md) を参照してください。これらが残っている間は、
-初版の完成とはしません。
+自動テストは音律のモデル、ファイル形式、鍵盤、レンダラーに渡す音高、主なダイアログを
+確かめています。Classic・WORLDLINE-R・DiffSinger は実際の音源で確かめ、合成した音は
+指定した音高との差が 0.75 セント以内でした。ENUNU・Vogen・VOICEVOX での合成、実機の
+MIDI 鍵盤、より広い画面と高 DPI の確認はまだです。詳細は
+[制作記録](docs/microtonal/PRODUCTION.md) を参照してください。
 
 ### 開発に参加するには
 
@@ -296,72 +286,3 @@ SIL OFL 1.1 に基づいて改変したフォントで、「Bravura」が予約�
 ライセンスは、このリポジトリと配布物には含めません。Xen のアプリデータ、インストーラーの
 識別情報、`.ustxen` の関連付けは本家 OpenUtau と分けています。この派生版では本家への
 自動更新を無効にしています。
-
-### 本家 OpenUtau
-
-OpenUtau は UTAU コミュニティ向けに作られた無料のオープンソースエディターです。
-以下のリンクは本家のもので、そのダウンロードには Xen の機能は含まれません。
-
-#### はじめに
-
-[Windows x64 版](https://github.com/stakira/OpenUtau/releases/latest/download/OpenUtau-win-x64.zip)
-・[Linux x64 版](https://github.com/stakira/OpenUtau/releases/latest/download/OpenUtau-linux-x64.zip)
-をダウンロードできます。使い始める前に、次の GitHub Wiki を読むことを**強くお勧めします**。
-- [Getting-Started](https://github.com/stakira/OpenUtau/wiki/Getting-Started)
-- [Resamplers](https://github.com/stakira/OpenUtau/wiki/Resamplers-and-Wavtools)
-- [Phonemizers](https://github.com/stakira/OpenUtau/wiki/Phonemizers)
-- [FAQ](https://github.com/stakira/OpenUtau/wiki/FAQ)
-
-#### 貢献するには
-
-OpenUtau を試して不満があれば、次の方法で改善に協力できます。
-- [Discord サーバー](https://discord.gg/UfpMnqMmEM)や GitHub で不具合を報告する。
-- Discord や GitHub で機能を提案する。
-- [Crowdin](https://crowdin.com/project/oxygen-dioxideopenutau) で自分の言語の翻訳を追加・更新する。
-
-コードを書ける場合は、次の方法もあります。
-- プルリクエストで修正を送る。
-- [Trello](https://trello.com/b/93ANoCIV/openutau) の開発ロードマップを確認し、Discord で議論する。
-
-#### プラグイン開発
-
-ほかの利用者に役立つプラグインを作る場合は、次の API 文書を参照してください。
-- [編集マクロ API 文書](OpenUtau.Core/Editing/README.md)
-- [フォニマイザ API 文書](OpenUtau.Core/Api/README.md)
-
-#### 主な機能
-
-- マウスとスクロールホイールで自然に操作でき、キーボードショートカットも使えます。
-- 機能の豊富な MIDI エディターで、楽曲やカバーを作れます。
-- ビブラートエディターで、表情のあるビブラートを付けられます。
-- 先行レンダリングと内蔵リサンプラーで、作業中の音をすぐ確認できます。
-
-各機能の動画は[英語版](#english)にあります。詳しくは
-[Getting-Started](https://github.com/stakira/OpenUtau/wiki/Getting-Started) を参照してください。
-
-#### 全機能
-
-- 現代的な操作性。
-- マウスとキーボードによる簡単な操作。
-- 機能の豊富な MIDI エディター。
-  - VSQX（Vocaloid 4）トラックの読込み。
-- UTAU との選択的な後方互換性。
-  - OpenUtau は少ない手順で問題を解決することを目指しています。UTAU の機能をそのまま再現するための設計ではありません。
-- 拡張可能なリアルタイム音素編集。
-  - 英語・日本語・中国語・韓国語・ロシア語などの、さまざまな音素体系（VCV、CVVC、Arpasing など）に対応したフォニマイザを同梱しています。
-- 調声には UTAU の標準「フラグ」の代わりにエクスプレッションを使います。
-  - 内蔵リサンプラー WORLDLINE-R は、多くの歌声合成エディターと同様の曲線による調声に対応しています。
-- UI の翻訳とファイルシステムの文字コード対応を含む国際化。
-  - UTAU と違い、システムロケールを変更する必要はありません。
-- 快適な試聴・レンダリング。
-  - 再生前に先行レンダリングするため、編集や調声の待ち時間を減らせます。
-- ENUNU の AI シンガーに対応しています。詳しくは [ENUNU の Wiki](https://github.com/stakira/OpenUtau/wiki/ENUNU-NNSVS-Support) を参照してください。
-- 使いやすいプラグインの仕組み。
-- 用途の広いリサンプリングエンジンのインターフェイス。
-  - ほとんどの UTAU リサンプラーと互換性があります。
-- Windows（32/64 ビット）、macOS、Linux で動作します。
-
-##### できないこと
-
-- 簡単なミキシングはできますが、DAW の代わりにはなりません。
-- 一部の機能を除き、Vocaloid との互換性は目指していません。

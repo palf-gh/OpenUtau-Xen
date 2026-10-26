@@ -1033,3 +1033,27 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
 - Purpose of the rule: the user asked that every task end with this kind of
   tidy-up so the checkout does not keep growing. `AGENTS.md` now has "Tidy up
   after every task", which lists what to delete or archive and what to keep.
+
+## 2026-10-26 — README of Xen features with screenshots
+
+- Purpose: user request. The README described Xen only briefly and repeated the
+  upstream README. It now describes what Xen adds, with screenshots, and points
+  to the upstream wiki for general use instead of copying upstream sections.
+- Implementation: both language sections list Xen's tunings and presets,
+  keyboards and MOS (including multi-period MOS, the MOS list and the propriety
+  preference), scales and names, pitch and renderers, files, MIDI input and the
+  editing changes (Lunai workspace, rhythm grid, drag creation, playhead split,
+  JOB plugins). Build, verification, contributing and attribution remain; the
+  verification text no longer quotes an outdated test count. Menu names were
+  checked against the English and Japanese resources. The Japanese section was
+  polished with yomiyasu (run and verify).
+- Screenshots: `docs/images/` holds the tuning settings page in English and
+  Japanese and a 31-EDO piano roll. `ReadmeCaptures` renders them during the
+  opt-in capture run (`OPENUTAU_KEYBOARD_CAPTURES`), into its `readme` folder; the
+  piano roll uses a stand-in singer without voice data so that notes draw as
+  valid. `.gitignore` now allows `docs/images/`.
+- Verification: serial solution build succeeded with zero errors. Full suite:
+  570 passed, one opt-in external-voice test skipped. The capture run produced
+  the three images, which were inspected.
+- Trial: the application is unchanged (only tests, documents and images), so the
+  trial from `aace0ef` was not rebuilt.
