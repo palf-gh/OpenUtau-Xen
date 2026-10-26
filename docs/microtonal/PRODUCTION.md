@@ -1227,3 +1227,14 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
   DLLs match the ReadyToRun outputs by SHA-256. Native interactive launch was not
   checked.
+
+## 2026-10-26 — Local merge of V4-style vibrato into develop
+
+- `feature/v4-vibrato` (`8faa4ab`) was merged into `develop` (`f833131`) without
+  conflicts, at the user's request.
+- Verification: serial solution build succeeded with zero errors. Full suite:
+  623 passed.
+- Trial: no trial was running at preflight. The build from `f833131` replaced
+  `work/OpenUtau-Xen-win-x64/` in place with local data kept. `OpenUtau-Xen.exe`
+  matches the generated apphost; the application and core DLLs match the
+  ReadyToRun outputs by SHA-256. Native interactive launch was not checked.
