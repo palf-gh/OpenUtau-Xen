@@ -329,7 +329,7 @@ end
   assert(VSUpdateNote(n) == 1)
   assert(VSInsertNote({ posTick = 960, durTick = 240, noteNum = 64, lyric = 'ピ', phonemes = ""p' i"" }) == 1)
   return 0");
-            Assert.Equal(new[] { "ハ", "+", "ピ" }, result.Edit!.AddedNotes.Select(n => n.lyric));
+            Assert.Equal(new[] { "は", "+", "ぴ" }, result.Edit!.AddedNotes.Select(n => n.lyric));
             // Changing a lyric and restoring it does not let a phoneme-only edit through.
             Assert.Throws<JobPluginException>(() => Run(project, part, @"
   VSSeekToBeginNote()
@@ -337,6 +337,29 @@ end
   n.lyric = 'x' n.phonemes = 'x' VSUpdateNote(n)
   n.lyric = 'la' VSUpdateNote(n)
   return 0"));
+        }
+
+        [Theory]
+        [InlineData("ハ", "は")]
+        [InlineData("ニャー", "にゃー")]
+        [InlineData("ヴァ", "ヴぁ")]
+        [InlineData("ハa", "ハa")]
+        [InlineData("あ", "あ")]
+        public void KatakanaLyricsBecomeHiragana(string lyric, string expected) {
+            Assert.Equal(expected, JobPluginSession.KatakanaToHiragana(lyric));
+        }
+
+        [Fact]
+        public void UnchangedKatakanaLyricsStayAsTheyAre() {
+            var (project, part) = Project(false);
+            part.notes.First().lyric = "ラ";
+            var result = Run(project, part, @"
+  VSSeekToBeginNote()
+  local r, n = VSGetNextNote()
+  n.durTick = 400
+  VSUpdateNote(n)
+  return 0");
+            Assert.Equal("ラ", result.Edit!.AddedNotes.Single().lyric);
         }
 
         [Fact]

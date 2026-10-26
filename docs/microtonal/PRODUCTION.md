@@ -1,5 +1,11 @@
 # Production record
 
+## 2026-10-26 — JOB plugins: katakana lyrics
+
+- User report: LyricOnmei ran, but its katakana note names (ハ, ニ, ホ…) were not recognised, because OpenUtau's Japanese phonemisers look lyrics up as hiragana while VOCALOID reads both. Lyrics a plugin writes entirely in katakana are now stored in hiragana. The long-vowel mark and ヴ are kept, since voicebanks usually label them in katakana; WanaKana's `ToHiragana` was not used because it rewrites ー as a vowel. Mixed text and lyrics the plugin did not change are left as they are.
+- Verification: serial solution build succeeded with zero errors; full suite passed 544 tests with the opt-in external-voice check skipped; six new tests cover the conversion and unchanged katakana lyrics. Corpus rerun: LyricOnmei now gives は ら に ら ほ…; 30 of 33 scripts still finish. `git diff --check` passed.
+- Trial packaging: no trial was running at preflight. Republished `work/OpenUtau-Xen-win-x64/` without deleting or mirroring local data; the executable matches the apphost and both application DLLs match the ReadyToRun output by SHA-256. Singing the converted lyrics was not checked with a voicebank, and the JOB menu was not exercised interactively.
+
 ## 2026-10-26 — JOB plugins: lyric-driven phonemes and quiet stops
 
 - User review: LyricOnmei and ShiftLyricsR only rewrite lyrics, with phonemes as the matching reading, so OpenUtau's phonemiser can derive the reading itself. Phonemes and phLock written together with a lyric change (or on an inserted note with a lyric) are now accepted and not applied; phoneme-only changes still stop the run, and a commit re-check catches a lyric changed and restored. The melisma lyric `-` maps to OpenUtau's extender `+` both ways, as agreed with the user. Expected stops and conflicts now go to the main window's status bar and the log instead of an error dialog, at the user's request; unexpected internal errors still use the dialog. No new strings were needed.

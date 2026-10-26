@@ -463,6 +463,18 @@ namespace OpenUtau.Core.JobPlugins {
             return Ok;
         }
 
+        /// <summary>
+        /// VOCALOID reads katakana and hiragana lyrics alike, but OpenUtau's Japanese phonemisers look
+        /// lyrics up as hiragana. A lyric written entirely in katakana is converted; the long-vowel mark
+        /// and ヴ, which voicebanks usually label in katakana, are kept. Mixed text is left unchanged.
+        /// </summary>
+        public static string KatakanaToHiragana(string lyric) {
+            if (lyric.Length == 0 || !lyric.All(c => c >= '\u30A1' && c <= '\u30F6' || c == '\u30FC')) {
+                return lyric;
+            }
+            return string.Concat(lyric.Select(c => c >= '\u30A1' && c <= '\u30F6' && c != '\u30F4' ? (char)(c - 0x60) : c));
+        }
+
         static bool LyricDriven(NoteState state, NoteFields fields) =>
             state.Original == null || fields.Lyric != state.Original.Lyric;
 
@@ -963,7 +975,9 @@ namespace OpenUtau.Core.JobPlugins {
         UNote Apply(UNote note, UNote? source, NoteFields? original, NoteFields current) {
             note.position = current.Pos;
             note.duration = current.Dur;
-            note.lyric = current.Lyric == Melisma ? Extender : current.Lyric;
+            if (original == null || current.Lyric != original.Lyric) {
+                note.lyric = current.Lyric == Melisma ? Extender : KatakanaToHiragana(current.Lyric);
+            }
             if (source == null || original == null) {
                 note.tone = current.NoteNum;
                 note.pitchAddress = PitchResolver.NearestAddress(tuning, current.NoteNum, true);
