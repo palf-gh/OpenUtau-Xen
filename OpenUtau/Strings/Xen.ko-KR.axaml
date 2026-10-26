@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">음의 수</system:String>
   <system:String x:Key="xen.field.mode">모드</system:String>
   <system:String x:Key="xen.field.periods">주기당 반복 수</system:String>
+  <system:String x:Key="xen.field.mosChoice">MOS 음계</system:String>
+  <system:String x:Key="xen.mos.custom">사용자 지정</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · 생성 음정 {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · 생성 음정 {1} ({2}¢) · 반복 {3}</system:String>
+  <system:String x:Key="xen.mos.group">{0}음</system:String>
+  <system:String x:Key="xen.mos.improper">정규 아님</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">음률 설정의 MOS 목록에 정규가 아닌 MOS도 표시</system:String>
   <system:String x:Key="xen.field.generatorInterval">생성 음정 (비율 또는 센트)</system:String>
   <system:String x:Key="xen.field.scaleName">음계 이름</system:String>
   <system:String x:Key="xen.field.degrees">음도 (쉼표로 구분)</system:String>

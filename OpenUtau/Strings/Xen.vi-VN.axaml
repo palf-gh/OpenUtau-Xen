@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Số cao độ</system:String>
   <system:String x:Key="xen.field.mode">Điệu thức</system:String>
   <system:String x:Key="xen.field.periods">Số lần lặp mỗi chu kỳ</system:String>
+  <system:String x:Key="xen.field.mosChoice">Thang âm MOS</system:String>
+  <system:String x:Key="xen.mos.custom">Tùy chỉnh</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · quãng sinh {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · quãng sinh {1} ({2}¢) · lặp {3} lần</system:String>
+  <system:String x:Key="xen.mos.group">{0} nốt</system:String>
+  <system:String x:Key="xen.mos.improper">không chuẩn</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Hiện MOS không chuẩn (improper) trong danh sách MOS của hệ âm</system:String>
   <system:String x:Key="xen.field.generatorInterval">Quãng sinh (tỉ lệ hoặc cent)</system:String>
   <system:String x:Key="xen.field.scaleName">Tên thang âm</system:String>
   <system:String x:Key="xen.field.degrees">Bậc âm (phân cách bằng dấu phẩy)</system:String>

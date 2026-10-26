@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Número de alturas</system:String>
   <system:String x:Key="xen.field.mode">Modo</system:String>
   <system:String x:Key="xen.field.periods">Repetições por período</system:String>
+  <system:String x:Key="xen.field.mosChoice">Escala MOS</system:String>
+  <system:String x:Key="xen.mos.custom">Personalizada</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · gerador {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · gerador {1} ({2}¢) · {3} repetições</system:String>
+  <system:String x:Key="xen.mos.group">{0} notas</system:String>
+  <system:String x:Key="xen.mos.improper">não própria</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Mostrar MOS não próprias na lista MOS da afinação</system:String>
   <system:String x:Key="xen.field.generatorInterval">Gerador (razão ou cents)</system:String>
   <system:String x:Key="xen.field.scaleName">Nome da escala</system:String>
   <system:String x:Key="xen.field.degrees">Graus (separados por vírgulas)</system:String>

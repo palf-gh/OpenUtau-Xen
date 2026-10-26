@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Число звуков</system:String>
   <system:String x:Key="xen.field.mode">Лад</system:String>
   <system:String x:Key="xen.field.periods">Повторов в периоде</system:String>
+  <system:String x:Key="xen.field.mosChoice">Звукоряд MOS</system:String>
+  <system:String x:Key="xen.mos.custom">Свой</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · генератор {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · генератор {1} ({2}¢) · повторов: {3}</system:String>
+  <system:String x:Key="xen.mos.group">Звуков: {0}</system:String>
+  <system:String x:Key="xen.mos.improper">несобственный</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Показывать несобственные MOS в списке MOS строя</system:String>
   <system:String x:Key="xen.field.generatorInterval">Генератор (отношение или центы)</system:String>
   <system:String x:Key="xen.field.scaleName">Название звукоряда</system:String>
   <system:String x:Key="xen.field.degrees">Ступени (через запятую)</system:String>

@@ -41,6 +41,13 @@ namespace OpenUtau.App.Views {
         readonly NumericUpDown cardinality = Number(1, 65536, 7, 0);
         readonly NumericUpDown mode = Number(1, 65536, 1, 0);
         readonly NumericUpDown periods = Number(1, 65536, 1, 0);
+        readonly ComboBox mosChoices = new ComboBox {
+            Name = "MosChoices", HorizontalAlignment = HorizontalAlignment.Stretch, PlaceholderText = XenStrings.Get("mos.custom"),
+        };
+        IReadOnlyList<MosChoice> mosChoiceList = Array.Empty<MosChoice>();
+        /// <summary>The choice index of each list row; -1 for a note-count heading.</summary>
+        List<int> mosChoiceRows = new List<int>();
+        string? mosChoiceKey;
         readonly NumericUpDown intervalCardinality = Number(1, 65536, 7, 0);
         readonly TextBox ratioGenerator = new TextBox { Text = "3/2" };
         readonly TextBox customScaleName = new TextBox { Text = XenStrings.Get("scale.custom") };
@@ -123,6 +130,7 @@ namespace OpenUtau.App.Views {
             kinds.Children.Add(mosKeyboard);
             kinds.Children.Add(manualKeyboard);
             keyboardCard.Children.Add(kinds);
+            mosPanel.Children.Add(Labelled("field.mosChoice", mosChoices));
             mosPanel.Children.Add(Parameters(("field.generatorDegree", generator), ("field.cardinality", cardinality), ("field.periods", periods), ("field.mode", mode)));
             mosPanel.Children.Add(scaleResult);
             keyboardCard.Children.Add(mosPanel);
@@ -223,6 +231,7 @@ namespace OpenUtau.App.Views {
             cardinality.ValueChanged += (_, _) => { if (!loading) { customCardinality = true; LiveMosChanged(); } };
             mode.ValueChanged += (_, _) => { if (!loading) LiveMosChanged(); };
             periods.ValueChanged += (_, _) => { if (!loading) { customPeriods = true; LiveMosChanged(); } };
+            mosChoices.SelectionChanged += (_, _) => { if (!loading) SelectMosChoice(); };
             mosKeyboard.IsCheckedChanged += (_, _) => { if (!loading && mosKeyboard.IsChecked == true) SetMosKeyboard(true); };
             manualKeyboard.IsCheckedChanged += (_, _) => { if (!loading && manualKeyboard.IsChecked == true) SetMosKeyboard(false); };
             keyboardCycle.ValueChanged += (_, _) => { if (!loading) ChangeKeyboardCycle(); };
@@ -582,8 +591,83 @@ namespace OpenUtau.App.Views {
             }
         }
 
+        /// <summary>
+        /// Lists the MOS that hold in the tuning under note-count headings and selects the one the fields give, if any.
+        /// The list is rebuilt when the degrees change, since the labels show generator cents.
+        /// </summary>
+        void RefreshMosChoices() {
+            bool wasLoading = loading;
+            loading = true;
+            try {
+                int n = draft.DegreeCount;
+                bool allowImproper = Core.Util.Preferences.Default.XenAllowImproperMos;
+                string key = allowImproper + ":" + string.Join(",",
+                    Enumerable.Range(0, n + 1).Select(d => draft.GetCents(d).ToString("F3", CultureInfo.InvariantCulture)));
+                if (key != mosChoiceKey) {
+                    mosChoiceKey = key;
+                    // Improper MOS are offered only when the preference allows them; the keyboard accepts either.
+                    mosChoiceList = MosGenerator.Choices(n).Where(choice => allowImproper || choice.IsProper).ToArray();
+                    var items = new List<ComboBoxItem>();
+                    mosChoiceRows = new List<int>();
+                    for (int i = 0; i < mosChoiceList.Count; i++) {
+                        int notes = mosChoiceList[i].Mos.Cardinality;
+                        if (i == 0 || mosChoiceList[i - 1].Mos.Cardinality != notes) {
+                            items.Add(new ComboBoxItem {
+                                Content = XenStrings.Get("mos.group", notes), IsEnabled = false,
+                                FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                            });
+                            mosChoiceRows.Add(-1);
+                        }
+                        items.Add(new ComboBoxItem { Content = MosChoiceLabel(mosChoiceList[i]), Padding = new Thickness(24, 4, 12, 4) });
+                        mosChoiceRows.Add(i);
+                    }
+                    mosChoices.ItemsSource = items;
+                }
+                KeyboardMos current;
+                try { current = draft.Keyboard.Mos ?? ReadMos(); } catch (Exception) { current = new KeyboardMos(); }
+                int index = -1;
+                for (int i = 0; i < mosChoiceList.Count && index < 0; i++) if (mosChoiceList[i].Matches(current, n)) index = i;
+                mosChoices.SelectedIndex = index < 0 ? -1 : mosChoiceRows.IndexOf(index);
+            } finally { loading = wasLoading; }
+        }
+
+        string MosChoiceLabel(MosChoice choice) {
+            string pattern = $"{choice.LargeCount}L{choice.SmallCount}s";
+            string cents = draft.GetCents(choice.Mos.Generator).ToString("F1", XenStrings.InputCulture);
+            return choice.Periods == 1
+                ? XenStrings.Get("mos.choice", pattern, choice.Mos.Generator, cents)
+                : XenStrings.Get("mos.choiceRepeated", pattern, choice.Mos.Generator, cents, choice.Periods);
+        }
+
+        /// <summary>
+        /// Applies a listed MOS to the fields. The default MOS keeps its own generator and mode when it is the same
+        /// MOS (12-EDO 5L2s stays generator 7 and C major); other choices start at mode 1.
+        /// </summary>
+        void SelectMosChoice() {
+            int row = mosChoices.SelectedIndex;
+            if (row < 0 || row >= mosChoiceRows.Count) return;
+            // A heading is not a choice: return to the row the fields give.
+            if (mosChoiceRows[row] < 0) { RefreshMosChoices(); return; }
+            var choice = mosChoiceList[mosChoiceRows[row]];
+            var fallback = KeyboardRegionizer.DefaultMos(draft);
+            var mos = choice.Matches(fallback, draft.DegreeCount) ? fallback.Clone() : choice.Mos.Clone();
+            loading = true;
+            try {
+                generator.Value = mos.Generator;
+                cardinality.Value = mos.Cardinality;
+                periods.Value = mos.Periods ?? 1;
+                RefreshModeMaximum();
+                mode.Value = mos.Mode + 1;
+                customGenerator = mos.Generator != fallback.Generator;
+                customCardinality = mos.Cardinality != fallback.Cardinality;
+                customPeriods = (mos.Periods ?? 1) != 1;
+            } finally { loading = false; }
+            LiveMosChanged();
+        }
+
         void RefreshMosStatus() {
             if (!structureValid || Manual) { scaleResult.Text = ""; return; }
+            RefreshMosChoices();
             var mos = draft.Keyboard.Mos ?? ReadMos();
             var degrees = KeyboardRegionizer.MosDegrees(draft, mos);
             if (degrees == null) {
@@ -595,7 +679,8 @@ namespace OpenUtau.App.Views {
             int small = steps.Min(), large = steps.Max();
             string pattern = string.Concat(steps.Select(step => large == small ? "=" : step == large ? "L" : "s"));
             string counts = large == small ? "" : $"{steps.Count(step => step == large)}L{steps.Count(step => step == small)}s · ";
-            scaleResult.Text = counts + (pattern.Length <= 80 ? pattern : pattern[..80] + "…");
+            string improper = large != small && !MosGenerator.IsProper(steps) ? " · " + XenStrings.Get("mos.improper") : "";
+            scaleResult.Text = counts + (pattern.Length <= 80 ? pattern : pattern[..80] + "…") + improper;
         }
 
         void RefreshPitchPreview() {

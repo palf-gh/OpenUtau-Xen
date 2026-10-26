@@ -184,6 +184,10 @@
             <TextBlock Text="{DynamicResource prefs.advanced.lyricshelper.brackets}" HorizontalAlignment="Left"/>
             <ToggleSwitch IsChecked="{Binding LyricsHelperBrackets}"/>
           </Grid>
+          <Grid>
+            <TextBlock Text="{DynamicResource xen.prefs.allowImproperMos}" HorizontalAlignment="Left"/>
+            <ToggleSwitch IsChecked="{Binding XenAllowImproperMos}"/>
+          </Grid>
         </StackPanel>
 
         <!-- Rendering -->

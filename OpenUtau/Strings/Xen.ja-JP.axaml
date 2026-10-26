@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">音の数</system:String>
   <system:String x:Key="xen.field.mode">モード</system:String>
   <system:String x:Key="xen.field.periods">周期内の繰り返し数</system:String>
+  <system:String x:Key="xen.field.mosChoice">MOS スケール</system:String>
+  <system:String x:Key="xen.mos.custom">カスタム</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · 生成音程 {1}（{2}¢）</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · 生成音程 {1}（{2}¢） · 繰り返し {3}</system:String>
+  <system:String x:Key="xen.mos.group">{0} 音</system:String>
+  <system:String x:Key="xen.mos.improper">真正でない</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">音律設定の MOS 一覧に真正でない MOS も表示</system:String>
   <system:String x:Key="xen.field.generatorInterval">生成音程（比率またはセント）</system:String>
   <system:String x:Key="xen.field.scaleName">スケール名</system:String>
   <system:String x:Key="xen.field.degrees">音度（コンマ区切り）</system:String>

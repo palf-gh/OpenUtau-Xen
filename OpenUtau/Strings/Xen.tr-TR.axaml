@@ -40,6 +40,13 @@
   <system:String x:Key="xen.field.cardinality">Perde sayısı</system:String>
   <system:String x:Key="xen.field.mode">Mod</system:String>
   <system:String x:Key="xen.field.periods">Periyot başına tekrar</system:String>
+  <system:String x:Key="xen.field.mosChoice">MOS dizisi</system:String>
+  <system:String x:Key="xen.mos.custom">Özel</system:String>
+  <system:String x:Key="xen.mos.choice">{0} · üreteç {1} ({2}¢)</system:String>
+  <system:String x:Key="xen.mos.choiceRepeated">{0} · üreteç {1} ({2}¢) · {3} tekrar</system:String>
+  <system:String x:Key="xen.mos.group">{0} nota</system:String>
+  <system:String x:Key="xen.mos.improper">düzgün değil</system:String>
+  <system:String x:Key="xen.prefs.allowImproperMos">Akort MOS listesinde düzgün olmayan MOS’ları göster</system:String>
   <system:String x:Key="xen.field.generatorInterval">Üreteç (oran veya sent)</system:String>
   <system:String x:Key="xen.field.scaleName">Dizi adı</system:String>
   <system:String x:Key="xen.field.degrees">Dereceler (virgülle ayrılmış)</system:String>

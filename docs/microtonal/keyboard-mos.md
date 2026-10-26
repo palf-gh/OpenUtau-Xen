@@ -171,6 +171,30 @@ keyboard. A multi-period MOS never takes family names; it always uses letters.
 Unequal tunings count degrees here too, so their repeats are equal in degrees,
 not necessarily in cents. Default and family MOS stay single-period.
 
+`MosGenerator.Choices` lists the MOS of four to 24 notes that hold in a degree
+count, single- and multi-period, for the settings page's MOS list. A generator
+and its inversion give the same MOS, so only the smaller generator is listed.
+Every interval class must come in at most two sizes: in an equal division two
+step sizes are not enough, because sizes can coincide (12-EDO's eight-note chain
+of fourths has steps sLLsssLL but three sizes of third). Single-period chains of
+one degree are left out, since they are the whole tuning with one gap. A
+generator that shares a factor with the period is kept until its chain closes:
+24-EDO's 14-step fifth stays in a 12-note cycle, and seven of them are 5L2s. The list
+is sorted by note count, repeat count and generator, cached per degree count and
+empty above 4096 degrees. 12-EDO lists 13 MOS, 24-EDO 78, 31-EDO 92 and 53-EDO
+178.
+`Generate` and the keyboard still accept any two-step-size subset.
+
+Each choice records Rothenberg propriety (`MosGenerator.IsProper`), counted in
+degrees: no interval of j steps is larger than one of j + 1 steps, with equal
+sizes allowed, so the 12-EDO diatonic is proper. 31-EDO has eleven seven-note
+MOS, of which four are proper (generators 4, 5, 9 and 13). The preference
+`XenAllowImproperMos` (off by default; Preferences, Editing) decides whether
+the settings list offers improper MOS. It does not change keyboards: the
+standard 5L2s keyboards of 17-, 22-, 41- and 53-EDO are improper, since their
+augmented fourth (3L) exceeds their diminished fifth (2L + 2s), and they must
+stay available. The status line marks an improper MOS instead.
+
 With `manual`, every key comes from `Keyboard.Classes` (missing classes are
 white); classes are ignored by a MOS keyboard. Switching to key by key copies
 the current roles into classes and the shown names into editable custom names;
