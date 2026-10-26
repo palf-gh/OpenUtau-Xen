@@ -1057,3 +1057,173 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   the three images, which were inspected.
 - Trial: the application is unchanged (only tests, documents and images), so the
   trial from `aace0ef` was not rebuilt.
+
+## 2026-10-26 — Editable vibrato curves and JOB VR/VD
+
+- Purpose: user request with three goals: keep the UTAU-style vibrato and its
+  compatibility, add editable depth and rate curves arranged like the V4
+  properties screen the user supplied, and let the user's JOB scripts read and
+  write those curves through VR and VD. The user does not want V4's values
+  or sound copied, so the model and the JOB scale are OpenUtau's own. No vendor
+  binary was examined for this change, and no vendor material is in the repository.
+- Implementation (details in `vibrato-curves.md`): `UVibrato` gains optional
+  `rate_curve` (Hz) and `depth_curve` (cents) over whole-note positions; notes
+  without curves use the unchanged equations. Curve notes integrate frequency over
+  the tempo map, shared by rendering and the piano roll, and native splitting
+  slices the curves and carries the phase. A new Vibrato curves dialogue in the
+  note context menu edits both lanes and applies them as one undo group. Five
+  note-expression calls now support VR and VD with the host scale VR 64 = 5 Hz
+  (one octave per 64) and VD 64 = 50 cents. A note reinserted at the same position
+  and length keeps its curves. `.ustxen` moves to version 4; `.tunxen` stays at 3.
+  UST and compatible USTX bake variable vibrato into pitch points and warn in the
+  USTX export. Eleven new strings are in all 20 Xen overlays; the Japanese strings
+  passed yomiyasu run/verify `20261026T083142Z-1671f54b` unchanged.
+- Verification: serial solution build succeeded with zero errors; full suite passed
+  600 tests. New tests cover the legacy equations, variable-rate phase, tempo
+  changes, splitting, undo, the dialogue, the command, JOB mapping and rollback,
+  copies and reinserts, native version 4 and legacy baking. The capture of the
+  dialogue was inspected. The opt-in corpus run of the user's four folders now
+  finishes 31 of 33 scripts; AutoScoopUpHighNotes no longer stops, while
+  Staccato (selected) and SineVibratoedit3 stop as before. Its new vibrato mode
+  shows that lyric and pitch scripts leave the curves unchanged. SplitNote splits
+  the curves where the script copies them, but restarts the right note's phase
+  and leaves the left half on its last point; scalar vibrato restarts in the same
+  way, so this predates the curves and is recorded as a limitation.
+  `git diff --check` passed.
+- Limitations: V4 factory vibrato types 2 to 16 remain rejected; JOB cannot
+  set phase or fades; baking does not promise the same sound across engines or
+  keep volume-link modulation. Results were not compared with V4.
+- Trial: no trial was running at preflight. The self-contained Windows x64
+  Release build from the uncommitted working tree on `feature/v4-vibrato` (on top
+  of `0174be9`) replaced `work/OpenUtau-Xen-win-x64/` in place with local data
+  kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
+  DLLs match the ReadyToRun outputs by SHA-256. Native interactive launch was not
+  checked. Nothing was committed or pushed, and the version is unchanged.
+
+## 2026-10-26 — V4 vibrato types as presets
+
+- Purpose: user request to support V4's vibrato types 2 to 16, which the
+  previous entry left rejected. The user chose to approximate V4's values,
+  to make type 1 a preset as well, and to offer the presets in the curve dialogue.
+- Research (kept outside the repository, with no extract, path or vendor file
+  committed): the installed editor's preset parameter files give each type a rate
+  and a depth value (0–127, with 64 as the centre) and, for type 4, a fade. The
+  manual places the vibrato graph over the vibrato section. These values hardly
+  differ between families, so the base rate and depth of each family were measured
+  from the sustained part of the editor's four recorded vibratos and rounded:
+  Normal 4.85 Hz/75 cents, Extreme 3.9/300, Fast 5.2/110, Slight 4.85/35. Fast is
+  deeper than Normal but only about 7% faster.
+- Implementation (details in `vibrato-curves.md`): `VibratoPresets` lays each type
+  out as rate and depth curves over the vibrato; types 1–3 hold their values and
+  type 4 fades both to 0 between 60% and 90%. `UVibrato` stores the type as
+  optional `preset` in `.ustxen` version 4, which exists only on
+  `feature/v4-vibrato` and has not been merged or released, so the version does not
+  change again; UST and compatible USTX drop it with the curves. The dialogue
+  gains a Preset list. In JOB, value 64 is now the base of the note's preset (5 Hz
+  and 50 cents without one), notes report their preset as `vibratoType`, and
+  choosing another type replaces the curves with that preset. A scalar note still
+  reports 1 and keeps its vibrato when 1 is written back, so a script choosing
+  `Standard 1` changes only notes whose vibrato was off; the Preset list applies
+  it to the others. Two new strings are in
+  all 20 Xen overlays; the Japanese strings passed yomiyasu run/verify
+  `20261026T091219Z-ffb1a4d5` unchanged.
+- Verification: serial solution build succeeded with zero errors; full suite passed
+  604 tests. New tests cover the type 4 layout and JOB scale, preset reporting and
+  moved copies, the switch from off to type 1, the dialogue's preset list and
+  relayout, the command, the native round trip and the legacy export. The capture of
+  the dialogue with `[Extreme] Type 4` was inspected. The corpus run still finishes
+  31 of 33 scripts, and its vibrato mode gives the same results as before apart
+  from the random scripts, with no scalar note gaining a preset.
+  VibratoTypeConversion with `[Extreme] Type 4` chosen gives all notes type 8, and
+  lyric scripts, AutoScoopUpHighNotes and SplitNote keep a preset note's type.
+  `git diff --check` passed.
+- Limitations: a preset is a sinusoidal vibrato. The recorded waveform shape, the
+  recordings' attack and release, and V4's exact value laws are not
+  reproduced, and results were not compared by ear with V4. Curves are laid
+  out when the type is chosen and do not follow a later length change.
+- Trial: no trial was running at preflight. The self-contained Windows x64
+  Release build from the uncommitted working tree on `feature/v4-vibrato` (on top
+  of `b44d557`) replaced `work/OpenUtau-Xen-win-x64/` in place with local data
+  kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
+  DLLs match the ReadyToRun outputs by SHA-256. Native interactive launch was not
+  checked. Nothing was pushed, and the version is unchanged.
+
+## 2026-10-26 — Vibrato properties like V4, live preview and handle follow-up
+
+- Purpose: user review of the preset build. The user asked for V4-style
+  vibrato properties with axes, for double-clicking the vibrato to open them, for
+  the piano-roll vibrato handles to adjust the curves sensibly, and for edits to
+  show while the dialogue is open. The user also chose to keep the axes in cents
+  and Hz with the type's value 64 marked, and to turn the upstream note hover glow
+  off by default in Xen.
+- Implementation: the dialogue is now **Vibrato properties**: vibrato length,
+  vibrato type, then depth and rate graphs over the vibrato section with a tick
+  ruler, value labels, a filled curve and a dashed line at the type's 64, in theme
+  colours. Each change runs inside one undo group so the notes update at once;
+  OK ends the group and Cancel, Escape or closing rolls it back. Double-clicking a
+  vibrato handle or line opens the dialogue for that note (or the selection
+  containing it). The length command moves curve points with the vibrato. The
+  depth and period handles sit at the depth curve's peak and the first cycle and
+  scale the whole curve from its shape at the start of the drag; the shift
+  handle uses that period. `NoteHoverGlow` now defaults to off; a saved
+  preference keeps its value. Strings for the title, length, position and type
+  were changed and the unused apply string removed in all 20 overlays; the
+  Japanese strings passed yomiyasu run/verify `20261026T103157Z-172843ce`
+  unchanged.
+- Verification: serial solution build succeeded with zero errors; full suite passed
+  606 tests. New tests cover the relative graphs, the preset layout and base
+  lines, the OK result, the live preview with Cancel and with OK and undo, length
+  remapping and the handle values. The capture of the dialogue was inspected.
+  Double-clicking and dragging the handles were not exercised interactively.
+  `git diff --check` passed.
+- Limitations: switching the vibrato off and on, and JOB `vibratoLength` writes,
+  leave curve points in place; the preview is visual only.
+- Trial: no trial was running at preflight. The self-contained Windows x64
+  Release build from the uncommitted working tree on `feature/v4-vibrato` (on top
+  of `ec3b23d`) replaced `work/OpenUtau-Xen-win-x64/` in place with local data
+  kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
+  DLLs match the ReadyToRun outputs by SHA-256. The trial's saved preferences
+  still have the hover glow on. Native interactive launch was not checked.
+
+## 2026-10-26 — Vibrato presets measured from V4, with Xen names
+
+- Purpose: the user found the presets unlike V4's. The editor's preset
+  files matched Xen's values, so the difference lay in the assumptions that turn
+  values into rate and depth. The user ran two measurement JOB plugins in
+  V4 (kept outside the repository), converted the vibrato pitch to PIT and
+  supplied three projects: all 16 types and flat test values on 2-bar notes, and
+  notes of several lengths, a 50% vibrato and low rates at tempos 120 and 60, all
+  with one V2 voicebank. After reviewing a closer model that copied V4's
+  waveform, the user chose a blend of UTAU's vibrato and V4's types: keep
+  OpenUtau's sine, match rate and depth, and express the rest through the
+  UTAU-style settings. The user also asked for Xen's own preset names with
+  V4's numbers.
+- Findings: depth is linear in the value, with a lower base at 64 than the earlier
+  estimate from the recordings; rate is linear on each side of 64, not exponential;
+  the top value 127 counts as 128 for both; the vibrato starts about a quarter of a
+  cycle in and builds up linearly over 0.34 seconds regardless of tempo, note length
+  or vibrato length, with no fade at the end; V4's vibrato is not a pure sine.
+- Implementation: `VibratoPresets` holds the measured family bases (Standard 4.6685
+  Hz/60.86 cents, Wide 3.5407/212.77, Quick 5.0798/101.69, Subtle 4.6677/34.93) and
+  start phases. The rate law, with the top value as 128, also serves the JOB scale
+  of notes without a type (5 Hz and 50 cents at 64 are unchanged). Choosing a type
+  in the dialogue or a JOB plugin sets the shift to the start phase, the fade-in to
+  0.34 seconds of the vibrato and the fade-out to 0; the vibrato stays a sine. The
+  families are named Standard, Wide, Quick and Subtle with numbers 1–4, keeping
+  type numbers 1–16; the names are in all 20 Xen overlays, and the Japanese names
+  passed yomiyasu run/verify `20261026T120338Z-39ecaaeb` unchanged. An opt-in test
+  (`OPENUTAU_XEN_V4_VSQX`) compares Xen's pitch with such a project.
+- Verification: serial solution build succeeded with zero errors; full suite passed
+  623 tests, including the measured rates and depths, the value laws, the shift
+  and fades set by a type, the names and the sine. The opt-in comparison differs
+  from V4 by about 15% of the depth, the waveform shape left out on purpose.
+  `git diff --check` passed.
+- Limitations: a flat rate of 0 produced no vibrato in V4, while Xen halves
+  the rate; the fade-in matches 0.34 seconds only for the length set when the type
+  was chosen; only one voicebank was measured, and nothing was compared by ear.
+- Trial: no trial was running at preflight. The self-contained Windows x64
+  Release build from the uncommitted working tree on `feature/v4-vibrato` (on top
+  of `f521b68`) replaced `work/OpenUtau-Xen-win-x64/` in place with local data
+  kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
+  DLLs match the ReadyToRun outputs by SHA-256. Native interactive launch was not
+  checked.

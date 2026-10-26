@@ -200,4 +200,20 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Adicionar pastas…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Remover</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} plugins encontrados, {1} problemas</system:String>
+  <system:String x:Key="xen.vibrato.properties">Propriedades do vibrato</system:String>
+  <system:String x:Key="xen.vibrato.depth">Profundidade (cents)</system:String>
+  <system:String x:Key="xen.vibrato.rate">Velocidade (Hz)</system:String>
+  <system:String x:Key="xen.vibrato.length">Duração do vibrato (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Posição no vibrato (%)</system:String>
+  <system:String x:Key="xen.vibrato.addPoint">Adicionar ponto</system:String>
+  <system:String x:Key="xen.vibrato.removePoint">Remover ponto</system:String>
+  <system:String x:Key="xen.vibrato.resetCurve">Redefinir curva</system:String>
+  <system:String x:Key="xen.vibrato.removeCurves">Remover curvas</system:String>
+  <system:String x:Key="xen.vibrato.preset">Tipo de vibrato</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Nenhuma</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Padrão</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Amplo</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Rápido</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Sutil</system:String>
+  <system:String x:Key="xen.export.vibratoBake">O vibrato variável será convertido em pontos de afinação.</system:String>
 </ResourceDictionary>

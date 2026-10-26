@@ -13,7 +13,8 @@ namespace OpenUtau.Core.Format {
         /// Version 2 stores tunings with keyboard layout, keyboard MOS and scale tonic; version 3 adds the keyboard
         /// MOS repeat count. Version 1 is upgraded; version 2 reads unchanged with one repeat.
         /// </summary>
-        public const int CurrentVersion = 3;
+        // Version 4 adds optional note vibrato curves; older notes need no conversion.
+        public const int CurrentVersion = 4;
         public const string Extension = ".ustxen";
         public sealed class Document {
             public string? Format { get; set; }
@@ -50,9 +51,10 @@ namespace OpenUtau.Core.Format {
         public static UProject Load(string path) => Parse(File.ReadAllText(path, Encoding.UTF8), path);
 
         public sealed class CompatibilityReport {
+            public int BakedVibratoNotes { get; set; }
             public int Notes { get; internal set; }
             public double MaximumErrorCents { get; internal set; }
-            public string Summary => $"Tuning definitions, scales and spellings will be removed. Maximum rounding {MaximumErrorCents:F3} cent.";
+            public string Summary => $"Tuning definitions, scales and spellings will be removed. Maximum rounding {MaximumErrorCents:F3} cent. Variable vibrato notes baked: {BakedVibratoNotes}.";
         }
 
         public static CompatibilityReport GetCompatibilityReport(UProject project) {
@@ -64,6 +66,7 @@ namespace OpenUtau.Core.Format {
                     double cents = midi * 100 + note.tuning;
                     report.MaximumErrorCents = Math.Max(report.MaximumErrorCents, Math.Abs(cents - Math.Round(cents, MidpointRounding.AwayFromZero)));
                     report.Notes++;
+                    if (note.vibrato.HasCurves && note.vibrato.length > 0) report.BakedVibratoNotes++;
                 }
             }
             return report;
@@ -72,9 +75,18 @@ namespace OpenUtau.Core.Format {
         internal static string SerializeCompatibilityPrepared(UProject project) {
             // Work on a detached DTO. Export must not retune or change the open project.
             var copy = Yaml.DefaultDeserializer.Deserialize<UProject>(Yaml.DefaultSerializer.Serialize(project));
+            copy.timeAxis.BuildSegments(copy);
             foreach (var part in copy.voiceParts ?? Enumerable.Empty<UVoicePart>()) {
                 var tuning = copy.GetTuning(copy.tracks[part.trackNo]);
                 foreach (var note in part.notes) {
+                    note.RefreshPitch(copy, copy.tracks[part.trackNo]);
+                    if (note.vibrato.HasCurves) {
+                        note.pitch = VibratoCompatibility.Bake(copy, part, note, note.pitch);
+                        note.vibrato.length = 0;
+                        note.vibrato.rateCurve = null;
+                        note.vibrato.depthCurve = null;
+                    }
+                    note.vibrato.preset = null;
                     double midi = note.pitchAddress == null ? note.tone : PitchResolver.ResolveMidi(tuning, note.pitchAddress);
                     note.tone = checked((int)Math.Ceiling(midi - 0.5));
                     note.tuning += checked((int)Math.Round((midi - note.tone) * 100, MidpointRounding.AwayFromZero));

@@ -200,5 +200,21 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Добавить папки…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Удалить</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">Найдено плагинов: {0}, проблем: {1}</system:String>
+  <system:String x:Key="xen.vibrato.properties">Свойства вибрато</system:String>
+  <system:String x:Key="xen.vibrato.depth">Глубина (центы)</system:String>
+  <system:String x:Key="xen.vibrato.rate">Скорость (Гц)</system:String>
+  <system:String x:Key="xen.vibrato.length">Длина вибрато (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Позиция в вибрато (%)</system:String>
+  <system:String x:Key="xen.vibrato.addPoint">Добавить точку</system:String>
+  <system:String x:Key="xen.vibrato.removePoint">Удалить точку</system:String>
+  <system:String x:Key="xen.vibrato.resetCurve">Сбросить кривую</system:String>
+  <system:String x:Key="xen.vibrato.removeCurves">Удалить кривые</system:String>
+  <system:String x:Key="xen.vibrato.preset">Тип вибрато</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Нет</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Стандартное</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Широкое</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Быстрое</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Лёгкое</system:String>
+  <system:String x:Key="xen.export.vibratoBake">Переменное вибрато будет преобразовано в точки высоты тона.</system:String>
 </ResourceDictionary>
 

@@ -769,19 +769,33 @@ namespace OpenUtau.App.Controls {
 
         private void RenderVibrato(UNote note, NotesViewModel viewModel, DrawingContext context) {
             var vibrato = note.vibrato;
-            if (vibrato == null || vibrato.length == 0) {
+            var part = viewModel.Part;
+            if (vibrato == null || vibrato.length == 0 || part == null) {
                 return;
             }
 
             var pen = ThemeManager.AccentPen3;
             float nPeriod = (float)viewModel.Project.timeAxis.TicksBetweenMsPos(note.PositionMs, note.PositionMs + vibrato.period) / note.duration;
             float nPos = vibrato.NormalizedStart;
-            var point = vibrato.Evaluate(nPos, nPeriod, note);
+            var point = vibrato.HasCurves
+                ? vibrato.EvaluateAtTick(viewModel.Project, part, note, note.position + note.duration * nPos)
+                : vibrato.Evaluate(nPos, nPeriod, note);
             var points = new Points();
             points.Add(viewModel.TickToneToCentrePoint(point.X, point.Y));
             while (nPos < 1) {
-                nPos = Math.Min(1, nPos + nPeriod / 16);
-                point = vibrato.Evaluate(nPos, nPeriod, note);
+                if (vibrato.HasCurves) {
+                    double tick = part.position + note.position + note.duration * nPos;
+                    double nextMs = viewModel.Project.timeAxis.TickPosToMsPos(tick)
+                        + 1000 / (vibrato.SampleRate(nPos) * 16);
+                    float next = (float)((viewModel.Project.timeAxis.MsPosToNonExactTickPos(nextMs)
+                        - part.position - note.position) / note.duration);
+                    nPos = Math.Min(1, Math.Max(MathF.BitIncrement(nPos), next));
+                } else {
+                    nPos = Math.Min(1, nPos + nPeriod / 16);
+                }
+                point = vibrato.HasCurves
+                    ? vibrato.EvaluateAtTick(viewModel.Project, part, note, note.position + note.duration * nPos)
+                    : vibrato.Evaluate(nPos, nPeriod, note);
                 points.Add(viewModel.TickToneToCentrePoint(point.X, point.Y));
             }
             var geometry = new PolylineGeometry(points, false);

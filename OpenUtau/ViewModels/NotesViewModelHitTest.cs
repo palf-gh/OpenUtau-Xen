@@ -357,6 +357,15 @@ namespace OpenUtau.App.ViewModels {
             return default;
         }
 
+        /// <summary>
+        /// The note whose vibrato handles or lines are at the point, excluding the on/off toggle.
+        /// These are the places where a first click edits the vibrato rather than adding a note.
+        /// </summary>
+        public UNote? HitTestVibratoArea(Point mousePos) {
+            var hit = HitTestVibrato(mousePos);
+            return hit.hit && !hit.hitToggle ? hit.note : null;
+        }
+
         public PhonemeHitInfo HitTestPhoneme(Point mousePos) {
             if (viewModel.Part == null || !viewModel.ShowPhoneme) {
                 return default;

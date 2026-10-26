@@ -200,5 +200,21 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Thêm thư mục…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Xóa</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">Tìm thấy {0} plugin, {1} sự cố</system:String>
+  <system:String x:Key="xen.vibrato.properties">Thuộc tính rung giọng</system:String>
+  <system:String x:Key="xen.vibrato.depth">Độ sâu (cent)</system:String>
+  <system:String x:Key="xen.vibrato.rate">Tốc độ (Hz)</system:String>
+  <system:String x:Key="xen.vibrato.length">Độ dài rung giọng (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Vị trí trong đoạn rung giọng (%)</system:String>
+  <system:String x:Key="xen.vibrato.addPoint">Thêm điểm</system:String>
+  <system:String x:Key="xen.vibrato.removePoint">Xóa điểm</system:String>
+  <system:String x:Key="xen.vibrato.resetCurve">Đặt lại đường cong</system:String>
+  <system:String x:Key="xen.vibrato.removeCurves">Xóa đường cong</system:String>
+  <system:String x:Key="xen.vibrato.preset">Kiểu rung giọng</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Không</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Tiêu chuẩn</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Rộng</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Nhanh</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Nhẹ</system:String>
+  <system:String x:Key="xen.export.vibratoBake">Rung giọng biến thiên sẽ được chuyển thành các điểm cao độ.</system:String>
 </ResourceDictionary>
 

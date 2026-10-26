@@ -55,10 +55,28 @@ namespace OpenUtau.Core.JobPlugins {
             public long Id;
             public UNote? Source;
             public NoteFields? Original;
+            public UNote? Template;
+            public NoteFields? TemplateFields;
             public NoteFields Current = new NoteFields();
             public bool Removed;
             /// <summary>Phonemes carry different native velocities; a scalar cannot represent them.</summary>
             public bool VelocityLocked;
+            public UVibrato Vibrato = new UVibrato();
+            /// <summary>A vibrato type change replaced the preset and curves of <see cref="Vibrato"/>.</summary>
+            public bool VibratoReset;
+            public Dictionary<string, NoteExpressionLane> Expressions = new Dictionary<string, NoteExpressionLane>();
+        }
+
+        sealed class NoteExpressionEvent {
+            public long Id;
+            public double Pos, Value;
+        }
+
+        sealed class NoteExpressionLane {
+            public List<NoteExpressionEvent> Events = new List<NoteExpressionEvent>();
+            public List<NoteExpressionEvent> Original = new List<NoteExpressionEvent>();
+            public List<long> Cursor = new List<long>();
+            public int CursorIndex;
         }
 
         sealed class ControlEvent {
@@ -131,6 +149,7 @@ namespace OpenUtau.Core.JobPlugins {
                 var fields = Export(note, out bool locked);
                 notes.Add(new NoteState {
                     Id = nextId++, Source = note, Original = fields, Current = fields.Clone(), VelocityLocked = locked,
+                    Vibrato = note.vibrato.Clone(),
                 });
             }
             foreach (var (type, def, min, max) in controlTypes) {
@@ -161,7 +180,7 @@ namespace OpenUtau.Core.JobPlugins {
                 NoteNum = note.tone,
                 Velocity = NativeToVelocity(native),
                 Lyric = note.lyric == Extender ? Melisma : note.lyric,
-                VibratoType = vibrato ? 1 : 0,
+                VibratoType = vibrato ? note.vibrato.preset ?? 1 : 0,
                 VibratoLength = vibrato ? (int)Math.Round(note.vibrato.length) : 0,
             };
         }
@@ -273,10 +292,11 @@ namespace OpenUtau.Core.JobPlugins {
             Add("VSDlgGetFloatValue", a => FieldValue(a, 2));
             Add("VSDlgGetStringValue", a => FieldValue(a, 3));
             Add("VSMessageBox", a => MessageBox(a));
-            foreach (var name in JobPluginApi.UnsupportedNames) {
-                Add(name, _ => throw new JobPluginException(
-                    $"{name}: VOCALOID4 note expressions (VR/VD) have no verified OpenUtau mapping yet"));
-            }
+            Add("VSSeekToBeginNoteExpression", a => SeekNoteExpression(a));
+            Add("VSGetNextNoteExpression", a => NextNoteExpression(script, a));
+            Add("VSGetNoteExpressionAt", a => NoteExpressionAt(a));
+            Add("VSInsertNoteExpression", a => InsertNoteExpression(a));
+            Add("VSRemoveNoteExpression", a => RemoveNoteExpression(a));
         }
 
         static readonly DynValue Ok = DynValue.NewNumber(1);
@@ -421,15 +441,15 @@ namespace OpenUtau.Core.JobPlugins {
             const string phonemeOnly = "a phoneme change without a lyric change cannot be expressed in OpenUtau";
             Check(lyricDriven || before.Phonemes == after.Phonemes, "phonemes", phonemeOnly);
             Check(lyricDriven || before.PhLock == after.PhLock, "phLock", phonemeOnly);
-            Check(before.BendDepth == after.BendDepth, "bendDepth", noEquivalent);
+            Check(before.BendDepth == after.BendDepth || after.BendDepth == 0, "bendDepth", noEquivalent);
             Check(before.BendLength == after.BendLength, "bendLength", noEquivalent);
             Check(before.RisePort == after.RisePort, "risePort", noEquivalent);
             Check(before.FallPort == after.FallPort, "fallPort", noEquivalent);
             Check(before.Decay == after.Decay, "decay", noEquivalent);
             Check(before.Accent == after.Accent, "accent", noEquivalent);
             Check(before.Opening == after.Opening, "opening", noEquivalent);
-            Check(before.VibratoType == after.VibratoType || after.VibratoType == 0, "vibratoType",
-                "only 0 (no vibrato) maps to OpenUtau; VOCALOID vibrato presets do not");
+            Check(after.VibratoType >= 0 && after.VibratoType <= VibratoPresets.All.Count,
+                "vibratoType", "only 0 (off) and the vibrato types 1-16 exist");
             if (before.Velocity != after.Velocity) {
                 Check(!velocityLocked, "velocity", "the note's phonemes have different velocities");
                 Check(velSupported, "velocity", "the track's renderer has no velocity expression");
@@ -443,8 +463,49 @@ namespace OpenUtau.Core.JobPlugins {
             var defaults = new NoteFields { Velocity = DefaultVelocity, Lyric = NotePresets.Default.DefaultLyric };
             var fields = ReadFields(t, defaults, api);
             CheckUnsupported(defaults, fields, api, false, StringField(t, "lyric", api) != null);
-            notes.Add(new NoteState { Id = nextId++, Current = fields });
+            var copiedId = t.Get("objID").CastToNumber();
+            var copied = copiedId.HasValue ? notes.FirstOrDefault(n => n.Id == copiedId.Value) : null;
+            // A copied API table carries its original objID. Keep the native pitch address and
+            // residual cents rather than reconstructing a clone from its integer MIDI adapter.
+            var template = copied == null ? null : ApplyNoteState(copied);
+            var vibrato = copied?.Vibrato.Clone() ?? new UVibrato();
+            var state = new NoteState { Id = nextId++, Current = fields, Vibrato = vibrato,
+                Template = template, TemplateFields = copied?.Current.Clone() };
+            // A copy that keeps the source's vibrato type keeps its vibrato. Curve positions span the
+            // whole note, so they only stay valid for a copy at the same time, such as a note removed
+            // and reinserted to change its lyric; a moved preset note gets the preset laid out again.
+            bool sameType = copied != null && fields.VibratoType == copied.Current.VibratoType;
+            if (!sameType) {
+                vibrato.rateCurve = null;
+                vibrato.depthCurve = null;
+                vibrato.preset = null;
+                if (fields.VibratoType > 0) {
+                    vibrato.length = fields.VibratoLength;
+                    VibratoPresets.Apply(vibrato, fields.VibratoType, VibratoSeconds(fields));
+                }
+            } else if (fields.Pos == copied!.Current.Pos && fields.Dur == copied.Current.Dur) {
+                foreach (var pair in copied.Expressions) {
+                    state.Expressions[pair.Key] = new NoteExpressionLane {
+                        Events = pair.Value.Events.Select(e => new NoteExpressionEvent {
+                            Id = nextId++, Pos = e.Pos, Value = e.Value }).ToList(),
+                        Original = pair.Value.Original.Select(e => new NoteExpressionEvent {
+                            Id = e.Id, Pos = e.Pos, Value = e.Value }).ToList(),
+                    };
+                }
+            } else if (vibrato.preset != null) {
+                vibrato.length = fields.VibratoLength;
+                VibratoPresets.Apply(vibrato, vibrato.preset.Value, VibratoSeconds(fields));
+            } else {
+                vibrato.rateCurve = null;
+                vibrato.depthCurve = null;
+            }
+            notes.Add(state);
             return Ok;
+        }
+
+        double VibratoSeconds(NoteFields fields) {
+            double end = partPosition + fields.Pos + fields.Dur;
+            return project.timeAxis.MsBetweenTickPos(end - fields.Dur * fields.VibratoLength / 100.0, end) / 1000;
         }
 
         NoteState? FindNote(Table t) {
@@ -459,6 +520,13 @@ namespace OpenUtau.Core.JobPlugins {
             }
             var fields = ReadFields(t, state.Current, api);
             CheckUnsupported(state.Current, fields, api, state.VelocityLocked, LyricDriven(state, fields));
+            if (fields.VibratoType != state.Current.VibratoType && fields.VibratoType > 0) {
+                // Choosing a type replaces the note's curves with the preset's, as the type list does.
+                state.Vibrato.length = fields.VibratoLength;
+                VibratoPresets.Apply(state.Vibrato, fields.VibratoType, VibratoSeconds(fields));
+                state.Expressions.Clear();
+                state.VibratoReset = true;
+            }
             state.Current = fields;
             return Ok;
         }
@@ -485,6 +553,150 @@ namespace OpenUtau.Core.JobPlugins {
             }
             state.Removed = true;
             return Ok;
+        }
+
+        // JOB value 64 is the base rate and depth of the note's vibrato type (5 Hz and 50 cents
+        // without one). VR doubles every 64 units; VD is linear.
+        public static double NoteExpressionToNative(string type, double value, int? preset = null) => type == "VR"
+            ? VibratoPreset.RateHz(VibratoPresets.BaseRate(preset), value)
+            : VibratoPreset.DepthCents(VibratoPresets.BaseDepth(preset), value);
+        public static double NativeToNoteExpression(string type, double value, int? preset = null) => type == "VR"
+            ? VibratoPreset.RateValue(VibratoPresets.BaseRate(preset), value)
+            : VibratoPreset.DepthValue(VibratoPresets.BaseDepth(preset), value);
+
+        static double Number(DynValue value, string api) {
+            double? number = value.CastToNumber();
+            if (!number.HasValue || !double.IsFinite(number.Value)) {
+                throw new JobPluginException($"{api}: expected a finite number");
+            }
+            return number.Value;
+        }
+
+        static string ExpressionType(DynValue value, string api) {
+            string? type = value.CastToString();
+            if (type != "VR" && type != "VD") {
+                throw new JobPluginException($"{api}: note expression '{type}' is not supported");
+            }
+            return type;
+        }
+
+        static double ExpressionPosition(DynValue value, string api) {
+            double pos = Number(value, api);
+            if (pos < 0 || pos > 1) {
+                throw new JobPluginException($"{api}: posNorm must be within 0-1 of the whole note");
+            }
+            return pos;
+        }
+
+        NoteExpressionLane NoteLane(NoteState state, string type) {
+            if (!state.Expressions.TryGetValue(type, out var lane)) {
+                lane = new NoteExpressionLane();
+                var curve = type == "VR" ? state.Vibrato.rateCurve : state.Vibrato.depthCurve;
+                if (curve != null && curve.Count > 0) {
+                    foreach (var point in curve) {
+                        lane.Events.Add(new NoteExpressionEvent { Id = nextId++, Pos = point.x,
+                            Value = NativeToNoteExpression(type, point.y, state.Vibrato.preset) });
+                    }
+                } else {
+                    double value = type == "VR" ? 1000.0 / state.Vibrato.period : state.Vibrato.depth;
+                    lane.Events.Add(new NoteExpressionEvent { Id = nextId++, Pos = 0,
+                        Value = NativeToNoteExpression(type, value, state.Vibrato.preset) });
+                }
+                lane.Original = lane.Events.Select(e => new NoteExpressionEvent {
+                    Id = e.Id, Pos = e.Pos, Value = e.Value }).ToList();
+                state.Expressions[type] = lane;
+            }
+            return lane;
+        }
+
+        NoteState ExpressionNote(CallbackArguments args, string api) {
+            return FindNote(Arg(args, 0, api))
+                ?? throw new JobPluginException($"{api}: note does not exist");
+        }
+
+        DynValue SeekNoteExpression(CallbackArguments args) {
+            const string api = "VSSeekToBeginNoteExpression";
+            var state = ExpressionNote(args, api);
+            var lane = NoteLane(state, ExpressionType(args[1], api));
+            lane.Cursor = lane.Events.OrderBy(e => e.Pos).ThenBy(e => e.Id).Select(e => e.Id).ToList();
+            lane.CursorIndex = 0;
+            return Ok;
+        }
+
+        DynValue NextNoteExpression(Script script, CallbackArguments args) {
+            const string api = "VSGetNextNoteExpression";
+            var state = ExpressionNote(args, api);
+            string type = ExpressionType(args[1], api);
+            var lane = NoteLane(state, type);
+            while (lane.CursorIndex < lane.Cursor.Count) {
+                long id = lane.Cursor[lane.CursorIndex++];
+                var point = lane.Events.FirstOrDefault(e => e.Id == id);
+                if (point == null) continue;
+                var t = new Table(script);
+                t["objID"] = point.Id;
+                t["type"] = type;
+                t["posNorm"] = point.Pos;
+                t["value"] = point.Value;
+                return Pair(Ok, DynValue.NewTable(t));
+            }
+            return Exhausted(script);
+        }
+
+        DynValue NoteExpressionAt(CallbackArguments args) {
+            const string api = "VSGetNoteExpressionAt";
+            var state = ExpressionNote(args, api);
+            string type = ExpressionType(args[1], api);
+            double pos = ExpressionPosition(args[2], api);
+            var events = NoteLane(state, type).Events.OrderBy(e => e.Pos).ToList();
+            if (events.Count == 0) return Pair(Ok, DynValue.NewNumber(64));
+            var left = events.LastOrDefault(e => e.Pos <= pos);
+            if (left == null) return Pair(Ok, DynValue.NewNumber(events[0].Value));
+            var right = events.FirstOrDefault(e => e.Pos > pos);
+            if (right == null) return Pair(Ok, DynValue.NewNumber(left.Value));
+            // Interpolate physical Hz/cents, matching the native curve evaluator.
+            double a = NoteExpressionToNative(type, left.Value, state.Vibrato.preset);
+            double b = NoteExpressionToNative(type, right.Value, state.Vibrato.preset);
+            double value = a + (b - a) * (pos - left.Pos) / (right.Pos - left.Pos);
+            return Pair(Ok, DynValue.NewNumber(NativeToNoteExpression(type, value, state.Vibrato.preset)));
+        }
+
+        DynValue InsertNoteExpression(CallbackArguments args) {
+            const string api = "VSInsertNoteExpression";
+            var state = ExpressionNote(args, api);
+            var t = Arg(args, 1, api);
+            string type = ExpressionType(t.Get("type"), api);
+            double pos = ExpressionPosition(t.Get("posNorm"), api);
+            double value = Number(t.Get("value"), api);
+            var lane = NoteLane(state, type);
+            if ((value < 0 || value > 127) && !lane.Original.Any(e =>
+                Math.Abs(e.Pos - pos) < 1e-9 && Math.Abs(e.Value - value) < 1e-7)) {
+                throw new JobPluginException($"{api}: value must be within the OpenUtau host range 0-127");
+            }
+            var existing = lane.Events.FirstOrDefault(e => Math.Abs(e.Pos - pos) < 1e-9);
+            if (existing != null) existing.Value = value;
+            else lane.Events.Add(new NoteExpressionEvent { Id = nextId++, Pos = pos, Value = value });
+            return Ok;
+        }
+
+        DynValue RemoveNoteExpression(CallbackArguments args) {
+            const string api = "VSRemoveNoteExpression";
+            var state = ExpressionNote(args, api);
+            var t = Arg(args, 1, api);
+            string type = ExpressionType(t.Get("type"), api);
+            var lane = NoteLane(state, type);
+            double? id = t.Get("objID").CastToNumber();
+            var point = id.HasValue ? lane.Events.FirstOrDefault(e => e.Id == id.Value)
+                : lane.Events.FirstOrDefault(e => Math.Abs(e.Pos - ExpressionPosition(t.Get("posNorm"), api)) < 1e-9);
+            if (point == null) return Fail;
+            lane.Events.Remove(point);
+            return Ok;
+        }
+
+        static bool ExpressionChanged(NoteExpressionLane lane) {
+            var current = lane.Events.OrderBy(e => e.Pos).ToList();
+            var original = lane.Original.OrderBy(e => e.Pos).ToList();
+            return current.Count != original.Count || current.Where((e, i) =>
+                Math.Abs(e.Pos - original[i].Pos) > 1e-9 || Math.Abs(e.Value - original[i].Value) > 1e-7).Any();
         }
 
         // Part and singer
@@ -879,16 +1091,16 @@ namespace OpenUtau.Core.JobPlugins {
                 if (state.Source != null) {
                     if (state.Removed) {
                         edit.RemovedNotes.Add(state.Source);
-                    } else if (!state.Current.SameAs(state.Original!)) {
+                    } else if (!state.Current.SameAs(state.Original!) || state.Expressions.Values.Any(ExpressionChanged)) {
                         if (!LyricDriven(state, state.Current) && (state.Current.Phonemes != state.Original!.Phonemes
                             || state.Current.PhLock != state.Original.PhLock)) {
                             throw new JobPluginException($"note at tick {state.Current.Pos}: a phoneme change without a lyric change cannot be expressed in OpenUtau");
                         }
                         edit.RemovedNotes.Add(state.Source);
-                        edit.AddedNotes.Add(Apply(state.Source.Clone(), state.Source, state.Original!, state.Current));
+                        edit.AddedNotes.Add(ApplyNoteState(state));
                     }
                 } else if (!state.Removed) {
-                    edit.AddedNotes.Add(Apply(project.CreateNote(), null, null, state.Current));
+                    edit.AddedNotes.Add(ApplyNoteState(state));
                 }
             }
             edit.AddedNotes.Sort((a, b) => a.position.CompareTo(b.position));
@@ -972,6 +1184,36 @@ namespace OpenUtau.Core.JobPlugins {
             return (simplified.Select(p => p.x).ToArray(), simplified.Select(p => p.y).ToArray());
         }
 
+        UNote ApplyNoteState(NoteState state) {
+            var source = state.Source ?? state.Template;
+            var original = state.Original ?? state.TemplateFields;
+            var note = source?.Clone() ?? project.CreateNote();
+            if (state.Source == null) {
+                note.vibrato = state.Vibrato.Clone();
+            } else if (state.VibratoReset) {
+                note.vibrato.preset = state.Vibrato.preset;
+                note.vibrato.shift = state.Vibrato.shift;
+                note.vibrato.@in = state.Vibrato.@in;
+                note.vibrato.@out = state.Vibrato.@out;
+                note.vibrato.rateCurve = state.Vibrato.rateCurve?.Select(point => point.Clone()).ToList();
+                note.vibrato.depthCurve = state.Vibrato.depthCurve?.Select(point => point.Clone()).ToList();
+            }
+            note = Apply(note, source, original, state.Current);
+            // An inserted copy has no previous native length, even when its other fields have
+            // a template for exact pitch and expression preservation.
+            if (state.Source == null) note.vibrato.length = state.Current.VibratoType == 0 ? 0 : state.Current.VibratoLength;
+            foreach (var pair in state.Expressions.Where(pair => ExpressionChanged(pair.Value))) {
+                var points = pair.Value.Events.OrderBy(e => e.Pos).Select(e => new VibratoPoint {
+                    x = (float)e.Pos, y = (float)NoteExpressionToNative(pair.Key, e.Value, state.Vibrato.preset) }).ToList();
+                if (points.Count == 0) points.Add(new VibratoPoint {
+                    x = 0, y = (float)NoteExpressionToNative(pair.Key, 64, state.Vibrato.preset) });
+                if (pair.Key == "VR") note.vibrato.rateCurve = points;
+                else note.vibrato.depthCurve = points;
+            }
+            note.vibrato.ValidateCurves();
+            return note;
+        }
+
         UNote Apply(UNote note, UNote? source, NoteFields? original, NoteFields current) {
             note.position = current.Pos;
             note.duration = current.Dur;
@@ -1000,7 +1242,7 @@ namespace OpenUtau.Core.JobPlugins {
                     if (original != null || note.vibrato.length > 0) {
                         note.vibrato.length = 0;
                     }
-                } else if (original != null) {
+                } else {
                     note.vibrato.length = current.VibratoLength;
                 }
             }

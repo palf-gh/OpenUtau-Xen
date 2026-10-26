@@ -200,5 +200,21 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Adaugă foldere…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Elimină</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} pluginuri găsite, {1} probleme</system:String>
+  <system:String x:Key="xen.vibrato.properties">Proprietăți vibrato</system:String>
+  <system:String x:Key="xen.vibrato.depth">Adâncime (cenți)</system:String>
+  <system:String x:Key="xen.vibrato.rate">Viteză (Hz)</system:String>
+  <system:String x:Key="xen.vibrato.length">Lungimea vibrato-ului (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Poziție în vibrato (%)</system:String>
+  <system:String x:Key="xen.vibrato.addPoint">Adaugă punct</system:String>
+  <system:String x:Key="xen.vibrato.removePoint">Elimină punctul</system:String>
+  <system:String x:Key="xen.vibrato.resetCurve">Resetează curba</system:String>
+  <system:String x:Key="xen.vibrato.removeCurves">Elimină curbele</system:String>
+  <system:String x:Key="xen.vibrato.preset">Tip de vibrato</system:String>
+  <system:String x:Key="xen.vibrato.presetNone">Niciuna</system:String>
+  <system:String x:Key="xen.vibrato.family.standard">Standard</system:String>
+  <system:String x:Key="xen.vibrato.family.wide">Amplu</system:String>
+  <system:String x:Key="xen.vibrato.family.quick">Rapid</system:String>
+  <system:String x:Key="xen.vibrato.family.subtle">Subtil</system:String>
+  <system:String x:Key="xen.export.vibratoBake">Vibratoul variabil va fi convertit în puncte de înălțime.</system:String>
 </ResourceDictionary>
 

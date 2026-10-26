@@ -302,10 +302,18 @@ namespace OpenUtau.Core {
         readonly UNote note;
         readonly float newLength;
         readonly float oldLength;
+        // Variable curves keep their place within the vibrato, as in V4-style vibrato graphs.
+        readonly List<VibratoPoint>? oldRate, oldDepth, newRate, newDepth;
         public VibratoLengthCommand(UVoicePart part, UNote note, float length) : base(part, note) {
             this.note = note;
             newLength = length;
             oldLength = note.vibrato.length;
+            oldRate = note.vibrato.rateCurve;
+            oldDepth = note.vibrato.depthCurve;
+            var resolved = note.vibrato.Clone();
+            resolved.length = length;
+            newRate = VibratoCurve.Remap(oldRate, oldLength, resolved.length);
+            newDepth = VibratoCurve.Remap(oldDepth, oldLength, resolved.length);
         }
         public override string ToString() {
             return "Change vibrato length";
@@ -313,11 +321,15 @@ namespace OpenUtau.Core {
         public override void Execute() {
             lock (Part) {
                 note.vibrato.length = newLength;
+                note.vibrato.rateCurve = newRate;
+                note.vibrato.depthCurve = newDepth;
             }
         }
         public override void Unexecute() {
             lock (Part) {
                 note.vibrato.length = oldLength;
+                note.vibrato.rateCurve = oldRate;
+                note.vibrato.depthCurve = oldDepth;
             }
         }
     }
