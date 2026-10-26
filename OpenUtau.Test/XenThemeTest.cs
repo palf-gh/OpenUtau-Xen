@@ -19,6 +19,22 @@ namespace OpenUtau.Test {
         }
 
         [Fact]
+        public void SettingsPreviewWhiteKeysAreWhiteInDarkMode() {
+            var dark = Yaml.DefaultDeserializer.Deserialize<CustomTheme.ThemeYaml>("name: Old dark\nis_dark_mode: true\n");
+            dark.FillWorkspaceDefaults();
+            Assert.Equal("#F2F2F2", dark.KeyboardPreviewWhiteColor);
+            Assert.Equal("#101010", dark.KeyboardPreviewWhiteNameColor);
+            var light = Yaml.DefaultDeserializer.Deserialize<CustomTheme.ThemeYaml>("name: Old light\n");
+            light.FillWorkspaceDefaults();
+            Assert.Equal("Transparent", light.KeyboardPreviewWhiteColor);
+            Assert.Equal("#5C7410", light.KeyboardPreviewWhiteNameColor);
+            var saved = Yaml.DefaultDeserializer.Deserialize<CustomTheme.ThemeYaml>(
+                "name: New\nis_dark_mode: true\nkeyboard_preview_white_color: '#FFFFFF'\n");
+            saved.FillWorkspaceDefaults();
+            Assert.Equal("#FFFFFF", saved.KeyboardPreviewWhiteColor);
+        }
+
+        [Fact]
         public void CustomThemeKeepsSavedWorkspaceColours() {
             var theme = Yaml.DefaultDeserializer.Deserialize<CustomTheme.ThemeYaml>(
                 "name: New\nis_dark_mode: true\nworkspace_canvas_color: '#101010'\n");

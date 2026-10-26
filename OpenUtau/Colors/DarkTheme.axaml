@@ -49,6 +49,8 @@
   <Color x:Key="BlackKeyNameColor">#FFFFFF</Color>
   <Color x:Key="KeyboardPreviewBlackColor">#202020</Color>
   <Color x:Key="KeyboardPreviewBlackNameColor">#F2F2F2</Color>
+  <Color x:Key="KeyboardPreviewWhiteColor">#F2F2F2</Color>
+  <Color x:Key="KeyboardPreviewWhiteNameColor">#101010</Color>
 
   <!--Xen: microtonal keys between naturals and accidentals; sub colour blue, see DESIGN.md-->
   <Color x:Key="BetweenKeyColorLeft">#2433B0</Color>

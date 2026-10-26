@@ -977,3 +977,28 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and
   core DLLs match the ReadyToRun outputs by SHA-256; the version string names
   `870b3ff`. Native interactive launch was not checked.
+
+## 2026-10-26 — White keys in dark-mode settings previews
+
+- Purpose: user review. In dark mode, settings keyboard previews drew White keys
+  in the piano roll's lime, so they did not read as white keys. Black keys
+  already use a dedicated black in light mode for the same reason.
+- Implementation: `KeyboardPreviewWhiteColor` and `KeyboardPreviewWhiteNameColor`
+  are in the light, dark and custom themes and the theme editor. Dark mode uses
+  `#F2F2F2` with `#101010` lettering; light mode keeps its previous transparent key
+  and `#5C7410` lettering. Custom themes saved before the keys existed take the
+  value for their mode. `NotchedKeyboardPreview` draws White keys with them; the
+  piano roll is unchanged. `DESIGN.md` describes the colours; its Japanese text
+  was polished with yomiyasu (run and verify).
+- Verification: serial solution build succeeded with zero errors. Full suite:
+  570 passed, one opt-in external-voice test skipped. `XenThemeTest` checks the
+  defaults for old dark and light custom themes and a saved value. Light and
+  dark captures of the 12-, 31-, 53-, 73-EDO and 13-EDT previews and the tuning
+  page were inspected: dark White keys are white with dark letters, and light
+  mode is unchanged.
+- Trial: no trial was running, so the self-contained Windows x64 Release build
+  replaced `work/OpenUtau-Xen-win-x64/` in place with local data kept. It was
+  built from the uncommitted working tree on `fix/dark-white-keys` on top of
+  `ae9e492`, so its version string names `ae9e492`. `OpenUtau-Xen.exe` matches
+  the generated apphost; the application and core DLLs match the ReadyToRun
+  outputs by SHA-256. Native interactive launch was not checked.
