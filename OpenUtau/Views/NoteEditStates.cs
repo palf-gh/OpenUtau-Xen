@@ -942,6 +942,8 @@ namespace OpenUtau.App.Views {
 
     class VibratoChangeDepthState : NoteEditState {
         public readonly UNote note;
+        // A depth curve is scaled as a whole from its shape when the drag started.
+        readonly UVibrato original;
         protected override string? commandNameKey => "command.vibrato.edit";
 
         public VibratoChangeDepthState(
@@ -950,12 +952,29 @@ namespace OpenUtau.App.Views {
             IValueTip valueTip,
             UNote note) : base(control, vm, valueTip) {
             this.note = note;
+            original = note.vibrato.Clone();
         }
         public override void Update(IPointer pointer, Point point) {
             var notesVm = vm.NotesViewModel;
             float newDepth = (float)((notesVm.PointToToneDouble(point.WithY(point.Y - 3 * notesVm.TrackHeight))
                 - note.AdjustedTone) * 50);
-            if (newDepth != note.vibrato.depth && notesVm.Part != null) {
+            if (notesVm.Part == null) {
+                return;
+            }
+            if (original.depthCurve?.Count > 0) {
+                newDepth = Math.Clamp(newDepth, 0, UVibrato.MaxDepthCents);
+                float peak = original.DisplayDepth;
+                var vibrato = original.Clone();
+                vibrato.depthCurve = peak > 0
+                    ? VibratoCurve.Scale(original.depthCurve, newDepth / peak, 0, UVibrato.MaxDepthCents)
+                    : original.depthCurve.Select(p => new VibratoPoint(p.x, newDepth)).ToList();
+                if (Math.Abs(vibrato.DisplayDepth - note.vibrato.DisplayDepth) > 1e-4f) {
+                    DocManager.Inst.ExecuteCmd(new SetVibratoCommand(notesVm.Part, note, vibrato));
+                }
+                valueTip.UpdateValueTip($"{note.vibrato.DisplayDepth:0.0}");
+                return;
+            }
+            if (newDepth != note.vibrato.depth) {
                 DocManager.Inst.ExecuteCmd(new VibratoDepthCommand(notesVm.Part, note, newDepth));
             }
             valueTip.UpdateValueTip($"{note.vibrato.depth:0.0}");
@@ -964,6 +983,8 @@ namespace OpenUtau.App.Views {
 
     class VibratoChangePeriodState : NoteEditState {
         public readonly UNote note;
+        // A rate curve is scaled as a whole from its shape when the drag started.
+        readonly UVibrato original;
         protected override string? commandNameKey => "command.vibrato.edit";
 
         public VibratoChangePeriodState(
@@ -972,6 +993,7 @@ namespace OpenUtau.App.Views {
             IValueTip valueTip,
             UNote note) : base(control, vm, valueTip) {
             this.note = note;
+            original = note.vibrato.Clone();
         }
         public override void Update(IPointer pointer, Point point) {
             var notesVm = vm.NotesViewModel;
@@ -985,6 +1007,18 @@ namespace OpenUtau.App.Views {
             double startMs = project.timeAxis.TickPosToMsPos(startTick + partPos);
             double pointerMs = project.timeAxis.TickPosToMsPos(notesVm.PointToTick(point) + notesVm.Part.position);
             float newPeriod = (float)((pointerMs - startMs) / (1 + note.vibrato.shift / 100f));
+            if (original.rateCurve?.Count > 0) {
+                // Rate is the inverse of the period, so a longer first cycle slows the whole curve.
+                newPeriod = Math.Clamp(newPeriod, 1000f / UVibrato.MaxRateHz, 1000f / UVibrato.MinRateHz);
+                var vibrato = original.Clone();
+                vibrato.rateCurve = VibratoCurve.Scale(original.rateCurve, original.DisplayPeriod / newPeriod,
+                    UVibrato.MinRateHz, UVibrato.MaxRateHz);
+                if (Math.Abs(vibrato.DisplayPeriod - note.vibrato.DisplayPeriod) > 1e-3f) {
+                    DocManager.Inst.ExecuteCmd(new SetVibratoCommand(notesVm.Part, note, vibrato));
+                }
+                valueTip.UpdateValueTip($"{note.vibrato.DisplayPeriod:0.0}ms");
+                return;
+            }
             if (newPeriod != note.vibrato.period) {
                 DocManager.Inst.ExecuteCmd(new VibratoPeriodCommand(notesVm.Part, note, newPeriod));
             }
@@ -1012,7 +1046,7 @@ namespace OpenUtau.App.Views {
         public override void Update(IPointer pointer, Point point) {
             var notesVm = vm.NotesViewModel;
             var project = notesVm.Project;
-            float periodTick = project.timeAxis.TicksBetweenMsPos(note.PositionMs, note.PositionMs + note.vibrato.period);
+            float periodTick = project.timeAxis.TicksBetweenMsPos(note.PositionMs, note.PositionMs + note.vibrato.DisplayPeriod);
             float deltaTick = notesVm.PointToTick(point) - notesVm.PointToTick(hitPoint);
             float deltaShift = deltaTick / periodTick * 100f;
             float newShift = initialShift + deltaShift;

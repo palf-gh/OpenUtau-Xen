@@ -1147,3 +1147,40 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
   DLLs match the ReadyToRun outputs by SHA-256. Native interactive launch was not
   checked. Nothing was pushed, and the version is unchanged.
+
+## 2026-10-26 — Vibrato properties like VOCALOID4, live preview and handle follow-up
+
+- Purpose: user review of the preset build. The user asked for VOCALOID4-style
+  vibrato properties with axes, for double-clicking the vibrato to open them, for
+  the piano-roll vibrato handles to adjust the curves sensibly, and for edits to
+  show while the dialogue is open. The user also chose to keep the axes in cents
+  and Hz with the type's value 64 marked, and to turn the upstream note hover glow
+  off by default in Xen.
+- Implementation: the dialogue is now **Vibrato properties**: vibrato length,
+  vibrato type, then depth and rate graphs over the vibrato section with a tick
+  ruler, value labels, a filled curve and a dashed line at the type's 64, in theme
+  colours. Each change runs inside one undo group so the notes update at once;
+  OK ends the group and Cancel, Escape or closing rolls it back. Double-clicking a
+  vibrato handle or line opens the dialogue for that note (or the selection
+  containing it). The length command moves curve points with the vibrato. The
+  depth and period handles sit at the depth curve's peak and the first cycle and
+  scale the whole curve from its shape at the start of the drag; the shift
+  handle uses that period. `NoteHoverGlow` now defaults to off; a saved
+  preference keeps its value. Strings for the title, length, position and type
+  were changed and the unused apply string removed in all 20 overlays; the
+  Japanese strings passed yomiyasu run/verify `20261026T103157Z-172843ce`
+  unchanged.
+- Verification: serial solution build succeeded with zero errors; full suite passed
+  606 tests. New tests cover the relative graphs, the preset layout and base
+  lines, the OK result, the live preview with Cancel and with OK and undo, length
+  remapping and the handle values. The capture of the dialogue was inspected.
+  Double-clicking and dragging the handles were not exercised interactively.
+  `git diff --check` passed.
+- Limitations: switching the vibrato off and on, and JOB `vibratoLength` writes,
+  leave curve points in place; the preview is visual only.
+- Trial: no trial was running at preflight. The self-contained Windows x64
+  Release build from the uncommitted working tree on `feature/v4-vibrato` (on top
+  of `ec3b23d`) replaced `work/OpenUtau-Xen-win-x64/` in place with local data
+  kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and core
+  DLLs match the ReadyToRun outputs by SHA-256. The trial's saved preferences
+  still have the hover glow on. Native interactive launch was not checked.

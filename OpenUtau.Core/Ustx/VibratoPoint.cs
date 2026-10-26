@@ -48,6 +48,25 @@ namespace OpenUtau.Core.Ustx {
                 .Select(group => group.Last()).ToList();
         }
 
+        /// <summary>
+        /// Moves whole-note points so that they keep their place within the vibrato when its length
+        /// changes. Points stay put while either length is 0, as there is no vibrato to follow.
+        /// </summary>
+        public static List<VibratoPoint>? Remap(List<VibratoPoint>? points, float oldLength, float newLength) {
+            if (points == null || points.Count == 0 || oldLength <= 0 || newLength <= 0 || oldLength == newLength) {
+                return points?.Select(point => point.Clone()).ToList();
+            }
+            float oldSpan = oldLength / 100f;
+            float newSpan = newLength / 100f;
+            return points.Select(point => new VibratoPoint(
+                    Math.Clamp(1 - newSpan + (point.x - (1 - oldSpan)) * newSpan / oldSpan, 0, 1), point.y))
+                .GroupBy(point => point.x).Select(group => group.Last()).ToList();
+        }
+
+        /// <summary>Multiplies every value, keeping the curve's shape.</summary>
+        public static List<VibratoPoint>? Scale(List<VibratoPoint>? points, float factor, float minimum, float maximum) =>
+            points?.Select(point => new VibratoPoint(point.x, Math.Clamp(point.y * factor, minimum, maximum))).ToList();
+
         public static List<VibratoPoint>? Slice(List<VibratoPoint>? points, float start, float end) {
             if (points == null || points.Count == 0) {
                 return null;

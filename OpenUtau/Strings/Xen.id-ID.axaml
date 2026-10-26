@@ -200,17 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Tambah folder…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Hapus</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} plugin ditemukan, {1} masalah</system:String>
-  <system:String x:Key="xen.vibrato.curves">Kurva vibrato</system:String>
+  <system:String x:Key="xen.vibrato.properties">Properti vibrato</system:String>
   <system:String x:Key="xen.vibrato.depth">Kedalaman (sen)</system:String>
   <system:String x:Key="xen.vibrato.rate">Kecepatan (Hz)</system:String>
-  <system:String x:Key="xen.vibrato.length">Panjang (%)</system:String>
-  <system:String x:Key="xen.vibrato.position">Posisi dalam not (%)</system:String>
+  <system:String x:Key="xen.vibrato.length">Panjang vibrato (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Posisi dalam vibrato (%)</system:String>
   <system:String x:Key="xen.vibrato.addPoint">Tambah titik</system:String>
   <system:String x:Key="xen.vibrato.removePoint">Hapus titik</system:String>
   <system:String x:Key="xen.vibrato.resetCurve">Atur ulang kurva</system:String>
-  <system:String x:Key="xen.vibrato.applySelected">Terapkan ke not terpilih</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Hapus kurva</system:String>
-  <system:String x:Key="xen.vibrato.preset">Prasetel</system:String>
+  <system:String x:Key="xen.vibrato.preset">Jenis vibrato</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Tidak ada</system:String>
   <system:String x:Key="xen.export.vibratoBake">Vibrato variabel akan dikonversi menjadi titik nada.</system:String>
 </ResourceDictionary>

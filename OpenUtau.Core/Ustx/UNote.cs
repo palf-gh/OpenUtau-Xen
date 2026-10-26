@@ -325,6 +325,10 @@ namespace OpenUtau.Core.Ustx {
 
         public float SampleRate(float notePosition) => VibratoCurve.Sample(rateCurve, notePosition, 1000f / period);
         public float SampleDepth(float notePosition) => VibratoCurve.Sample(depthCurve, notePosition, depth);
+        /// <summary>Depth shown by the piano-roll handle: the depth curve's peak, or the scalar depth.</summary>
+        [YamlIgnore] public float DisplayDepth => depthCurve?.Count > 0 ? depthCurve.Max(point => point.y) : depth;
+        /// <summary>Period shown by the piano-roll handle: the first cycle's, from the rate at the vibrato start.</summary>
+        [YamlIgnore] public float DisplayPeriod => rateCurve?.Count > 0 ? 1000f / SampleRate(NormalizedStart) : period;
         // Vibrato percentage of note length.
         float _length;
         // Period in milliseconds.
@@ -546,13 +550,13 @@ namespace OpenUtau.Core.Ustx {
         public Vector2 GetEnvelopeFadeIn(UNote note) {
             return new Vector2(
                 note.position + note.duration * (NormalizedStart + length / 100f * @in / 100f),
-                note.tone - 3f + depth / 50f);
+                note.tone - 3f + DisplayDepth / 50f);
         }
 
         public Vector2 GetEnvelopeFadeOut(UNote note) {
             return new Vector2(
                 note.position + note.duration * (1f - length / 100f * @out / 100f),
-                note.tone - 3f + depth / 50f);
+                note.tone - 3f + DisplayDepth / 50f);
         }
 
         public Vector2 GetEnvelopeEnd(UNote note) {
@@ -566,7 +570,7 @@ namespace OpenUtau.Core.Ustx {
         }
 
         public void GetPeriodStartEnd(UProject project, UNote note, out Vector2 start, out Vector2 end) {
-            float periodTick = project.timeAxis.TicksBetweenMsPos(note.PositionMs, note.PositionMs + period);
+            float periodTick = project.timeAxis.TicksBetweenMsPos(note.PositionMs, note.PositionMs + DisplayPeriod);
             float shiftTick = periodTick * shift / 100f;
             start = new Vector2(
                 note.position + note.duration * NormalizedStart + shiftTick,

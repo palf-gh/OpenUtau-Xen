@@ -200,17 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Lisää kansioita…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Poista</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} laajennusta löytyi, {1} ongelmaa</system:String>
-  <system:String x:Key="xen.vibrato.curves">Vibratokäyrät</system:String>
+  <system:String x:Key="xen.vibrato.properties">Vibraton ominaisuudet</system:String>
   <system:String x:Key="xen.vibrato.depth">Syvyys (senttiä)</system:String>
   <system:String x:Key="xen.vibrato.rate">Nopeus (Hz)</system:String>
-  <system:String x:Key="xen.vibrato.length">Pituus (%)</system:String>
-  <system:String x:Key="xen.vibrato.position">Sijainti nuotissa (%)</system:String>
+  <system:String x:Key="xen.vibrato.length">Vibraton pituus (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Sijainti vibratossa (%)</system:String>
   <system:String x:Key="xen.vibrato.addPoint">Lisää piste</system:String>
   <system:String x:Key="xen.vibrato.removePoint">Poista piste</system:String>
   <system:String x:Key="xen.vibrato.resetCurve">Palauta käyrä</system:String>
-  <system:String x:Key="xen.vibrato.applySelected">Käytä valittuihin nuotteihin</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Poista käyrät</system:String>
-  <system:String x:Key="xen.vibrato.preset">Esiasetus</system:String>
+  <system:String x:Key="xen.vibrato.preset">Vibraton tyyppi</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Ei mitään</system:String>
   <system:String x:Key="xen.export.vibratoBake">Muuttuva vibrato muunnetaan sävelkorkeuspisteiksi.</system:String>
 </ResourceDictionary>

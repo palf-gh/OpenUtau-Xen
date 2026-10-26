@@ -200,17 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Klasör ekle…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Kaldır</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} eklenti bulundu, {1} sorun</system:String>
-  <system:String x:Key="xen.vibrato.curves">Vibrato eğrileri</system:String>
+  <system:String x:Key="xen.vibrato.properties">Vibrato özellikleri</system:String>
   <system:String x:Key="xen.vibrato.depth">Derinlik (sent)</system:String>
   <system:String x:Key="xen.vibrato.rate">Hız (Hz)</system:String>
-  <system:String x:Key="xen.vibrato.length">Uzunluk (%)</system:String>
-  <system:String x:Key="xen.vibrato.position">Nota içindeki konum (%)</system:String>
+  <system:String x:Key="xen.vibrato.length">Vibrato uzunluğu (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Vibrato içindeki konum (%)</system:String>
   <system:String x:Key="xen.vibrato.addPoint">Nokta ekle</system:String>
   <system:String x:Key="xen.vibrato.removePoint">Noktayı kaldır</system:String>
   <system:String x:Key="xen.vibrato.resetCurve">Eğriyi sıfırla</system:String>
-  <system:String x:Key="xen.vibrato.applySelected">Seçili notalara uygula</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Eğrileri kaldır</system:String>
-  <system:String x:Key="xen.vibrato.preset">Ön ayar</system:String>
+  <system:String x:Key="xen.vibrato.preset">Vibrato türü</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Yok</system:String>
   <system:String x:Key="xen.export.vibratoBake">Değişken vibrato perde noktalarına dönüştürülecek.</system:String>
 </ResourceDictionary>

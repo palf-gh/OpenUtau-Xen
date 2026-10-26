@@ -200,17 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Añadir carpetas…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Quitar</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} plugins encontrados, {1} problemas</system:String>
-  <system:String x:Key="xen.vibrato.curves">Curvas de vibrato</system:String>
+  <system:String x:Key="xen.vibrato.properties">Propiedades del vibrato</system:String>
   <system:String x:Key="xen.vibrato.depth">Profundidad (cents)</system:String>
   <system:String x:Key="xen.vibrato.rate">Velocidad (Hz)</system:String>
-  <system:String x:Key="xen.vibrato.length">Duración (%)</system:String>
-  <system:String x:Key="xen.vibrato.position">Posición en la nota (%)</system:String>
+  <system:String x:Key="xen.vibrato.length">Duración del vibrato (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Posición en el vibrato (%)</system:String>
   <system:String x:Key="xen.vibrato.addPoint">Añadir punto</system:String>
   <system:String x:Key="xen.vibrato.removePoint">Eliminar punto</system:String>
   <system:String x:Key="xen.vibrato.resetCurve">Restablecer curva</system:String>
-  <system:String x:Key="xen.vibrato.applySelected">Aplicar a notas seleccionadas</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Eliminar curvas</system:String>
-  <system:String x:Key="xen.vibrato.preset">Preajuste</system:String>
+  <system:String x:Key="xen.vibrato.preset">Tipo de vibrato</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Ninguno</system:String>
   <system:String x:Key="xen.export.vibratoBake">El vibrato variable se convertirá en puntos de tono.</system:String>
 </ResourceDictionary>

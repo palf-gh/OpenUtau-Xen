@@ -200,17 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">フォルダーを追加…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">削除</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">プラグイン {0} 件、問題 {1} 件</system:String>
-  <system:String x:Key="xen.vibrato.curves">ビブラート曲線</system:String>
+  <system:String x:Key="xen.vibrato.properties">ビブラートプロパティ</system:String>
   <system:String x:Key="xen.vibrato.depth">深さ（セント）</system:String>
   <system:String x:Key="xen.vibrato.rate">速さ（Hz）</system:String>
-  <system:String x:Key="xen.vibrato.length">長さ（%）</system:String>
-  <system:String x:Key="xen.vibrato.position">ノート内の位置（%）</system:String>
+  <system:String x:Key="xen.vibrato.length">ビブラート長（%）</system:String>
+  <system:String x:Key="xen.vibrato.position">ビブラート内の位置（%）</system:String>
   <system:String x:Key="xen.vibrato.addPoint">点を追加</system:String>
   <system:String x:Key="xen.vibrato.removePoint">点を削除</system:String>
   <system:String x:Key="xen.vibrato.resetCurve">曲線をリセット</system:String>
-  <system:String x:Key="xen.vibrato.applySelected">選択ノートに適用</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">曲線を削除</system:String>
-  <system:String x:Key="xen.vibrato.preset">プリセット</system:String>
+  <system:String x:Key="xen.vibrato.preset">ビブラートの種類</system:String>
   <system:String x:Key="xen.vibrato.presetNone">なし</system:String>
   <system:String x:Key="xen.export.vibratoBake">可変ビブラートをピッチ点に変換して書き出します。</system:String>
 </ResourceDictionary>

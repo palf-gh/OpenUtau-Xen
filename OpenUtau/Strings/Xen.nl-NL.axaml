@@ -200,17 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">Mappen toevoegen…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">Verwijderen</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">{0} plug-ins gevonden, {1} problemen</system:String>
-  <system:String x:Key="xen.vibrato.curves">Vibratocurven</system:String>
+  <system:String x:Key="xen.vibrato.properties">Vibrato-eigenschappen</system:String>
   <system:String x:Key="xen.vibrato.depth">Diepte (cent)</system:String>
   <system:String x:Key="xen.vibrato.rate">Snelheid (Hz)</system:String>
-  <system:String x:Key="xen.vibrato.length">Lengte (%)</system:String>
-  <system:String x:Key="xen.vibrato.position">Positie in de noot (%)</system:String>
+  <system:String x:Key="xen.vibrato.length">Vibratolengte (%)</system:String>
+  <system:String x:Key="xen.vibrato.position">Positie in het vibrato (%)</system:String>
   <system:String x:Key="xen.vibrato.addPoint">Punt toevoegen</system:String>
   <system:String x:Key="xen.vibrato.removePoint">Punt verwijderen</system:String>
   <system:String x:Key="xen.vibrato.resetCurve">Curve herstellen</system:String>
-  <system:String x:Key="xen.vibrato.applySelected">Toepassen op geselecteerde noten</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">Curven verwijderen</system:String>
-  <system:String x:Key="xen.vibrato.preset">Voorinstelling</system:String>
+  <system:String x:Key="xen.vibrato.preset">Vibratotype</system:String>
   <system:String x:Key="xen.vibrato.presetNone">Geen</system:String>
   <system:String x:Key="xen.export.vibratoBake">Variabel vibrato wordt omgezet in toonhoogtepunten.</system:String>
 </ResourceDictionary>

@@ -200,17 +200,16 @@
   <system:String x:Key="xen.prefs.jobplugins.add">添加文件夹…</system:String>
   <system:String x:Key="xen.prefs.jobplugins.remove">移除</system:String>
   <system:String x:Key="xen.prefs.jobplugins.count">找到 {0} 个插件，{1} 个问题</system:String>
-  <system:String x:Key="xen.vibrato.curves">颤音曲线</system:String>
+  <system:String x:Key="xen.vibrato.properties">颤音属性</system:String>
   <system:String x:Key="xen.vibrato.depth">深度（音分）</system:String>
   <system:String x:Key="xen.vibrato.rate">速度（Hz）</system:String>
-  <system:String x:Key="xen.vibrato.length">长度（%）</system:String>
-  <system:String x:Key="xen.vibrato.position">音符内位置（%）</system:String>
+  <system:String x:Key="xen.vibrato.length">颤音长度（%）</system:String>
+  <system:String x:Key="xen.vibrato.position">颤音内位置（%）</system:String>
   <system:String x:Key="xen.vibrato.addPoint">添加点</system:String>
   <system:String x:Key="xen.vibrato.removePoint">删除点</system:String>
   <system:String x:Key="xen.vibrato.resetCurve">重置曲线</system:String>
-  <system:String x:Key="xen.vibrato.applySelected">应用到所选音符</system:String>
   <system:String x:Key="xen.vibrato.removeCurves">删除曲线</system:String>
-  <system:String x:Key="xen.vibrato.preset">预设</system:String>
+  <system:String x:Key="xen.vibrato.preset">颤音类型</system:String>
   <system:String x:Key="xen.vibrato.presetNone">无</system:String>
   <system:String x:Key="xen.export.vibratoBake">可变颤音将转换为音高点后导出。</system:String>
 </ResourceDictionary>

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -11,16 +12,20 @@ using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
 
 namespace OpenUtau.App.Views {
+    /// <summary>
+    /// Vibrato properties laid out like VOCALOID4's: length, type, and depth and rate graphs over the
+    /// vibrato section. Edits are previewed on the notes inside one undo group until OK or Cancel.
+    /// </summary>
     public sealed class VibratoCurvesDialog : Window {
         readonly UVoicePart part;
         readonly UNote[] notes;
         readonly NumericUpDown length;
+        readonly ComboBox preset;
         readonly VibratoCurvePanel depth;
         readonly VibratoCurvePanel rate;
-        readonly ComboBox preset;
-        // The graphs still hold the selected preset's curves, so a length change lays them out again.
-        bool presetCurves;
-        bool laying;
+        readonly bool preview;
+        bool finished;
+        bool loading = true;
 
         public VibratoCurvesDialog(UVoicePart part, IEnumerable<UNote> selectedNotes) {
             this.part = part;
@@ -29,112 +34,177 @@ namespace OpenUtau.App.Views {
                 throw new ArgumentException("Select a note.", nameof(selectedNotes));
             }
             XenDialogStyles.Apply(this);
-            Title = XenStrings.Get("vibrato.curves");
-            Width = 670;
-            MinWidth = 540;
-            Height = 690;
-            MinHeight = 590;
+            Title = XenStrings.Get("vibrato.properties");
+            Width = 640;
+            MinWidth = 520;
+            Height = 700;
+            MinHeight = 600;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             var seed = notes[0].vibrato;
-            length = Number(0, 100, seed.length > 0 ? (decimal)seed.length : 66);
+            length = Number(1, 100, seed.length > 0 ? (decimal)seed.length : 66);
             length.Name = "VibratoLength";
-            length.Width = 100;
-            depth = new VibratoCurvePanel("vibrato.depth", seed.depthCurve,
-                seed.depth, 0, UVibrato.MaxDepthCents, 100);
-            rate = new VibratoCurvePanel("vibrato.rate", seed.rateCurve,
-                1000f / seed.period, UVibrato.MinRateHz, UVibrato.MaxRateHz, 10);
-            preset = new ComboBox { Name = "VibratoPreset", MinWidth = 180 };
+            length.Width = 110;
+            preset = new ComboBox { Name = "VibratoPreset", MinWidth = 190 };
             preset.Items.Add(XenStrings.Get("vibrato.presetNone"));
             foreach (var item in VibratoPresets.All) {
                 preset.Items.Add(item.Name);
             }
             preset.SelectedIndex = VibratoPresets.Get(seed.preset)?.Id ?? 0;
-            preset.SelectionChanged += (_, _) => LayOutPreset();
-            depth.Graph.Changed += () => presetCurves &= laying;
-            rate.Graph.Changed += () => presetCurves &= laying;
+            depth = new VibratoCurvePanel("vibrato.depth", ToVibrato(seed.depthCurve, seed),
+                seed.depth, 0, UVibrato.MaxDepthCents, 100);
+            rate = new VibratoCurvePanel("vibrato.rate", ToVibrato(seed.rateCurve, seed),
+                1000f / seed.period, UVibrato.MinRateHz, UVibrato.MaxRateHz, 10);
+            preset.SelectionChanged += (_, _) => ChoosePreset();
             length.ValueChanged += (_, _) => {
-                UpdateStart();
-                if (presetCurves) LayOutPreset();
+                UpdateRuler();
+                Preview();
             };
-            UpdateStart();
-            var apply = new Button { Content = XenStrings.Get("vibrato.applySelected") };
-            apply.Click += (_, _) => Apply(false);
+            depth.Graph.Changed += Preview;
+            rate.Graph.Changed += Preview;
+            UpdateRuler();
+            UpdateBaseLines();
+
+            var ok = new Button { Content = ThemeManager.GetString("button.ok"), MinWidth = 80, IsDefault = true };
+            ok.Click += (_, _) => Finish(false);
+            var cancel = new Button { Content = ThemeManager.GetString("button.cancel"), MinWidth = 80 };
+            cancel.Click += (_, _) => Close();
             var remove = new Button { Content = XenStrings.Get("vibrato.removeCurves") };
-            remove.Click += (_, _) => Apply(true);
-            var close = new Button { Content = XenStrings.Get("action.close") };
-            close.Click += (_, _) => Close();
+            remove.Click += (_, _) => Finish(true);
             Content = new ScrollViewer {
                 Content = new StackPanel {
                     Margin = new Thickness(20),
-                    Spacing = 16,
+                    Spacing = 14,
                     Children = {
-                        new StackPanel {
-                            Orientation = Orientation.Horizontal,
-                            Spacing = 12,
-                            Children = {
-                                new TextBlock {
-                                    Text = XenStrings.Get("vibrato.length"),
-                                    VerticalAlignment = VerticalAlignment.Center,
-                                },
-                                length,
-                                new TextBlock {
-                                    Text = XenStrings.Get("vibrato.preset"),
-                                    VerticalAlignment = VerticalAlignment.Center,
-                                    Margin = new Thickness(12, 0, 0, 0),
-                                },
-                                preset,
-                            },
-                        },
+                        Row("vibrato.length", length),
+                        Row("vibrato.preset", preset),
                         depth,
                         rate,
-                        new StackPanel {
-                            Orientation = Orientation.Horizontal,
-                            Spacing = 10,
-                            HorizontalAlignment = HorizontalAlignment.Right,
-                            Children = { remove, close, apply },
+                        new DockPanel {
+                            Children = {
+                                remove,
+                                new StackPanel {
+                                    Orientation = Orientation.Horizontal,
+                                    Spacing = 10,
+                                    HorizontalAlignment = HorizontalAlignment.Right,
+                                    Children = { ok, cancel },
+                                },
+                            },
                         },
                     },
                 },
             };
+            // Preview edits on the notes themselves. A dialog for notes outside the open project
+            // (such as a test fixture) only reports its result.
+            preview = DocManager.Inst.Project?.parts.Contains(part) == true
+                && notes.All(note => part.notes.Contains(note));
+            if (preview) {
+                DocManager.Inst.StartUndoGroup("command.vibrato.edit");
+            }
+            loading = false;
         }
 
-        /// <summary>VOCALOID-style type of the curves to apply; null keeps scalar scales.</summary>
+        static Grid Row(string label, Control control) {
+            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("170,*") };
+            grid.Children.Add(new TextBlock { Text = XenStrings.Get(label), VerticalAlignment = VerticalAlignment.Center });
+            control.HorizontalAlignment = HorizontalAlignment.Left;
+            Grid.SetColumn(control, 1);
+            grid.Children.Add(control);
+            return grid;
+        }
+
+        /// <summary>VOCALOID-style type of the curves; null keeps the note's own scales.</summary>
         int? SelectedPreset => preset.SelectedIndex > 0 ? preset.SelectedIndex : null;
+        float Length => (float)(length.Value ?? 0);
 
-        void LayOutPreset() {
+        /// <summary>Curve points over the vibrato section (0 = vibrato start, 1 = note end).</summary>
+        internal static List<VibratoPoint> ToVibrato(List<VibratoPoint>? points, UVibrato vibrato) {
+            var result = new List<VibratoPoint>();
+            if (points == null || points.Count == 0) {
+                return result;
+            }
+            float span = vibrato.length / 100f;
+            if (span <= 0) {
+                return points.Select(point => point.Clone()).ToList();
+            }
+            float start = 1 - span;
+            foreach (var point in points.Where(point => point.x >= start)) {
+                result.Add(new VibratoPoint((point.x - start) / span, point.y));
+            }
+            if (result.Count == 0 || result[0].x > 0) {
+                result.Insert(0, new VibratoPoint(0, VibratoCurve.Sample(points, start, 0)));
+            }
+            return result;
+        }
+
+        /// <summary>Whole-note curve points for a vibrato of <paramref name="length"/> percent.</summary>
+        internal static List<VibratoPoint>? ToNote(IEnumerable<VibratoPoint> points, float length) {
+            float span = length / 100f;
+            var result = points.Select(point => new VibratoPoint(1 - span + point.x * span, point.y)).ToList();
+            return result.Count == 0 ? null : result;
+        }
+
+        public SetVibratoCurvesCommand BuildCommand(bool remove) => new SetVibratoCurvesCommand(part, notes,
+            remove ? null : ToNote(rate.Graph.Points, Length),
+            remove ? null : ToNote(depth.Graph.Points, Length),
+            remove ? null : Length,
+            remove ? null : SelectedPreset);
+
+        void ChoosePreset() {
             var selected = VibratoPresets.Get(SelectedPreset);
-            if (selected == null) {
-                presetCurves = false;
-                return;
+            if (selected != null) {
+                // A full-length layout is the preset's shape over the vibrato section.
+                var (rateCurve, depthCurve) = selected.Curves(100);
+                loading = true;
+                rate.Graph.SetPoints(rateCurve);
+                depth.Graph.SetPoints(depthCurve);
+                loading = false;
             }
-            var (rateCurve, depthCurve) = selected.Curves((float)(length.Value ?? 0));
-            laying = true;
-            rate.Graph.SetPoints(rateCurve);
-            depth.Graph.SetPoints(depthCurve);
-            laying = false;
-            presetCurves = true;
+            UpdateBaseLines();
+            Preview();
         }
 
-        void UpdateStart() {
-            float start = 1 - (float)(length.Value ?? 0) / 100;
-            depth.Graph.VibratoStart = start;
-            rate.Graph.VibratoStart = start;
+        void UpdateBaseLines() {
+            var selected = VibratoPresets.Get(SelectedPreset);
+            depth.Graph.BaseLine = selected?.BaseDepth;
+            rate.Graph.BaseLine = selected?.BaseRate;
         }
 
-        void Apply(bool remove) {
-            if (!DocManager.Inst.Project.parts.Contains(part)
-                || notes.Any(note => !part.notes.Contains(note))) {
-                Close();
+        void UpdateRuler() {
+            double ticks = notes[0].duration * Length / 100.0;
+            depth.Graph.VibratoTicks = ticks;
+            rate.Graph.VibratoTicks = ticks;
+        }
+
+        void Preview() {
+            if (!loading && preview && !finished) {
+                DocManager.Inst.ExecuteCmd(BuildCommand(false));
+            }
+        }
+
+        void Finish(bool remove) {
+            if (finished) {
                 return;
             }
-            DocManager.Inst.StartUndoGroup("command.vibrato.edit");
-            DocManager.Inst.ExecuteCmd(new SetVibratoCurvesCommand(part, notes,
-                remove ? null : rate.Graph.Points,
-                remove ? null : depth.Graph.Points,
-                remove ? null : (float?)(length.Value ?? 0),
-                remove ? null : SelectedPreset));
-            DocManager.Inst.EndUndoGroup();
+            finished = true;
+            if (preview) {
+                if (remove) {
+                    DocManager.Inst.ExecuteCmd(BuildCommand(true));
+                }
+                DocManager.Inst.EndUndoGroup();
+            }
             Close();
+        }
+
+        protected override void OnClosed(EventArgs e) {
+            // Cancel, Escape and the title bar discard the previewed edits.
+            if (!finished) {
+                finished = true;
+                if (preview) {
+                    DocManager.Inst.RollBackUndoGroup();
+                    DocManager.Inst.EndUndoGroup();
+                }
+            }
+            base.OnClosed(e);
         }
 
         protected override void OnKeyDown(KeyEventArgs e) {
@@ -160,7 +230,6 @@ namespace OpenUtau.App.Views {
         public readonly VibratoCurveGraph Graph;
         readonly NumericUpDown position;
         readonly NumericUpDown value;
-        readonly TextBlock maximum;
         bool updating;
 
         public VibratoCurvePanel(string label, IEnumerable<VibratoPoint>? points,
@@ -172,7 +241,6 @@ namespace OpenUtau.App.Views {
             position.Width = 100;
             value = VibratoCurvesDialog.Number((decimal)minimum, (decimal)limit, (decimal)fallback);
             value.Width = 110;
-            maximum = new TextBlock { HorizontalAlignment = HorizontalAlignment.Right };
             var add = new Button { Content = XenStrings.Get("vibrato.addPoint") };
             add.Click += (_, _) => Graph.AddPoint(0.5f, Graph.Sample(0.5f));
             var remove = new Button { Content = XenStrings.Get("vibrato.removePoint") };
@@ -182,25 +250,35 @@ namespace OpenUtau.App.Views {
             Graph.Changed += Update;
             position.ValueChanged += (_, _) => UpdatePoint();
             value.ValueChanged += (_, _) => UpdatePoint();
-            Children.Add(new TextBlock { Text = XenStrings.Get(label), FontWeight = FontWeight.SemiBold });
-            Children.Add(maximum);
+            var header = new DockPanel();
+            header.Children.Add(new TextBlock {
+                Text = XenStrings.Get(label),
+                FontWeight = FontWeight.SemiBold,
+                Margin = new Thickness(0, 0, 10, 0),
+            });
+            header.Children.Add(new Rectangle {
+                Height = 1,
+                Fill = ThemeManager.NeutralAccentBrush,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            Children.Add(header);
             Children.Add(Graph);
-            Children.Add(new StackPanel {
+            Children.Add(new WrapPanel {
                 Orientation = Orientation.Horizontal,
-                Spacing = 10,
                 Children = {
                     new TextBlock {
                         Text = XenStrings.Get("vibrato.position"),
                         VerticalAlignment = VerticalAlignment.Center,
-                    }, position, value,
+                        Margin = new Thickness(0, 0, 10, 0),
+                    }, position, Spaced(value), Spaced(add), Spaced(remove), Spaced(reset),
                 },
             });
-            Children.Add(new StackPanel {
-                Orientation = Orientation.Horizontal,
-                Spacing = 10,
-                Children = { add, remove, reset },
-            });
             Update();
+        }
+
+        static Control Spaced(Control control) {
+            control.Margin = new Thickness(10, 0, 0, 0);
+            return control;
         }
 
         void Update() {
@@ -211,7 +289,6 @@ namespace OpenUtau.App.Views {
                 position.Value = (decimal)(selected.x * 100);
                 value.Value = (decimal)selected.y;
             }
-            maximum.Text = Graph.Maximum.ToString("0.##", XenStrings.InputCulture);
             updating = false;
         }
 
@@ -222,22 +299,36 @@ namespace OpenUtau.App.Views {
         }
     }
 
+    /// <summary>
+    /// One vibrato lane over the vibrato section: a tick ruler on top, values on the left and the
+    /// curve filled down to the minimum, as VOCALOID4's property graphs show it.
+    /// </summary>
     public sealed class VibratoCurveGraph : Control {
-        const double Padding = 9;
+        const double Pad = 6;
+        const double RulerHeight = 18;
+        const double AxisWidth = 46;
+        static readonly int[] RulerSteps = { 15, 30, 60, 120, 240, 480, 960, 1920 };
         readonly float fallback;
         readonly float minimum;
         readonly float limit;
         readonly float initialMaximum;
-        float vibratoStart;
+        double vibratoTicks;
+        float? baseLine;
         bool dragging;
         public readonly List<VibratoPoint> Points;
         public VibratoPoint? Selected { get; private set; }
         public event Action? Changed;
-        public float Maximum => Math.Min(limit,
-            Math.Max(initialMaximum, Math.Max(fallback, Points.Count == 0 ? 0 : Points.Max(point => point.y)) * 1.15f));
-        public float VibratoStart {
-            get => vibratoStart;
-            set { vibratoStart = value; InvalidateVisual(); }
+        public float Maximum => Math.Min(limit, Math.Max(initialMaximum,
+            Math.Max(Math.Max(fallback, baseLine ?? 0), Points.Count == 0 ? 0 : Points.Max(point => point.y)) * 1.15f));
+        /// <summary>Ticks in the vibrato section, for the ruler.</summary>
+        public double VibratoTicks {
+            get => vibratoTicks;
+            set { vibratoTicks = value; InvalidateVisual(); }
+        }
+        /// <summary>The selected type's value 64, drawn as a reference line.</summary>
+        public float? BaseLine {
+            get => baseLine;
+            set { baseLine = value; InvalidateVisual(); }
         }
 
         public VibratoCurveGraph(IEnumerable<VibratoPoint>? points, float fallback,
@@ -248,10 +339,13 @@ namespace OpenUtau.App.Views {
             this.initialMaximum = initialMaximum;
             Points = points?.Select(point => new VibratoPoint { x = point.x, y = point.y }).ToList()
                 ?? new List<VibratoPoint>();
-            Height = 145;
+            Height = 170;
             Focusable = true;
             Cursor = new Cursor(StandardCursorType.Cross);
         }
+
+        Rect Plot => new Rect(AxisWidth, RulerHeight + Pad,
+            Math.Max(1, Bounds.Width - AxisWidth - Pad), Math.Max(1, Bounds.Height - RulerHeight - 2 * Pad));
 
         public float Sample(float x) {
             if (Points.Count == 0) return fallback;
@@ -266,34 +360,70 @@ namespace OpenUtau.App.Views {
             return Points[^1].y;
         }
 
-        Point ToPoint(float x, float y) => new Point(
-            Padding + x * Math.Max(1, Bounds.Width - 2 * Padding),
-            Padding + (Maximum - y) / (Maximum - minimum) * Math.Max(1, Bounds.Height - 2 * Padding));
+        Point ToPoint(float x, float y) {
+            var plot = Plot;
+            return new Point(plot.X + x * plot.Width, plot.Y + (Maximum - y) / (Maximum - minimum) * plot.Height);
+        }
 
-        (float x, float y) FromPoint(Point p) => (
-            Math.Clamp((float)((p.X - Padding) / Math.Max(1, Bounds.Width - 2 * Padding)), 0, 1),
-            Math.Clamp(Maximum - (float)((p.Y - Padding) / Math.Max(1, Bounds.Height - 2 * Padding))
-                * (Maximum - minimum), minimum, limit));
+        (float x, float y) FromPoint(Point p) {
+            var plot = Plot;
+            return (Math.Clamp((float)((p.X - plot.X) / plot.Width), 0, 1),
+                Math.Clamp(Maximum - (float)((p.Y - plot.Y) / plot.Height) * (Maximum - minimum), minimum, limit));
+        }
+
+        static FormattedText Text(string text, IBrush brush) => new FormattedText(text,
+            CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 10, brush);
 
         public override void Render(DrawingContext context) {
             base.Render(context);
-            var rect = new Rect(Bounds.Size).Deflate(1);
-            context.DrawRectangle(ThemeManager.BackgroundBrush, ThemeManager.NeutralAccentPen, rect);
-            var start = ToPoint(vibratoStart, minimum).X;
-            context.DrawRectangle(ThemeManager.NeutralAccentBrushSemi, null,
-                new Rect(Padding, Padding, Math.Max(0, start - Padding), Math.Max(0, Bounds.Height - 2 * Padding)));
-            for (int i = 1; i < 4; i++) {
-                float x = i / 4f;
-                context.DrawLine(ThemeManager.NeutralAccentPenSemi,
-                    ToPoint(x, minimum), ToPoint(x, Maximum));
+            var plot = Plot;
+            context.DrawRectangle(ThemeManager.BackgroundBrush, ThemeManager.NeutralAccentPen, plot);
+            // Tick ruler over the vibrato section.
+            context.DrawRectangle(ThemeManager.NeutralAccentBrushSemi, null, new Rect(plot.X, 0, plot.Width, RulerHeight));
+            if (vibratoTicks > 0) {
+                int step = RulerSteps.FirstOrDefault(s => vibratoTicks / s <= 6, RulerSteps[^1]);
+                for (int tick = 0; tick <= vibratoTicks; tick += step) {
+                    double x = plot.X + tick / vibratoTicks * plot.Width;
+                    context.DrawLine(ThemeManager.NeutralAccentPenSemi, new Point(x, plot.Y), new Point(x, plot.Bottom));
+                    context.DrawLine(ThemeManager.NeutralAccentPen, new Point(x, RulerHeight - 5), new Point(x, RulerHeight));
+                    if (tick == 0 || x + 24 < plot.Right) {
+                        context.DrawText(Text(tick.ToString(CultureInfo.InvariantCulture), ThemeManager.ForegroundBrush),
+                            new Point(x + 3, 2));
+                    }
+                }
             }
-            Point previous = ToPoint(0, Sample(0));
-            foreach (var point in Points) {
-                var next = ToPoint(point.x, point.y);
-                context.DrawLine(ThemeManager.AccentPen1Thickness2, previous, next);
-                previous = next;
+            // Value axis.
+            foreach (float y in new[] { minimum, (minimum + Maximum) / 2, Maximum }) {
+                var p = ToPoint(0, y);
+                context.DrawLine(ThemeManager.NeutralAccentPenSemi, p, new Point(plot.Right, p.Y));
+                var label = Text(y.ToString(Maximum < 20 ? "0.#" : "0", XenStrings.InputCulture), ThemeManager.ForegroundBrush);
+                context.DrawText(label, new Point(plot.X - label.Width - 5,
+                    Math.Clamp(p.Y - label.Height / 2, plot.Y - 2, plot.Bottom - label.Height + 2)));
             }
-            context.DrawLine(ThemeManager.AccentPen1Thickness2, previous, ToPoint(1, Sample(1)));
+            // The curve, filled down to the minimum.
+            var top = new List<Point> { ToPoint(0, Sample(0)) };
+            top.AddRange(Points.Select(point => ToPoint(point.x, point.y)));
+            top.Add(ToPoint(1, Sample(1)));
+            var geometry = new StreamGeometry();
+            using (var ctx = geometry.Open()) {
+                ctx.BeginFigure(new Point(plot.X, plot.Bottom), true);
+                foreach (var point in top) {
+                    ctx.LineTo(point);
+                }
+                ctx.LineTo(new Point(plot.Right, plot.Bottom));
+                ctx.EndFigure(true);
+            }
+            context.DrawGeometry(ThemeManager.AccentBrush1Semi, null, geometry);
+            for (int i = 1; i < top.Count; i++) {
+                context.DrawLine(ThemeManager.AccentPen1Thickness2, top[i - 1], top[i]);
+            }
+            if (baseLine is float value && value <= Maximum) {
+                var p = ToPoint(0, value);
+                var pen = new Pen(ThemeManager.ForegroundBrush, 1, new DashStyle(new double[] { 4, 3 }, 0));
+                context.DrawLine(pen, p, new Point(plot.Right, p.Y));
+                var label = Text("64", ThemeManager.ForegroundBrush);
+                context.DrawText(label, new Point(plot.Right - label.Width - 3, p.Y - label.Height - 1));
+            }
             foreach (var point in Points) {
                 context.DrawEllipse(ReferenceEquals(point, Selected) ? ThemeManager.AccentBrush2 : ThemeManager.AccentBrush1,
                     null, ToPoint(point.x, point.y), 4, 4);

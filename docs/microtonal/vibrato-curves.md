@@ -12,20 +12,33 @@ repository; how the presets were derived is described below.
 
 ## Editing
 
-Select notes in the piano roll and open **Vibrato curves** in the note context
-menu. The dialogue has length (%), depth (cents), and rate (Hz). Click a graph to
-add a point, drag it to move it, or select it and use its numeric position/value
-controls. Delete removes the selected point. Position is a percentage of the
-whole note, including the region before vibrato begins; that region is shaded.
-**Preset** fills both graphs with one of the 16 types for the current length, and
-lays them out again when the length changes, until a point is edited.
+**Vibrato properties** opens from the note context menu, or by double-clicking a
+note's vibrato handles or lines in the piano roll, and follows the layout of
+VOCALOID4's vibrato properties: vibrato length (%), vibrato type, and a depth
+(cents) and a rate (Hz) graph. The graphs span the vibrato section, from its start
+to the note end, with a tick ruler above and the values on the left; the curve is
+filled down to the minimum. When a type is chosen, a dashed line marks its value
+64. Click a graph to add a point, drag it to move it, or select it and use its
+numeric position and value controls; right-click or Delete removes it. Choosing a
+type fills both graphs with its preset. Positions are relative to the vibrato, so
+changing the length keeps the shape. Points before the vibrato start do not show
+and are not kept when the dialogue changes the curves.
 
-**Apply to selected notes** applies the detached curves, length and preset as one
-undo group. Other legacy vibrato settings remain individual to each selected note.
-**Remove curves** restores each note's scalar-vibrato path and clears its preset
-without switching vibrato off. **Reset curve** clears one lane in the dialogue; an absent lane
-uses that note's legacy depth or period. Closing without applying discards edits.
-The earlier UTAU-style controls remain available.
+Every change is previewed on the selected notes in the piano roll while the
+dialogue is open; playback is not available until it closes. **OK** keeps the
+changes as one undo step, and **Cancel**, Escape or closing the window discards
+them. **Remove curves** clears the curves and type without switching vibrato off.
+An empty lane uses each note's own depth or period. Other vibrato settings remain
+individual to each selected note.
+
+The piano-roll handles follow the curves. The depth handle sits at the depth
+curve's peak and scales the whole curve; the period handle shows the first
+cycle, from the rate at the vibrato start, and scales the whole rate curve; the
+shift handle uses that period. Dragging the length handle, or changing the
+length in the note properties, moves the curve points with the vibrato, as
+VOCALOID's graphs do. Switching the vibrato off and on leaves the points where
+they were, and a JOB plugin's `vibratoLength` change does not move them. Fade-in,
+fade-out and shift do not change the curves. Notes without curves behave as before.
 
 ## Model and rendering
 
@@ -70,7 +83,7 @@ waveform shape and the recordings' attack and release are not reproduced; the no
 shape the onset and end. The research material stays outside the repository.
 
 A preset is stored as `preset` (1–16) next to the curves it produced, which are
-laid out over the vibrato length at the time it is chosen. Editing points keeps
+laid out over the vibrato section. Editing points keeps
 the preset, because it also sets the JOB scale. UST and compatible USTX export
 drop it together with the curves.
 

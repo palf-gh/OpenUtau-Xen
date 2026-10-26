@@ -144,5 +144,47 @@ namespace OpenUtau.Test {
             Assert.Equal(2, note.vibrato.rateCurve!.Count);
             Assert.Equal(2, note.vibrato.SampleRate(0));
         }
+
+        [Fact]
+        public void LengthChangesKeepCurvesInPlaceWithinTheVibrato() {
+            var part = new UVoicePart();
+            var note = new UNote {
+                duration = 480,
+                vibrato = new UVibrato {
+                    length = 50,
+                    depthCurve = new List<VibratoPoint> { new(0.5f, 10), new(0.75f, 40), new(1, 20) },
+                },
+            };
+            var command = new VibratoLengthCommand(part, note, 80);
+            command.Execute();
+            Assert.Equal(new[] { 0.2f, 0.6f, 1f }, note.vibrato.depthCurve!.ConvertAll(p => p.x).ToArray(),
+                new FloatComparer());
+            Assert.Equal(40, note.vibrato.depthCurve[1].y);
+            command.Unexecute();
+            Assert.Equal(0.75f, note.vibrato.depthCurve![1].x);
+            // Switching the vibrato off leaves the curves where they are.
+            new VibratoLengthCommand(part, note, 0).Execute();
+            Assert.Equal(0.75f, note.vibrato.depthCurve![1].x);
+            Assert.Null(VibratoCurve.Remap(null, 50, 80));
+        }
+
+        [Fact]
+        public void HandlesShowTheCurvePeakAndFirstCycle() {
+            var vibrato = new UVibrato { length = 50, depth = 25, period = 200 };
+            Assert.Equal(25, vibrato.DisplayDepth);
+            Assert.Equal(200, vibrato.DisplayPeriod);
+            vibrato.depthCurve = new List<VibratoPoint> { new(0.5f, 30), new(1, 90) };
+            vibrato.rateCurve = new List<VibratoPoint> { new(0.5f, 4), new(1, 8) };
+            Assert.Equal(90, vibrato.DisplayDepth);
+            Assert.Equal(250, vibrato.DisplayPeriod, 3);
+            var scaled = VibratoCurve.Scale(vibrato.depthCurve, 0.5f, 0, UVibrato.MaxDepthCents)!;
+            Assert.Equal(new[] { 15f, 45f }, scaled.ConvertAll(p => p.y).ToArray());
+            Assert.Equal(30, vibrato.depthCurve[0].y);
+        }
+
+        sealed class FloatComparer : IEqualityComparer<float> {
+            public bool Equals(float a, float b) => Math.Abs(a - b) < 1e-5f;
+            public int GetHashCode(float value) => 0;
+        }
     }
 }

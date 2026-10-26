@@ -1055,7 +1055,7 @@ namespace OpenUtau.App.Controls {
                             InputGesture = new KeyGesture(Key.V, KeyModifiers.Alt),
                         });
                     ViewModel.NotesContextMenuItems.Add(new MenuItemViewModel() {
-                        Header = XenStrings.Get("vibrato.curves"),
+                        Header = XenStrings.Get("vibrato.properties"),
                         Command = ReactiveCommand.Create(() => {
                             var notes = ViewModel.NotesViewModel.Selection.ToArray();
                             if (notes.Length > 0 && ViewModel.NotesViewModel.Part != null) {
@@ -1210,6 +1210,18 @@ namespace OpenUtau.App.Controls {
                 editState.End(args.Pointer, point);
                 editState = null;
                 Cursor = null;
+            }
+            // As in VOCALOID4, double-clicking a note's vibrato opens its vibrato properties.
+            var vibratoNote = ViewModel.NotesViewModel.HitTest.HitTestVibratoArea(point);
+            if (vibratoNote != null && ViewModel.NotesViewModel.Part != null) {
+                var selection = ViewModel.NotesViewModel.Selection;
+                if (!selection.Contains(vibratoNote)) {
+                    ViewModel.NotesViewModel.DeselectNotes();
+                    ViewModel.NotesViewModel.SelectNote(vibratoNote, false);
+                }
+                var notes = ViewModel.NotesViewModel.Selection.ToArray();
+                new VibratoCurvesDialog(ViewModel.NotesViewModel.Part, notes).ShowDialog(RootWindow);
+                return;
             }
             var noteHitInfo = ViewModel.NotesViewModel.HitTest.HitTestNote(point);
             if (noteHitInfo.hitBody && ViewModel?.NotesViewModel?.Part != null) {
