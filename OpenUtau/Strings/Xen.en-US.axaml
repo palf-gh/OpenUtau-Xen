@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Generator (degrees)</system:String>
   <system:String x:Key="xen.field.cardinality">Number of pitches</system:String>
   <system:String x:Key="xen.field.mode">Mode</system:String>
+  <system:String x:Key="xen.field.periods">Repeats per period</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (ratio or cents)</system:String>
   <system:String x:Key="xen.field.scaleName">Scale name</system:String>
   <system:String x:Key="xen.field.degrees">Degrees (comma separated)</system:String>

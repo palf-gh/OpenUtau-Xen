@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">ช่วงเสียงกำเนิด (จำนวนขั้นเสียง)</system:String>
   <system:String x:Key="xen.field.cardinality">จำนวนเสียง</system:String>
   <system:String x:Key="xen.field.mode">โหมด</system:String>
+  <system:String x:Key="xen.field.periods">จำนวนการซ้ำต่อคาบ</system:String>
   <system:String x:Key="xen.field.generatorInterval">ช่วงเสียงกำเนิด (อัตราส่วนหรือเซนต์)</system:String>
   <system:String x:Key="xen.field.scaleName">ชื่อบันไดเสียง</system:String>
   <system:String x:Key="xen.field.degrees">ขั้นเสียง (คั่นด้วยจุลภาค)</system:String>

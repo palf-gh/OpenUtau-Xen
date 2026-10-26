@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Generator (stopnie)</system:String>
   <system:String x:Key="xen.field.cardinality">Liczba dźwięków</system:String>
   <system:String x:Key="xen.field.mode">Tryb</system:String>
+  <system:String x:Key="xen.field.periods">Powtórzenia na okres</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generator (stosunek lub centy)</system:String>
   <system:String x:Key="xen.field.scaleName">Nazwa skali</system:String>
   <system:String x:Key="xen.field.degrees">Stopnie (oddzielone przecinkami)</system:String>

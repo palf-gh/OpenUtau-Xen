@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Quãng sinh (số bậc âm)</system:String>
   <system:String x:Key="xen.field.cardinality">Số cao độ</system:String>
   <system:String x:Key="xen.field.mode">Điệu thức</system:String>
+  <system:String x:Key="xen.field.periods">Số lần lặp mỗi chu kỳ</system:String>
   <system:String x:Key="xen.field.generatorInterval">Quãng sinh (tỉ lệ hoặc cent)</system:String>
   <system:String x:Key="xen.field.scaleName">Tên thang âm</system:String>
   <system:String x:Key="xen.field.degrees">Bậc âm (phân cách bằng dấu phẩy)</system:String>

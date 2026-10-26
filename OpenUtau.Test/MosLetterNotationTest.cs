@@ -205,7 +205,7 @@ namespace OpenUtau.Test {
             tuning.Keyboard.Tonic = 7;
             tuning.Keyboard.ActiveScaleId = ScalePresets.Prefix + "ritsu";
             var text = TunxenFormat.Serialize(tuning);
-            Assert.Contains("version: 2", text);
+            Assert.Contains("version: 3", text);
             var read = TunxenFormat.Parse(text);
             Assert.Equal(7, read.Keyboard.Tonic);
             Assert.Equal(5, read.Keyboard.Mos!.Cardinality);
@@ -217,7 +217,7 @@ namespace OpenUtau.Test {
         [Fact]
         public void TunxenVersion1KeyClassesBecomeTheMatchingLayout() {
             TuningDefinition ReadV1(TuningDefinition tuning) =>
-                TunxenFormat.Parse(TunxenFormat.Serialize(tuning).Replace("version: 2", "version: 1"));
+                TunxenFormat.Parse(TunxenFormat.Serialize(tuning).Replace("version: 3", "version: 1"));
             var complete = TuningPresets.EqualDivision(12);
             complete.Keyboard.Classes = Enumerable.Range(0, 12).ToDictionary(d => d, _ => "natural");
             Assert.Equal(KeyboardLayout.ManualLayout, ReadV1(complete).Keyboard.Layout);

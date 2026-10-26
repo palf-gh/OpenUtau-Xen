@@ -50,12 +50,16 @@ namespace OpenUtau.Core.Microtonal {
 
     public enum PitchDisplayMode { Full, ScaleHighlight, Compact }
 
-    /// <summary>The MOS that builds a keyboard: generator in degrees, note count and zero-based mode.</summary>
+    /// <summary>
+    /// The MOS that builds a keyboard: generator in degrees, note count and zero-based mode. Periods is the number
+    /// of times the generator chain repeats in the tuning period (4 for 12-EDO 4L4s); null means one and is not written.
+    /// </summary>
     public sealed class KeyboardMos {
         public int Generator { get; set; }
         public int Cardinality { get; set; }
         public int Mode { get; set; }
-        public KeyboardMos Clone() => new KeyboardMos { Generator = Generator, Cardinality = Cardinality, Mode = Mode };
+        public int? Periods { get; set; }
+        public KeyboardMos Clone() => new KeyboardMos { Generator = Generator, Cardinality = Cardinality, Mode = Mode, Periods = Periods };
     }
 
     /// <summary>
@@ -187,6 +191,8 @@ namespace OpenUtau.Core.Microtonal {
                 throw new FormatException("The keyboard layout must be mos or manual.");
             if (Keyboard.Mos != null && (Keyboard.Mos.Cardinality < 1 || Keyboard.Mos.Cardinality > DegreeCount))
                 throw new FormatException("The keyboard MOS needs between one note and the degree count.");
+            if (Keyboard.Mos?.Periods is int periods && (periods < 1 || periods > DegreeCount))
+                throw new FormatException("The keyboard MOS needs between one period and the degree count.");
             if (Keyboard.Tonic < 0 || Keyboard.Tonic >= DegreeCount) throw new FormatException("The scale tonic must be inside the period.");
             if (Scales.Select(s => s.Id).Distinct().Count() != Scales.Count || Notations.Select(n => n.Id).Distinct().Count() != Notations.Count)
                 throw new FormatException("Scale and notation identifiers must be unique.");

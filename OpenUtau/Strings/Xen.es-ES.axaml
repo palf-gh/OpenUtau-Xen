@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Generador (grados)</system:String>
   <system:String x:Key="xen.field.cardinality">Número de alturas</system:String>
   <system:String x:Key="xen.field.mode">Modo</system:String>
+  <system:String x:Key="xen.field.periods">Repeticiones por período</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generador (razón o cents)</system:String>
   <system:String x:Key="xen.field.scaleName">Nombre de la escala</system:String>
   <system:String x:Key="xen.field.degrees">Grados (separados por comas)</system:String>

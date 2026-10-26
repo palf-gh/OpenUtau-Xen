@@ -28,8 +28,9 @@ remain available.
 
 ## Invalid MOS and keyboard display
 
-Repeating generators and configurations with more than two physical gap sizes
-show the localised MOS-unavailable status. Equal-step MOS remain valid.
+Repeating generators, repeat counts that do not divide the degree count and the
+note count, and configurations with more than two physical gap sizes show the
+localised MOS-unavailable status. Equal-step MOS remain valid.
 Unavailable configurations show every tuning degree as a separate white key with
 its degree number; the scale stays as chosen. A corrected configuration restores
 the keyboard immediately. An incomplete or invalid period instead clears the
@@ -75,8 +76,10 @@ Date: 2026-10-25 (supersedes the single scale card with MOS/custom-scale
 choices). The tuning page has a **Keyboard** card and a **Scale** card, with the
 keyboard preview between them.
 
-- Keyboard: **MOS** shows generator, note count, mode and the step pattern
-  (for example `5L2s · LLsLLLs`); **Key by key** shows the selected-key buttons
+- Keyboard: **MOS** shows generator, note count, repeats per period, mode and the
+  step pattern (for example `5L2s · LLsLLLs`, or `4L4s · LsLsLsLs` for 12-EDO
+  diminished with 4 repeats); the mode count is the note count divided by the
+  repeats; **Key by key** shows the selected-key buttons
   White key, Black key and In-between key. Selecting a key (which also auditions
   it) and pressing a button sets its class; the names and key classes page shows
   the same classes. MOS edits change only the keyboard.

@@ -68,7 +68,7 @@ namespace OpenUtau.Core.Microtonal {
         static readonly ConcurrentDictionary<(int, int, int), MosKeyboard> cache = new ConcurrentDictionary<(int, int, int), MosKeyboard>();
         static readonly ConcurrentDictionary<string, MosKeyboard> letterCache = new ConcurrentDictionary<string, MosKeyboard>();
         static readonly ConcurrentDictionary<int, KeyboardMos?> searchCache = new ConcurrentDictionary<int, KeyboardMos?>();
-        static readonly ConcurrentDictionary<(int, int, int, int), int[]?> mosCache = new ConcurrentDictionary<(int, int, int, int), int[]?>();
+        static readonly ConcurrentDictionary<(int, int, int, int, int), int[]?> mosCache = new ConcurrentDictionary<(int, int, int, int, int), int[]?>();
 
         /// <summary>Roles per degree index, or null when the tuning has no valid piano-style theory.</summary>
         public static KeyRole[]? Roles(TuningDefinition tuning) {
@@ -101,11 +101,12 @@ namespace OpenUtau.Core.Microtonal {
         public static int[]? MosDegrees(TuningDefinition tuning, KeyboardMos mos) {
             int n = tuning.DegreeCount;
             if (mos.Cardinality < 1 || mos.Cardinality > n) return null;
-            // Step sizes are counted in degrees, so the result depends only on these four numbers.
+            // Step sizes are counted in degrees, so the result depends only on these five numbers.
             if (mosCache.Count > 256) mosCache.Clear();
-            return mosCache.GetOrAdd((n, mos.Generator, mos.Cardinality, mos.Mode), _ => {
+            int periods = mos.Periods ?? 1;
+            return mosCache.GetOrAdd((n, mos.Generator, mos.Cardinality, mos.Mode, periods), _ => {
                 try {
-                    var result = MosGenerator.Generate(tuning, mos.Generator, mos.Cardinality, mos.Mode);
+                    var result = MosGenerator.Generate(tuning, mos.Generator, mos.Cardinality, mos.Mode, periods);
                     return result.IsMos || result.IsEqualStep ? result.Scale.Degrees.ToArray() : null;
                 } catch (ArgumentException) {
                     return null;
@@ -183,6 +184,8 @@ namespace OpenUtau.Core.Microtonal {
         /// in an unequal octave), which keeps the conventional names and keys rather than letters.
         /// </summary>
         public static bool IsFamilyMos(TuningDefinition tuning, KeyboardMos mos) {
+            // Family keyboards repeat once per equave; a multi-period MOS always takes letter names.
+            if ((mos.Periods ?? 1) != 1) return false;
             int n = tuning.DegreeCount;
             int g = (mos.Generator % n + n) % n;
             var theory = KeyboardTheory.For(tuning);

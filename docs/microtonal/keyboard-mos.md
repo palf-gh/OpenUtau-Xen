@@ -154,8 +154,22 @@ conventional keyboards: C D E F G A B for seven notes, C D E F G H J A B for nin
 C D E A B for five (fewer than three notes start at A), with sharps and flats of its chroma and ups and downs for
 any remainder. A MOS that cannot be generated shows all keys white with degree
 numbers. `MosGenerator` counts step sizes in degrees, so the result depends only
-on the degree count, generator, note count and mode and is cached; a
+on the degree count, generator, note count, mode and repeat count and is cached; a
 fifth-generated diatonic in just intonation or a well temperament is 5L2s.
+
+A multi-period MOS repeats its generator chain several times in the tuning
+period. `KeyboardMos.Periods` holds the repeat count; null means one and is not
+written. The period is the degree count divided by the repeat count, and the
+generator is counted inside it, so 22-EDO pajara 2L8s is the same with generator
+2 or 13. The note count covers the whole tuning period, and the mode is a
+rotation within one repeat, so the mode count is the note count divided by the
+repeat count. Examples: 12-EDO diminished 4L4s (generator 1, 8 notes, 4 repeats;
+white keys 0 2 3 5 6 8 9 11 and shared black keys 1 4 7 10), 15-EDO blackwood
+5L5s (1, 10, 5) and 22-EDO pajara 2L8s (2, 10, 2). A repeat count that does not
+divide both the degree count and the note count gives the MOS-unavailable
+keyboard. A multi-period MOS never takes family names; it always uses letters.
+Unequal tunings count degrees here too, so their repeats are equal in degrees,
+not necessarily in cents. Default and family MOS stay single-period.
 
 With `manual`, every key comes from `Keyboard.Classes` (missing classes are
 white); classes are ignored by a MOS keyboard. Switching to key by key copies
@@ -177,8 +191,9 @@ presets start key by key with keys following their names. Rast is the standard
 24-EDO keyboard with the maqam Rast scale selected, and the preset menu shows it
 by identifier rather than as plain 24-EDO.
 
-Format: `.tunxen` and `.ustxen` are version 2 and store `layout`, `mos` and
-`tonic`. Version 1 is upgraded on reading: a class on every degree becomes key by
+Format: `.tunxen` and `.ustxen` are version 3 and store `layout`, `mos` and
+`tonic`; `mos.periods` is written only for a multi-period MOS. Version 2 is read
+unchanged with one repeat. Version 1 is upgraded on reading: a class on every degree becomes key by
 key; otherwise the MOS layout is used, and partial classes that changed a key
 become key by key with that change kept. Tonic is 0, and stored scale degrees
 are read as counted from it.

@@ -39,6 +39,7 @@
   <system:String x:Key="xen.field.generatorDegree">Generaattori (asteina)</system:String>
   <system:String x:Key="xen.field.cardinality">Sävelten määrä</system:String>
   <system:String x:Key="xen.field.mode">Moodi</system:String>
+  <system:String x:Key="xen.field.periods">Toistoja jaksossa</system:String>
   <system:String x:Key="xen.field.generatorInterval">Generaattori (suhde tai senttiä)</system:String>
   <system:String x:Key="xen.field.scaleName">Asteikon nimi</system:String>
   <system:String x:Key="xen.field.degrees">Asteet (pilkuin eroteltuina)</system:String>

@@ -12,20 +12,28 @@ namespace OpenUtau.Core.Microtonal {
         public string Pattern { get; set; } = string.Empty;
     }
     public static class MosGenerator {
-        public static MosResult Generate(TuningDefinition tuning, int generatorDegree, int cardinality, int mode = 0) {
+        /// <summary>
+        /// A MOS whose generator chain repeats <paramref name="periods"/> times in the tuning period, such as 12-EDO 4L4s
+        /// (diminished) or 22-EDO 2L8s (pajara). The generator is counted inside one period, the cardinality covers
+        /// the whole tuning period and the mode is a rotation within one repeat. A period count that does not divide the
+        /// degree count and the cardinality is rejected.
+        /// </summary>
+        public static MosResult Generate(TuningDefinition tuning, int generatorDegree, int cardinality, int mode = 0, int periods = 1) {
             tuning.Validate();
-            int period = tuning.DegreeCount;
-            if (cardinality <= 0 || cardinality > period) throw new ArgumentOutOfRangeException(nameof(cardinality));
+            int n = tuning.DegreeCount;
+            if (cardinality <= 0 || cardinality > n) throw new ArgumentOutOfRangeException(nameof(cardinality));
+            if (periods <= 0 || n % periods != 0 || cardinality % periods != 0) throw new ArgumentOutOfRangeException(nameof(periods));
+            int period = n / periods, perPeriod = cardinality / periods;
             int Mod(long value) => (int)((value % period + period) % period);
             // Begin the chain one generator below the root: for seven fifth-generated notes this is F C G D A E B.
-            var pitches = Enumerable.Range(0, cardinality).Select(i => Mod((long)(cardinality == 1 ? 0 : i - 1) * generatorDegree)).Distinct().OrderBy(d => d).ToArray();
-            if (pitches.Length != cardinality) throw new ArgumentException("The generator repeats before reaching the requested cardinality.");
-            mode = (mode % cardinality + cardinality) % cardinality;
-            int origin = pitches[mode];
-            var degrees = pitches.Select(p => Mod(p - origin)).OrderBy(d => d).ToList();
+            var chain = Enumerable.Range(0, perPeriod).Select(i => Mod((long)(perPeriod == 1 ? 0 : i - 1) * generatorDegree)).Distinct().OrderBy(d => d).ToArray();
+            if (chain.Length != perPeriod) throw new ArgumentException("The generator repeats before reaching the requested cardinality.");
+            mode = (mode % perPeriod + perPeriod) % perPeriod;
+            int origin = chain[mode];
+            var degrees = Enumerable.Range(0, periods).SelectMany(k => chain.Select(p => Mod(p - origin) + k * period)).OrderBy(d => d).ToList();
             // Step sizes are counted in the tuning's degrees, as on the keyboard, so a fifth-generated diatonic
             // in twelve-note just intonation or a well temperament is still 5L2s although its cents vary.
-            var widths = degrees.Select((d, i) => (double)((i + 1 < degrees.Count ? degrees[i + 1] : period) - d)).ToArray();
+            var widths = degrees.Select((d, i) => (double)((i + 1 < degrees.Count ? degrees[i + 1] : n) - d)).ToArray();
             var sizes = new List<double>();
             foreach (double width in widths) if (!sizes.Any(s => Math.Abs(s - width) <= 1e-6)) sizes.Add(width);
             sizes.Sort();
@@ -36,7 +44,8 @@ namespace OpenUtau.Core.Microtonal {
                 IsMos = isMos, IsEqualStep = sizes.Count == 1,
                 SmallCount = isMos ? smallCount : 0, LargeCount = isMos ? cardinality - smallCount : 0, Pattern = pattern,
                 Scale = new ScaleDefinition {
-                    Id = $"mos-{generatorDegree}-{cardinality}-{mode}",
+                    // Single-period identifiers keep their earlier form.
+                    Id = periods == 1 ? $"mos-{generatorDegree}-{cardinality}-{mode}" : $"mos-{generatorDegree}-{cardinality}-{mode}-p{periods}",
                     Name = isMos ? $"{cardinality - smallCount}L{smallCount}s (mode {mode + 1})" : sizes.Count == 1 ? "Equal-step subset" : "Generator subset",
                     Degrees = degrees, GeneratorDegree = generatorDegree, Mode = mode,
                 },
