@@ -892,3 +892,20 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   was not checked.
 - Open issues: the default MOS search does not propose multi-period MOS, and
   multi-period scale presets are not offered.
+
+## 2026-10-26 — Local merge of JOB plug-ins and multi-period MOS into develop
+
+- Purpose: give testers one trial with both the JOB plug-in, rhythm-grid and
+  lone-Alt work and multi-period MOS keyboards.
+- Implementation: `develop` was fast-forwarded to
+  `feature/job-plugin-compatibility` (`33c574f`), then
+  `feature/multi-period-mos` was merged (`580ccf5`). The only conflict was this
+  record, where both branches had appended entries; both were kept. Nothing was
+  pushed.
+- Verification: serial solution build succeeded with zero errors. Full suite:
+  557 passed, one opt-in external-voice test skipped.
+- Trial: no trial was running, so the self-contained Windows x64 Release build
+  from `580ccf5` replaced `work/OpenUtau-Xen-win-x64/` in place with local data
+  kept. `OpenUtau-Xen.exe` matches the generated apphost; the application and
+  core DLLs match the ReadyToRun outputs by SHA-256; the version string names
+  `580ccf5`. Native interactive launch was not checked.
