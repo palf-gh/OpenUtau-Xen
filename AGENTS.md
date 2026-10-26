@@ -61,6 +61,23 @@ dotnet test OpenUtau.Test -m:1
 - This requirement authorises local trial packaging only. It does not authorise
   remote publication, pushing, tagging or release completion.
 
+## Tidy up after every task
+
+- Before reporting completion, remove what the task left behind so the checkout
+  does not keep growing:
+  - Delete extra build and publish output in `work/` (test hosts, review builds,
+    old trial copies). Delete `work/OpenUtau-Xen-staged-win-x64/` once the regular
+    trial has been replaced from it.
+  - Keep one-off scripts, logs and captures in the scratchpad. Anything that must
+    stay in the checkout goes to `work/archive/`, not the top of `work/`.
+  - Delete local branches already merged into `develop` with `git branch -d`.
+    Keep `main`, `develop`, backup branches and unmerged branches.
+- Always keep `work/OpenUtau-Xen-win-x64/` with its local data, and
+  `work/voice-test-host/` and `work/voice-smoke/` for
+  `tools/verify-xen-voices.ps1`.
+- Tidying is local only: never delete remote branches, tags or the user's
+  voicebanks, projects or caches. Mention the tidy-up in the completion report.
+
 ## Code conventions
 
 - Follow `DESIGN.md` for colours and appearance: the layout follows OpenUtau
