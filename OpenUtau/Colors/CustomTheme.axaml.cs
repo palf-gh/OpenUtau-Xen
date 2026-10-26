@@ -113,6 +113,8 @@ public class CustomTheme {
             SetResourceColor("BlackKeyNameColor", Default.BlackKeyNameColor);
             SetResourceColor("KeyboardPreviewBlackColor", Default.KeyboardPreviewBlackColor);
             SetResourceColor("KeyboardPreviewBlackNameColor", Default.KeyboardPreviewBlackNameColor);
+            SetResourceColor("KeyboardPreviewWhiteColor", Default.KeyboardPreviewWhiteColor!);
+            SetResourceColor("KeyboardPreviewWhiteNameColor", Default.KeyboardPreviewWhiteNameColor!);
 
             SetResourceColor("BetweenKeyColorLeft", Default.BetweenKeyColorLeft);
             SetResourceColor("BetweenKeyColorRight", Default.BetweenKeyColorRight);
@@ -183,6 +185,8 @@ public class CustomTheme {
         public string BlackKeyNameColor = "#101010";
         public string KeyboardPreviewBlackColor = "#202020";
         public string KeyboardPreviewBlackNameColor = "#F2F2F2";
+        public string? KeyboardPreviewWhiteColor;
+        public string? KeyboardPreviewWhiteNameColor;
 
         public string BetweenKeyColorLeft = "#C9CEF8";
         public string BetweenKeyColorRight = "#AEB6F4";
@@ -208,6 +212,9 @@ public class CustomTheme {
             AppTopBarTransportHoverColor ??= IsDarkMode ? "#505050" : "#DADAD5";
             AppTopBarValueStripColor ??= IsDarkMode ? "#262626" : "#FAFAF8";
             AppTopBarValueDividerColor ??= IsDarkMode ? "#484848" : "#CDCDC8";
+            // Settings keyboard previews draw white keys white in dark mode, as black keys are black in light mode.
+            KeyboardPreviewWhiteColor ??= IsDarkMode ? "#F2F2F2" : "Transparent";
+            KeyboardPreviewWhiteNameColor ??= IsDarkMode ? "#101010" : "#5C7410";
         }
     }
 }

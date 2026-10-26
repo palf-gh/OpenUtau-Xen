@@ -45,8 +45,10 @@ OpenUtau Xen の画面と配色の決まりです。画面構成は OpenUtau Lun
 - ノートを置く領域では、中間鍵の行を白鍵の行と黒鍵の行の中間の濃さで塗ります。
 
 設定画面の鍵盤プレビューと度数マップの Black は、黒地と明るい文字にします。
-専用の色を設け、ピアノロール本体の配色とは分けます。テーマエディターでは
-`KeyboardPreviewBlackColor` と `KeyboardPreviewBlackNameColor` で調整します。
+ダークモードの White は白地と暗い文字にします。どちらも専用の色を設け、
+ピアノロール本体の配色とは分けます。テーマエディターでは
+`KeyboardPreviewBlackColor`、`KeyboardPreviewBlackNameColor`、
+`KeyboardPreviewWhiteColor`、`KeyboardPreviewWhiteNameColor` で調整します。
 
 ## 4. 文字と記号
 

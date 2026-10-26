@@ -102,7 +102,9 @@ through a control automation peer and an updated accessible name.
 Bravura accidentals. Following the user's colour review, Black keys in settings
 previews and degree maps use a dedicated black background and light lettering.
 `KeyboardPreviewBlackColor` and `KeyboardPreviewBlackNameColor` are present in
-light, dark and custom themes and the theme editor. Piano-roll key colours keep
+light, dark and custom themes and the theme editor. For the same reason, White
+keys use `KeyboardPreviewWhiteColor` and `KeyboardPreviewWhiteNameColor`: white
+with dark lettering in dark mode, and unchanged in light mode. Piano-roll key colours keep
 their existing theme settings. The preview supports pointer selection, arrow keys, Home/End and
 horizontal scrolling. Visible shapes are culled and their drawing geometries
 are cached. Performance-scale edits reuse the baseline layout. A single live

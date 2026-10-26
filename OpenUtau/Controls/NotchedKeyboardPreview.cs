@@ -223,7 +223,9 @@ namespace OpenUtau.App.Controls {
 
         IBrush KeyBrush(KeyRole role, bool name = false) => Brush(role == KeyRole.Black
             ? name ? "KeyboardPreviewBlackNameBrush" : "KeyboardPreviewBlackBrush"
-            : role + (name ? "KeyNameBrush" : "KeyBrush"));
+            : role == KeyRole.White
+                ? name ? "KeyboardPreviewWhiteNameBrush" : "KeyboardPreviewWhiteBrush"
+                : role + (name ? "KeyNameBrush" : "KeyBrush"));
 
         StreamGeometry Geometry(NotchedKeyShape shape) {
             if (geometries.TryGetValue(shape.Degree, out var cached)) return cached;
