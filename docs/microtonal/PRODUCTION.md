@@ -1016,3 +1016,20 @@ DESIGN.md) without breaking OpenUtau's look, documented in a dedicated DESIGN.md
   DLLs match the ReadyToRun outputs by SHA-256; the version string names
   `aace0ef`. Replacement of the regular trial remains pending. Native
   interactive launch was not checked.
+
+## 2026-10-26 — Regular trial replaced, local tidy-up and tidy rule
+
+- Trial: after the user closed the running trial, the build from `aace0ef` replaced
+  `work/OpenUtau-Xen-win-x64/` in place with local data kept. `OpenUtau-Xen.exe`
+  matches the generated apphost; the application and core DLLs match the
+  ReadyToRun outputs by SHA-256. Native interactive launch was not checked.
+- Tidy-up (user request): deleted the old build folders in `work/` (the staged
+  trial, the `81a06312` trial copy, `publish`, `localised-app` and
+  `localised-tests`; about 2.5 GB). Moved the remaining one-off scripts, logs,
+  captures and review folders from the top of `work/` into `work/archive/`. Deleted
+  the eleven local branches already merged into `develop` with `git branch -d`;
+  `main`, `backup/pre-publication-scrub` and the unmerged `docs/trial-0.2.0` were
+  kept. Remote branches were not touched.
+- Purpose of the rule: the user asked that every task end with this kind of
+  tidy-up so the checkout does not keep growing. `AGENTS.md` now has "Tidy up
+  after every task", which lists what to delete or archive and what to keep.
